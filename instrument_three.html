@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+	
+<head>
+<link rel="stylesheet" href="css/pico.min.css">
+<title>Instrument Three</title>
+</head>
+
+<body>
+<main class = "container">
+	<nav>
+		<ul>
+			<li><a href="index.html"><small>Home</small></a></li> | 
+			<li><a href="instrument_one.html"><small>Instrument One</small></a></li> |
+			<li><a href="instrument_two.html"><small>Instrument Two</small></a></li> |
+			<li><a href="instrument_three.html"><small><u>Instrument Three</u></small></a></li>
+		</ul>
+		<ul>
+			<li>
+				<a href="https://github.com/alexmlucas/Instrument_Three" target="_blank">
+				<img src="images/GitHub-Mark-32px.png" alt="The GitHub logo">
+				</a>
+			</li>
+		</ul>
+	</nav>
+	<hr>
+	<hgroup>
+		<h1>Instrument Three</h1>
+		<h2>A violin-inspired accessible instrument</h2>
+	</hgroup>
+	
+	<blockquote>
+		<small><i>"I have enjoyed the whole process; designing the violin and using it in lessons to learn music theory and practice. It has opened up my possibilities to play an instrument I would not have been able to."</i></small>
+		<footer>
+		<cite><small>- Marylouise McCord</small></cite>
+		</footer>
+	</blockquote>
+	
+	<table>
+	  <tr>
+		<td>
+			<figure>
+				<a href="images/instrument_three_side_1080x721.png">
+					<img src="images/instrument_three_side_450x300.png" alt="A side-facing photograph of Instrument Three, a violin-inspired accessible instrument">
+				</a>
+			</figure>
+		</td>
+		<td>
+			<figure>
+				<a href="images/instrument_three_front_1080x721.png">
+					<img src="images/instrument_three_front_450x300.png" alt="A front-facing photograph of Instrument Three, a violin-inspired accessible instrument">
+				</a>
+			</figure>
+		</td>
+	  </tr>
+	</table>
+	<p>
+		<small>Instrument Three was designed in collaboration with physically disabled musician Marylouise McCord and <a href="https://www.ohmi.org.uk/" target="_blank">The OHMI Trust</a>. This instrument is inspired by the violin but can be played with one hand through the use of four touch-sensors. With support from OHMI, Marylouise used the instrument in a series of private violin lessons with music tutor Gemma McGrath.</small>	
+	</p>
+	
+	<details>
+		<summary><b>Functionality</b></summary>
+		<center>
+				<figure>
+					<a href="images/instrument_three_chrom_1080x621.png">
+						<img src="images/instrument_three_chrom_450x259.png" alt="An illustration of Instrument Three's chromatic mapping.">
+					</a>
+					<figcaption><center><small>Chromatic Mapping</small></center></figcaption>
+				</figure>
+		</center>
+				<p><small>Instrument Three is played upon a flat surface, such as a wheelchair tray. The violin features four touch-sensors in place of strings (named touch-strings) situated on top of a pressure sensor.  Placing a finger on a touch-string and applying pressure results in bowed articulation. Loudness increases and decreases according to the amount of pressure applied. Releasing a finger without applying pressure articulates the string in a pizzicato fashion. The touch-strings cover a pitch range of a perfect fourth, as illustrated above.</small></p>
+				
+				<h6>Key Features</h6>
+				<br>
+					<ul>
+						<li><small>Four touch sensors with pressure sensitivity.</small></li>
+						<li><small>Four voice polyphony.</small></li>
+						<li><small>A pitch range of perfect fourth.</small></li>
+						<li><small>Internal 3.7 Watt speaker.</small></li>
+						<li><small> 3.5 mm headphone output.</small></li>
+					</ul>
+			
+	</details>
+	
+	<details>
+		<summary><b>Demonstration</b></summary>
+		<center>
+			<video width="440" height="330" controls>
+				<source src="video/instrument_three_demo_low.mp4" type="video/mp4">
+				Your browser does not support the video tag.
+			</video>
+		</center>
+	</details>
+	<details>
+		<summary><b>Technical Overview</b></summary>
+		<center>
+			<figure>
+				<a href="images/instrument_three_flow_1080x761.png">
+					<img src="images/instrument_three_flow_450x317.png" alt="A high-level flow diagram showing the key elements of Instrument Three">
+				</a>
+				<figcaption><center><small>A High-level Schematic of the Instrument's Core Electronics</small></center></figcaption>
+			</figure>
+		</center>
+		<p><small>The instrument centres upon a Teensy 4.0 microcontroller board and a companion Teensy Audio Adapter Board. Physical modelling synthesis produces the violin sound via the Faust DSP environment's Physical Modelling Library. The instrument is polyphonic, affording the playing of double, triple and quadruple stops. Mono sound emanates from a single internal speaker, driven by a 3.7-watt amplifier. A 3.5 mm jack socket provides line level dual-mono audio output. The instrument is powered by a 5V DC transformer, with the power status indicated by a green panel-mounted LED.</small></p>
+		
+		<p><small>The four Trill Bar touch sensors connect to the Teensy via i2C placed upon a simple single-channel pressure sensor. The pressure sensor consists of a Velostat sheet sandwiched between two thin layers of copper tape. EVA foam provides a degree of cushioning. A 3D-printed PLA gantry holds the touch and pressure sensors in place.</small></p>
+		
+	</details>
+	
+	
+	<footer>Alex Lucas: PhD Research Project, Queen's University Belfast, 2021</footer>
+
+</main>
+</body>
+</html>
