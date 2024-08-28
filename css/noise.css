@@ -13,7 +13,7 @@ body {
 /* Header/Blog Title */
 .header {
   padding: 30px;
-  text-align: center;
+  text-align: left;
   background: white;
 }
 
@@ -101,6 +101,14 @@ body {
     float: none;
     width: 100%;
   }
+}
+
+#container{
+    width: 100%;
+}
+#floated{
+    float: left;
+    width: 120px;
 }
 
 
