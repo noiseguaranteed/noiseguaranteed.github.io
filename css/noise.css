@@ -4,7 +4,7 @@
 
 body {
   font-family: Arial;
-  padding: 10px;
+  padding: 5px;
   background-color: #111111;
   margin: 0;
   font-family: 'Courier new', monospace;
@@ -12,8 +12,8 @@ body {
 
 /* Header/Blog Title */
 .header {
-  padding: 30px;
-  text-align: left;
+  padding: 10px;
+  text-align: right;
   background: white;
 }
 
@@ -69,7 +69,7 @@ body {
 .card {
   background-color: white;
   padding: 20px;
-  margin-top: 20px;
+  margin-top: 5px;
 }
 
 /* Clear floats after the columns */
