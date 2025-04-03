@@ -77,8 +77,8 @@ body {
 /* Add a card effect for articles */
 .card {
   background-color: #fdeac8;
-  padding: 20px;
-  margin-top: 5px;
+  padding: 10px 10px;
+  margin-top: 5px2
 }
 
 /* Clear floats after the columns */
