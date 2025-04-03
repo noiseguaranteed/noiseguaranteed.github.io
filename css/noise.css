@@ -2,12 +2,21 @@
   box-sizing: border-box;
 }
 
+html {
+    opacity: 0.1;
+    
+    opacity: 1;
+    background-attachment: fixed;
+    color: var(--foreground);
+    line-height: 1.5rem;
+}
+
 body {
-  font-family: Arial;
   padding: 5px;
-  background-color: #111111;
+  /*background-color: #111111;*/
   margin: 0;
   font-family: 'Courier new', monospace;
+    font-size: 14px;
 }
 
 /* Header/Blog Title */
@@ -24,14 +33,15 @@ body {
 /* Style the top navigation bar */
 .topnav {
   overflow: hidden;
-  background-color: #333;
+  background-color: #81FF73;
+  color: black;
 }
 
 /* Style the topnav links */
 .topnav a {
   float: left;
   display: block;
-  color: #f2f2f2;
+  color: black;
   text-align: center;
   padding: 14px 16px;
   text-decoration: none;
@@ -39,7 +49,7 @@ body {
 
 /* Change color on hover */
 .topnav a:hover {
-  background-color: #ddd;
+  background-color: #F273FF;
   color: black;
 }
 
@@ -81,10 +91,10 @@ body {
 
 /* Footer */
 .footer {
-  padding: 20px;
+  padding: 5px;
   text-align: center;
-  background: #ddd;
-  margin-top: 20px;
+  background: #fdeac8;
+  margin-top: 5px;
 }
 
 /* Responsive layout - when the screen is less than 800px wide, make the two columns stack on top of each other instead of next to each other */
@@ -105,10 +115,17 @@ body {
 
 #container{
     width: 100%;
+    padding: 5px;
 }
 #floated{
     float: left;
-    width: 120px;
+    width: 20px;
 }
 
+.center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%;
+}
 
