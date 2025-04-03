@@ -2,9 +2,7 @@
   box-sizing: border-box;
 }
 
-html {
-    opacity: 0.1;
-    
+html {    
     opacity: 1;
     background-attachment: fixed;
     color: var(--foreground);
@@ -16,18 +14,19 @@ body {
   /*background-color: #111111;*/
   margin: 0;
   font-family: 'Courier new', monospace;
-    font-size: 14px;
+  font-size: 14px;
 }
 
 /* Header/Blog Title */
 .header {
   padding: 10px;
-  text-align: right;
+  text-align: center;
   background: white;
 }
 
 .header h1 {
   font-size: 50px;
+  text-align: center;
 }
 
 /* Style the top navigation bar */
@@ -77,7 +76,7 @@ body {
 
 /* Add a card effect for articles */
 .card {
-  background-color: white;
+  background-color: #fdeac8;
   padding: 20px;
   margin-top: 5px;
 }
