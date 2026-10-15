@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Talk feedback – Who makes music software accessible? (ASSETS '26)</title>
+<meta name="description" content="A short, optional feedback form for Alex Lucas's ASSETS '26 talk on convivial tools and music software accessibility.">
+<style>
+  @font-face { font-family: "Atkinson Hyperlegible"; src: url("../fonts/AtkinsonHyperlegible-Regular.ttf"); font-weight: 400; font-display: swap; }
+  @font-face { font-family: "Atkinson Hyperlegible"; src: url("../fonts/AtkinsonHyperlegible-Bold.ttf"); font-weight: 700; font-display: swap; }
+
+  :root {
+    --bg: #FFF8EC; --surface: #FFFFFF; --ink: #1B1B2F; --muted: #4A4A5A;
+    --accent: #00575C; --accent-ink: #FFF8EC; --line: #1B1B2F; --error: #8A1C1C;
+    --focus: #5B2A86; --error-bg: #FDECEC;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15151F; --surface: #20202C; --ink: #F4F1EA; --muted: #C9C6BF;
+      --accent: #7FD6D2; --accent-ink: #10101A; --line: #C9C6BF; --error: #FFB4B4;
+      --focus: #D9B8FF; --error-bg: #3A1E22;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #15151F; --surface: #20202C; --ink: #F4F1EA; --muted: #C9C6BF;
+    --accent: #7FD6D2; --accent-ink: #10101A; --line: #C9C6BF; --error: #FFB4B4;
+    --focus: #D9B8FF; --error-bg: #3A1E22;
+  }
+
+  * { box-sizing: border-box; }
+  html { font-size: 112.5%; } /* 18px base; everything in rem so browser zoom/text size settings scale it */
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: "Atkinson Hyperlegible", Verdana, Arial, sans-serif; line-height: 1.55;
+  }
+  main { max-width: 40rem; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+  h1 { font-size: 1.9rem; line-height: 1.2; margin: 0.5rem 0 0.75rem; color: var(--accent); }
+  h2 { font-size: 1.25rem; margin: 2rem 0 0.5rem; }
+  p { margin: 0 0 1rem; }
+  a { color: var(--accent); text-underline-offset: 3px; }
+  .skip { position: absolute; left: -999px; }
+  .skip:focus { left: 1rem; top: 1rem; background: var(--surface); padding: 0.5rem 1rem; z-index: 2; }
+
+  fieldset { border: 2px solid var(--line); border-radius: 12px; margin: 0 0 1.5rem; padding: 1rem 1rem 0.5rem; background: var(--surface); }
+  legend { font-weight: 700; font-size: 1.1rem; padding: 0 0.4rem; }
+  .hint { color: var(--muted); font-size: 0.95rem; margin: 0 0 0.75rem; }
+  .field { margin: 0 0 1.5rem; }
+  label.block { display: block; font-weight: 700; margin-bottom: 0.25rem; }
+  .choice { display: flex; gap: 0.75rem; align-items: flex-start; padding: 0.45rem 0; }
+  .choice input { width: 1.6rem; height: 1.6rem; margin: 0.05rem 0 0; flex: none; accent-color: var(--accent); }
+  .choice label { flex: 1; }
+  textarea, input[type="text"], input[type="email"] {
+    width: 100%; font: inherit; color: var(--ink); background: var(--surface);
+    border: 2px solid var(--line); border-radius: 8px; padding: 0.6rem 0.75rem;
+  }
+  textarea { min-height: 7rem; resize: vertical; }
+  :focus-visible { outline: 4px solid var(--focus); outline-offset: 3px; }
+  .req { font-weight: 400; color: var(--muted); }
+
+  button {
+    font: inherit; font-weight: 700; font-size: 1.1rem; cursor: pointer;
+    background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 10px;
+    padding: 0.85rem 1.75rem; min-height: 3rem;
+  }
+  button[disabled] { opacity: 0.6; cursor: progress; }
+
+  .error-summary { border: 3px solid var(--error); background: var(--error-bg); border-radius: 10px; padding: 1rem; margin: 0 0 1.5rem; }
+  .error-summary h2 { margin-top: 0; color: var(--error); }
+  .error-text { color: var(--error); font-weight: 700; margin: 0 0 0.5rem; }
+  .status { border: 3px solid var(--accent); border-radius: 10px; padding: 1rem; background: var(--surface); }
+  .honeypot { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+  .privacy { font-size: 0.95rem; color: var(--muted); border-top: 2px solid var(--line); margin-top: 2.5rem; padding-top: 1rem; }
+</style>
+</head>
+<body>
+<a class="skip" href="#feedback-form">Skip to the form</a>
+<main>
+  <p><a href="../">Slides and script</a></p>
+  <h1>Who makes music software accessible?<br>Your feedback</h1>
+  <p>Thanks for coming to the talk at ASSETS '26. This form takes about two minutes. <strong>Every question is optional except the one about quoting you.</strong> It works with screen readers and keyboards, and there's no time limit.</p>
+  <p>Your answers help us show the impact of this research, for example in a university impact case study.</p>
+
+  <div id="error-summary" class="error-summary" role="alert" tabindex="-1" hidden>
+    <h2>There's a problem</h2>
+    <ul id="error-list"></ul>
+  </div>
+
+  <div id="status" class="status" role="status" aria-live="polite" tabindex="-1" hidden></div>
+
+  <!-- The action is the Google Apps Script web-app URL (see apps-script/Code.gs). Without JavaScript the browser posts here directly. -->
+  <form id="feedback-form" method="post" action="APPS_SCRIPT_URL" novalidate>
+    <input type="hidden" name="talk" value="ASSETS26-convivial-tools">
+
+    <fieldset>
+      <legend>1. Which of these describe you?</legend>
+      <p class="hint" id="role-hint">Choose as many as you like.</p>
+      <div class="choice"><input type="checkbox" id="role-research" name="role" value="Researcher or academic" aria-describedby="role-hint"><label for="role-research">Researcher or academic</label></div>
+      <div class="choice"><input type="checkbox" id="role-educator" name="role" value="Educator or teacher"><label for="role-educator">Educator or teacher</label></div>
+      <div class="choice"><input type="checkbox" id="role-industry" name="role" value="Music technology designer, developer or product person"><label for="role-industry">Designer, developer or product person in music technology</label></div>
+      <div class="choice"><input type="checkbox" id="role-creative" name="role" value="Disabled musician or sound creative"><label for="role-creative">Disabled musician or sound creative</label></div>
+      <div class="choice"><input type="checkbox" id="role-a11y" name="role" value="Accessibility specialist or advocate"><label for="role-a11y">Accessibility specialist or advocate</label></div>
+      <div class="choice"><input type="checkbox" id="role-student" name="role" value="Student"><label for="role-student">Student</label></div>
+      <div class="field">
+        <label class="block" for="role-other">Something else</label>
+        <input type="text" id="role-other" name="role_other" autocomplete="off">
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>2. How relevant is this work to what you do?</legend>
+      <div class="choice"><input type="radio" id="rel-very" name="relevance" value="Very relevant"><label for="rel-very">Very relevant</label></div>
+      <div class="choice"><input type="radio" id="rel-some" name="relevance" value="Somewhat relevant"><label for="rel-some">Somewhat relevant</label></div>
+      <div class="choice"><input type="radio" id="rel-not" name="relevance" value="Not very relevant"><label for="rel-not">Not very relevant</label></div>
+      <div class="choice"><input type="radio" id="rel-unsure" name="relevance" value="Not sure"><label for="rel-unsure">Not sure</label></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>3. Which design guideline feels most useful to you?</legend>
+      <div class="choice"><input type="radio" id="g1" name="guideline" value="1 Build accessible ecosystems"><label for="g1"><strong>1. Build accessible ecosystems</strong>: tutorials and manuals without visual cues</label></div>
+      <div class="choice"><input type="radio" id="g2" name="guideline" value="2 Embrace interdependent access"><label for="g2"><strong>2. Embrace interdependent access</strong>: credit community work, and point people to it</label></div>
+      <div class="choice"><input type="radio" id="g3" name="guideline" value="3 Design for designers"><label for="g3"><strong>3. Design for designers</strong>: open extension points</label></div>
+      <div class="choice"><input type="radio" id="g0" name="guideline" value="None or not sure"><label for="g0">None of them, or not sure</label></div>
+    </fieldset>
+
+    <div class="field">
+      <label class="block" for="change">4. Will this talk change anything you do? If so, what?</label>
+      <p class="hint" id="change-hint">For example, how you teach, design, research, or make tutorials.</p>
+      <textarea id="change" name="change" aria-describedby="change-hint"></textarea>
+    </div>
+
+    <div class="field">
+      <label class="block" for="comments">5. Anything else?</label>
+      <p class="hint" id="comments-hint">Questions, critique and ideas are all welcome.</p>
+      <textarea id="comments" name="comments" aria-describedby="comments-hint"></textarea>
+    </div>
+
+    <fieldset id="quote-group" aria-describedby="quote-hint">
+      <legend>6. May we quote what you've written, without your name? <span class="req">(required)</span></legend>
+      <p class="hint" id="quote-hint">Quotes would appear in reports about this research's impact, such as a university impact case study.</p>
+      <p class="error-text" id="quote-error" hidden>Choose yes or no.</p>
+      <div class="choice"><input type="radio" id="quote-yes" name="quote_ok" value="Yes" required><label for="quote-yes">Yes, you may quote me anonymously</label></div>
+      <div class="choice"><input type="radio" id="quote-no" name="quote_ok" value="No"><label for="quote-no">No, please don't quote me</label></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>7. Can we get back in touch? (optional)</legend>
+      <p class="hint">In about six months, we'd like to ask whether anything changed for you. We'll only use these details for that, and never publish them.</p>
+      <div class="field"><label class="block" for="name">Name</label><input type="text" id="name" name="name" autocomplete="name"></div>
+      <div class="field"><label class="block" for="org">Role and organisation</label><input type="text" id="org" name="organisation" autocomplete="organization"></div>
+      <div class="field"><label class="block" for="email">Email</label><input type="email" id="email" name="email" autocomplete="email" aria-describedby="email-error"><p class="error-text" id="email-error" hidden>Enter an email address like name@example.com, or leave it blank.</p></div>
+    </fieldset>
+
+    <div class="honeypot" aria-hidden="true">
+      <label for="website">Leave this empty</label>
+      <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
+    </div>
+
+    <button type="submit" id="submit">Send feedback</button>
+  </form>
+
+  <section class="privacy" aria-labelledby="privacy-h">
+    <h2 id="privacy-h">How we use your answers</h2>
+    <p>Alex Lucas at Queen's University Belfast collects these answers to understand and report the impact of this research. Answers are stored in a private spreadsheet that only the research team can see. Contact details are deleted once the follow-up is done, and all responses by the end of 2029. To see, change or delete what you sent, email <a href="mailto:a.lucas@qub.ac.uk">a.lucas@qub.ac.uk</a>.</p>
+  </section>
+</main>
+
+<script>
+(() => {
+  const form = document.getElementById('feedback-form');
+  const summary = document.getElementById('error-summary');
+  const list = document.getElementById('error-list');
+  const status = document.getElementById('status');
+  const button = document.getElementById('submit');
+  const quoteError = document.getElementById('quote-error');
+  const email = document.getElementById('email');
+  const emailError = document.getElementById('email-error');
+
+  function showErrors(errors) {
+    list.replaceChildren(...errors.map(([id, msg]) => {
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = '#' + id; a.textContent = msg;
+      a.addEventListener('click', e => { e.preventDefault(); document.getElementById(id).focus(); });
+      li.append(a); return li;
+    }));
+    summary.hidden = errors.length === 0;
+    if (errors.length) summary.focus();
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errors = [];
+    const quoteChosen = form.querySelector('input[name="quote_ok"]:checked');
+    quoteError.hidden = !!quoteChosen;
+    document.getElementById('quote-yes').setAttribute('aria-invalid', String(!quoteChosen));
+    if (!quoteChosen) errors.push(['quote-yes', 'Question 6: choose whether we may quote you']);
+    const emailBad = email.value.trim() !== '' && !email.checkValidity();
+    emailError.hidden = !emailBad;
+    email.setAttribute('aria-invalid', String(emailBad));
+    if (emailBad) errors.push(['email', 'Question 7: enter a valid email address, or leave it blank']);
+    showErrors(errors);
+    if (errors.length) return;
+
+    if (form.action.includes('APPS_SCRIPT_URL')) {
+      status.hidden = false;
+      status.textContent = 'This form is not connected yet, so nothing was sent. (Preview mode.)';
+      status.focus();
+      return;
+    }
+
+    button.disabled = true;
+    button.textContent = 'Sending…';
+    try {
+      // Apps Script replies via a cross-origin redirect, so the response is opaque;
+      // a network failure still throws, which is what we need to detect.
+      await fetch(form.action, { method: 'POST', mode: 'no-cors', body: new URLSearchParams(new FormData(form)) });
+      form.hidden = true;
+      status.hidden = false;
+      status.innerHTML = '<h2>Thank you!</h2><p>Your feedback has been sent. You can close this page, or go back to the <a href="../">slides and script</a>.</p>';
+      status.focus();
+    } catch (err) {
+      button.disabled = false;
+      button.textContent = 'Send feedback';
+      status.hidden = false;
+      status.innerHTML = 'Sorry, that didn’t send. Please check your connection and try again, or email your thoughts to <a href="mailto:a.lucas@qub.ac.uk">a.lucas@qub.ac.uk</a>.';
+      status.focus();
+    }
+  });
+})();
+</script>
+</body>
+</html>
