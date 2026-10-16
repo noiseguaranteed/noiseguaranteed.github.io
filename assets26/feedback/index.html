@@ -4,79 +4,92 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Talk feedback – Who makes music software accessible? (ASSETS '26)</title>
+<link rel="icon" href="../img/favicon.png">
 <meta name="description" content="A short, optional feedback form for Alex Lucas's ASSETS '26 talk on convivial tools and music software accessibility.">
 <style>
-  @font-face { font-family: "Atkinson Hyperlegible"; src: url("../fonts/AtkinsonHyperlegible-Regular.ttf"); font-weight: 400; font-display: swap; }
-  @font-face { font-family: "Atkinson Hyperlegible"; src: url("../fonts/AtkinsonHyperlegible-Bold.ttf"); font-weight: 700; font-display: swap; }
+  @font-face { font-family: "Atkinson Hyperlegible Mono"; src: url("../fonts/ahmono.woff2") format("woff2"); font-weight: 200 800; font-display: swap; }
+  @font-face { font-family: "Atkinson Hyperlegible Mono"; src: url("../fonts/ahmono-italic.woff2") format("woff2"); font-weight: 200 800; font-style: italic; font-display: swap; }
 
-  :root {
-    --bg: #FFF8EC; --surface: #FFFFFF; --ink: #1B1B2F; --muted: #4A4A5A;
-    --accent: #00575C; --accent-ink: #FFF8EC; --line: #1B1B2F; --error: #8A1C1C;
-    --focus: #5B2A86; --error-bg: #FDECEC;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --bg: #15151F; --surface: #20202C; --ink: #F4F1EA; --muted: #C9C6BF;
-      --accent: #7FD6D2; --accent-ink: #10101A; --line: #C9C6BF; --error: #FFB4B4;
-      --focus: #D9B8FF; --error-bg: #3A1E22;
-    }
-  }
-  :root[data-theme="dark"] {
-    --bg: #15151F; --surface: #20202C; --ink: #F4F1EA; --muted: #C9C6BF;
-    --accent: #7FD6D2; --accent-ink: #10101A; --line: #C9C6BF; --error: #FFB4B4;
-    --focus: #D9B8FF; --error-bg: #3A1E22;
-  }
+  /* noise guaranteed brand (BRAND.md): black text on cream or white only,
+     nav green and magenta as backgrounds, square corners, 2px black borders */
+  :root { --ink: #000; --paper: #fdeac8; --panel: #fff; --nav: #81ff73; --hot: #f273ff; }
 
   * { box-sizing: border-box; }
-  html { font-size: 112.5%; } /* 18px base; everything in rem so browser zoom/text size settings scale it */
   body {
-    margin: 0; background: var(--bg); color: var(--ink);
-    font-family: "Atkinson Hyperlegible", Verdana, Arial, sans-serif; line-height: 1.55;
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: "Atkinson Hyperlegible Mono", "Courier New", monospace; font-size: 17px; line-height: 1.6;
   }
-  main { max-width: 40rem; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
-  h1 { font-size: 1.9rem; line-height: 1.2; margin: 0.5rem 0 0.75rem; color: var(--accent); }
-  h2 { font-size: 1.25rem; margin: 2rem 0 0.5rem; }
-  p { margin: 0 0 1rem; }
-  a { color: var(--accent); text-underline-offset: 3px; }
+  a { color: inherit; text-underline-offset: 3px; }
+  a:hover { background: var(--hot); }
+  :focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
   .skip { position: absolute; left: -999px; }
-  .skip:focus { left: 1rem; top: 1rem; background: var(--surface); padding: 0.5rem 1rem; z-index: 2; }
+  .skip:focus { left: 16px; top: 16px; background: var(--panel); border: 2px solid var(--ink); padding: 8px 16px; z-index: 2; }
 
-  fieldset { border: 2px solid var(--line); border-radius: 12px; margin: 0 0 1.5rem; padding: 1rem 1rem 0.5rem; background: var(--surface); }
-  legend { font-weight: 700; font-size: 1.1rem; padding: 0 0.4rem; }
-  .hint { color: var(--muted); font-size: 0.95rem; margin: 0 0 0.75rem; }
-  .field { margin: 0 0 1.5rem; }
-  label.block { display: block; font-weight: 700; margin-bottom: 0.25rem; }
-  .choice { display: flex; gap: 0.75rem; align-items: flex-start; padding: 0.45rem 0; }
-  .choice input { width: 1.6rem; height: 1.6rem; margin: 0.05rem 0 0; flex: none; accent-color: var(--accent); }
+  header { background: var(--nav); border-bottom: 2px solid var(--ink); }
+  .bar { max-width: 900px; margin: 0 auto; padding: 10px 24px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 24px; }
+  .home { display: inline-flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; text-decoration: none; }
+  .home img { width: 44px; height: 44px; }
+  .bar .back { padding: 8px; }
+  .strip { display: block; width: 100%; height: 10px; image-rendering: pixelated; object-fit: cover; object-position: left; }
+
+  main { max-width: 900px; margin: 0 auto; padding: 40px 24px 64px; }
+  .kicker { font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase; margin: 0 0 12px; }
+  h1 { font-size: clamp(30px, 6vw, 48px); line-height: 1.15; margin: 0 0 24px; max-width: 18ch; }
+  .mark { background: var(--nav); padding: 0 0.15em; }
+  h2 { font-size: 20px; margin: 32px 0 8px; }
+  p { margin: 0 0 16px; max-width: 65ch; }
+  form { max-width: 44rem; }
+  main, footer { overflow-wrap: anywhere; }
+
+  fieldset { border: 2px solid var(--ink); margin: 0 0 24px; padding: 0 16px 8px; background: var(--panel); }
+  legend { font-weight: 700; font-size: 18px; padding: 2px 10px; background: var(--nav); border: 2px solid var(--ink); }
+  .hint { font-size: 15px; margin: 12px 0; }
+  .field { margin: 0 0 24px; }
+  label.block { display: block; font-weight: 700; margin-bottom: 4px; }
+  .choice { display: flex; gap: 12px; align-items: flex-start; padding: 7px 0; }
+  .choice input { width: 26px; height: 26px; margin: 0; flex: none; accent-color: #000; }
   .choice label { flex: 1; }
   textarea, input[type="text"], input[type="email"] {
-    width: 100%; font: inherit; color: var(--ink); background: var(--surface);
-    border: 2px solid var(--line); border-radius: 8px; padding: 0.6rem 0.75rem;
+    width: 100%; font: inherit; color: var(--ink); background: var(--panel);
+    border: 2px solid var(--ink); border-radius: 0; padding: 10px 12px;
   }
   textarea { min-height: 7rem; resize: vertical; }
-  :focus-visible { outline: 4px solid var(--focus); outline-offset: 3px; }
-  .req { font-weight: 400; color: var(--muted); }
+  .req { font-weight: 400; }
 
+  /* buttons: green on black is 16.5:1, black on magenta hover 8.7:1 */
   button {
-    font: inherit; font-weight: 700; font-size: 1.1rem; cursor: pointer;
-    background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 10px;
-    padding: 0.85rem 1.75rem; min-height: 3rem;
+    font: inherit; font-weight: 700; font-size: 18px; cursor: pointer;
+    background: var(--ink); color: var(--nav); border: 2px solid var(--ink); border-radius: 0;
+    padding: 10px 20px; min-height: 48px;
   }
+  button:hover { background: var(--hot); color: var(--ink); }
   button[disabled] { opacity: 0.6; cursor: progress; }
 
-  .error-summary { border: 3px solid var(--error); background: var(--error-bg); border-radius: 10px; padding: 1rem; margin: 0 0 1.5rem; }
-  .error-summary h2 { margin-top: 0; color: var(--error); }
-  .error-text { color: var(--error); font-weight: 700; margin: 0 0 0.5rem; }
-  .status { border: 3px solid var(--accent); border-radius: 10px; padding: 1rem; background: var(--surface); }
+  /* errors: black text on magenta with a symbol, so they never rely on colour */
+  .error-summary { border: 2px solid var(--ink); background: var(--hot); padding: 16px; margin: 0 0 24px; }
+  .error-summary h2 { margin-top: 0; }
+  .error-text { font-weight: 700; margin: 0 0 8px; background: var(--hot); display: inline-block; padding: 0 6px; }
+  .error-text::before { content: "⚠ " / ""; }
+  [hidden] { display: none !important; }
+  .status { border: 2px solid var(--ink); border-left: 12px solid var(--nav); padding: 16px; background: var(--panel); }
   .honeypot { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
-  .privacy { font-size: 0.95rem; color: var(--muted); border-top: 2px solid var(--line); margin-top: 2.5rem; padding-top: 1rem; }
+  footer { border-top: 2px solid var(--ink); background: var(--panel); }
+  footer p { max-width: 900px; margin: 0 auto; padding: 18px 24px; font-size: 14px; }
+  @media (max-width: 480px) { .bar, main, footer p { padding-left: 16px; padding-right: 16px; } }
 </style>
 </head>
 <body>
 <a class="skip" href="#feedback-form">Skip to the form</a>
+<header>
+  <div class="bar">
+    <a class="home" href="../../"><img src="../img/ng-logo.png" alt="">noise guaranteed</a>
+    <a class="back" href="../">slides and script</a>
+  </div>
+</header>
+<img class="strip" src="../img/noise-strip.png" alt="">
 <main>
-  <p><a href="../">Slides and script</a></p>
-  <h1>Who makes music software accessible?<br>Your feedback</h1>
+  <p class="kicker">assets '26 · feedback</p>
+  <h1>Who makes music software accessible? <span class="mark">Your feedback</span></h1>
   <p>Thanks for coming to the talk at ASSETS '26. This form takes about two minutes. <strong>Every question is optional except the one about quoting you.</strong> It works with screen readers and keyboards, and there's no time limit.</p>
   <p>Your answers help us show the impact of this research, for example in a university impact case study.</p>
 
@@ -158,11 +171,13 @@
     <button type="submit" id="submit">Send feedback</button>
   </form>
 
-  <section class="privacy" aria-labelledby="privacy-h">
-    <h2 id="privacy-h">How we use your answers</h2>
-    <p>Alex Lucas at Queen's University Belfast collects these answers to understand and report the impact of this research. Answers are stored in a private spreadsheet that only the research team can see. Contact details are deleted once the follow-up is done, and all responses by the end of 2029. To see, change or delete what you sent, email <a href="mailto:a.lucas@qub.ac.uk">a.lucas@qub.ac.uk</a>.</p>
-  </section>
+  
 </main>
+<footer>
+<section aria-labelledby="privacy-h"><p>
+    <strong id="privacy-h">How we use your answers.</strong> Alex Lucas at Queen's University Belfast collects these answers to understand and report the impact of this research. Answers are stored in a private spreadsheet that only the research team can see. Contact details are deleted once the follow-up is done, and all responses by the end of 2029. To see, change or delete what you sent, email <a href="mailto:a.lucas@qub.ac.uk">a.lucas@qub.ac.uk</a>.</p>
+  </section>
+</footer>
 
 <script>
 (() => {
