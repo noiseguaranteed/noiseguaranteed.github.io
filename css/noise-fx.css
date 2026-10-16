@@ -60,15 +60,23 @@
   outline-offset: -3px;
 }
 
-/* Colour fringe: red/cyan (or the wash's pair) ghosts either side of large headings,
-   like the ring in the video. Use on big text only: at small sizes the ghosts blur
-   the letter shapes. */
-.fringe {
-  text-shadow: -0.05em 0 0 var(--fringe-a), 0.05em 0 0 var(--fringe-b);
+/* Colour fringe: red/cyan (or the wash's pair) ghosts trailing to the right of large
+   headings, like the smear in the video. A 1px outline in the background colour keeps
+   the ghosts off the letters, so the letter edges stay sharp. Set --fringe-gap to the
+   colour behind the heading if it isn't the page cream, e.g. style="--fringe-gap:#fff"
+   on a white panel. Use on big text only. */
+:root { --fringe-gap: #fdeac8; }
+[data-wash] { --fringe-gap: var(--wash-soft); }
+/* Applied to children too, so a highlighted phrase can set its own --fringe-gap. */
+.fringe, .fringe * {
+  text-shadow:
+    1px 0 0 var(--fringe-gap), -1px 0 0 var(--fringe-gap),
+    0 1px 0 var(--fringe-gap), 0 -1px 0 var(--fringe-gap),
+    0.05em 0 0 var(--fringe-a), 0.09em 0 0 var(--fringe-b);
 }
 
 /* People who ask for more contrast get plain text. Forced-colours modes
    (e.g. Windows High Contrast) drop text shadows by themselves. */
 @media (prefers-contrast: more) {
-  .fringe { text-shadow: none; }
+  .fringe, .fringe * { text-shadow: none; }
 }

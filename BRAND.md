@@ -121,7 +121,7 @@ JavaScript API: `NoiseGuaranteed.render(canvas, opts)`, `.image(w, h, opts)` (an
 Accents from the VHS video. Use them as moments, not everywhere.
 
 - **Tape tear on images:** `<img data-tear="hover">` (or `"load"` for once on page load). The real `<img>` stays in the page, so its alt text is kept. Small images like the logo (under 341 × 256 / 4 px² in area, the WCAG 2.3.1 exemption) tear quickly; anything larger is limited to three frames a second. Nothing tears under reduced motion.
-- **Colour fringe:** `class="fringe"` on **large headings only**. It draws red/cyan ghost copies offset either side, or the wash's own pair. It switches off under `prefers-contrast: more` and in Windows High Contrast.
+- **Colour fringe:** `class="fringe"` on **large headings only**. Red and cyan ghosts (or the wash's own pair) trail to the right, kept off the letters by a 1px outline in the background colour, so the letter edges stay sharp. The gap colour is `--fringe-gap`: cream by default, and the card colour automatically on washed pages. **On any other background, set it to match**, e.g. `style="--fringe-gap:#fff"` on a white panel, or `--fringe-gap: var(--nav)` on a green highlight. Otherwise a cream outline shows. It switches off under `prefers-contrast: more` and in Windows High Contrast.
 - **Stripes:** `data-style="stripes"` on a noise canvas, for bands and dividers.
 - **Don't:** run a VHS filter over the whole page, animate continuously, or put effects behind text.
 
