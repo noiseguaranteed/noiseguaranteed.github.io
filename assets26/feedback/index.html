@@ -82,8 +82,8 @@
 <a class="skip" href="#feedback-form">Skip to the form</a>
 <header>
   <div class="bar">
-    <a class="home" href="../../"><img src="../img/ng-logo.png" alt="">noise guaranteed</a>
-    <a class="back" href="../">slides and script</a>
+    <a class="home" href="../../index.html"><img src="../img/ng-logo.png" alt="">noise guaranteed</a>
+    <a class="back" href="../index.html">slides and script</a>
   </div>
 </header>
 <img class="strip" src="../img/noise-strip.png" alt="">
@@ -231,7 +231,7 @@
       await fetch(form.action, { method: 'POST', mode: 'no-cors', body: new URLSearchParams(new FormData(form)) });
       form.hidden = true;
       status.hidden = false;
-      status.innerHTML = '<h2>Thank you!</h2><p>Your feedback has been sent. You can close this page, or go back to the <a href="../">slides and script</a>.</p>';
+      status.innerHTML = '<h2>Thank you!</h2><p>Your feedback has been sent. You can close this page, or go back to the <a href="../index.html">slides and script</a>.</p>';
       status.focus();
     } catch (err) {
       button.disabled = false;
