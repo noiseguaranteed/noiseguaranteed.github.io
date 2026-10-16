@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>noise guaranteed: shop</title>
+<link rel="stylesheet" href="css/noise-fx.css">
+<style>
+  :root {
+    --ink: #000;
+    --paper: #fdeac8;   /* the site's cream */
+    --panel: #fff;
+    --nav: #81ff73;     /* the site's nav green */
+    --hot: #f273ff;     /* the site's hover magenta */
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Courier New', Courier, monospace;
+    background: var(--paper); color: var(--ink);
+    font-size: 15px; line-height: 1.6;
+  }
+  a { color: inherit; }
+  h1, h2, h3 { line-height: 1.2; }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+  section { padding: 56px 0; }
+  .visually-hidden {
+    position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+  }
+  canvas.noise { display: block; width: 100%; height: 16px; }
+
+  /* header: logo and name on the left, links on the right, all on the nav green */
+  header { background: var(--nav); border-bottom: 2px solid var(--ink); }
+  .nav {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+    gap: 8px 24px; max-width: 900px; margin: 0 auto; padding: 10px 24px;
+  }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: bold; font-size: 18px; text-decoration: none; }
+  .logo img { width: 44px; height: 44px; }
+  .nav-links { display: flex; flex-wrap: wrap; gap: 4px 6px; list-style: none; }
+  .nav-links a { display: block; padding: 8px 8px; text-decoration: none; }
+  .nav-links a:hover { background: var(--hot); }
+  .nav-links a:focus-visible { outline: 3px solid var(--ink); outline-offset: -3px; }
+  .nav-links a[aria-current="page"] { font-weight: bold; text-decoration: underline; }
+
+  /* hero */
+  .hero { padding: 48px 0; }
+  .draft { border: 2px dashed var(--ink); background: var(--panel); padding: 8px 12px; margin-bottom: 28px; }
+  .kicker { font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 16px; }
+  h1 { font-size: clamp(34px, 6vw, 56px); max-width: 16ch; }
+  h1 .mark { background: var(--nav); padding: 0 0.15em; }
+  .band { margin-top: 32px; border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink); background: var(--panel); }
+  .band canvas.noise { height: 120px; }
+  .lede { margin-top: 24px; max-width: 56ch; font-size: 17px; }
+
+  /* numbered section headings with a dotted rule, like a lab sheet */
+  .sec-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 8px; }
+  .sec-head .num { font-size: 13px; }
+  .sec-head h2 { font-size: 26px; }
+  .sec-head .rule { flex: 1; border-bottom: 2px dotted var(--ink); transform: translateY(-6px); }
+  .sec-sub { max-width: 60ch; margin-bottom: 28px; }
+
+  /* product cards */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(250px, 100%), 1fr)); gap: 18px; }
+  .card { background: var(--panel); border: 2px solid var(--ink); display: flex; flex-direction: column; }
+  .card .pic { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-bottom: 2px solid var(--ink); }
+  .card .art { position: relative; aspect-ratio: 4 / 3; border-bottom: 2px solid var(--ink); }
+  .card .art canvas.noise { position: absolute; inset: 0; height: 100%; }
+  .card .art span { position: absolute; left: 8px; bottom: 8px; background: var(--panel); border: 2px solid var(--ink); padding: 0 6px; font-weight: bold; }
+  .card .body { padding: 14px; display: flex; flex-direction: column; flex: 1; gap: 6px; }
+  .card h3 { font-size: 17px; }
+  .price { font-size: 20px; font-weight: bold; }
+  .stock::before { content: "● " / ""; }
+  .stock.low::before { content: "◐ " / ""; }
+  .stock.soon::before { content: "○ " / ""; }
+  .card .actions { margin-top: auto; padding-top: 8px; display: flex; flex-wrap: wrap; gap: 8px; }
+
+  /* buttons: green on black is 16.5:1, black on magenta hover is 8.7:1 */
+  .buy {
+    display: inline-block; background: var(--ink); color: var(--nav); text-decoration: none;
+    padding: 10px 16px; font-weight: bold; border: 2px solid var(--ink); min-height: 44px;
+  }
+  .buy:hover { background: var(--hot); color: var(--ink); }
+  .buy:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+
+  /* dated cards for workshops and markets */
+  .event { background: var(--panel); border: 2px solid var(--ink); }
+  .event .when { border-bottom: 2px solid var(--ink); padding: 8px 14px; font-size: 13px; display: flex; justify-content: space-between; gap: 10px; background: var(--nav); }
+  .event .body { padding: 14px; display: flex; flex-direction: column; gap: 6px; }
+  .event h3 { font-size: 16px; }
+  .tag { display: inline-block; align-self: flex-start; font-size: 13px; border: 2px solid var(--ink); padding: 0 8px; margin-top: 4px; }
+
+  /* how buying works: stages left to right, stacking on phones */
+  .panel-section { background: var(--panel); border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink); }
+  .process { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink); list-style: none; }
+  .stage { padding: 20px 14px; border-right: 2px dotted var(--ink); position: relative; }
+  .stage:last-child { border-right: none; }
+  .stage .n { font-size: 13px; }
+  .stage h3 { font-size: 16px; margin: 4px 0; }
+  .stage::after { content: "→" / ""; position: absolute; right: -9px; top: 20px; background: var(--panel); z-index: 1; }
+  .stage:last-child::after { content: none; }
+  @media (max-width: 760px) {
+    .process { grid-template-columns: 1fr; }
+    .stage { border-right: none; border-bottom: 2px dotted var(--ink); }
+    .stage:last-child { border-bottom: none; }
+    .stage::after { content: "↓" / ""; right: 14px; top: auto; bottom: 8px; }
+  }
+
+  dt { font-weight: bold; margin-top: 16px; }
+  dd { max-width: 65ch; }
+
+  footer { border-top: 2px solid var(--ink); background: var(--panel); }
+  .stats { display: flex; flex-wrap: wrap; gap: 8px 28px; max-width: 900px; margin: 0 auto; padding: 18px 24px; font-size: 13px; }
+  .foot { max-width: 900px; margin: 0 auto; padding: 0 24px 24px; font-size: 14px; }
+
+  @media (max-width: 480px) {
+    .wrap, .nav, .stats, .foot { padding-left: 16px; padding-right: 16px; }
+    section { padding: 40px 0; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav" aria-label="main">
+    <a class="logo" href="index.html">
+      <img src="images/ng_logo_trans_bkg_sml.png" alt="" data-tear="hover">
+      noise guaranteed
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">home</a></li>
+      <li><a href="workshops.html">workshops</a></li>
+      <li><a href="bookbuild.html">book & build</a></li>
+      <li><a href="people.html">people</a></li>
+      <li><a href="shop-v2.html" aria-current="page">shop</a></li>
+      <li><a href="https://github.com/noiseguaranteed">github</a></li>
+    </ul>
+  </nav>
+</header>
+<canvas class="noise" aria-hidden="true" data-seed="shop" data-cell="5" data-density="0.6"></canvas>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <p class="draft"><b>Draft page.</b> The products, prices, stock levels, dates and buy links below are placeholders. No checkout is connected yet.</p>
+      <p class="kicker">Shop · kits, vouchers &amp; workshop places · Belfast</p>
+      <h1 class="fringe">Make some noise. <span class="mark">We'll bring the parts.</span></h1>
+      <div class="band">
+        <canvas class="noise" aria-hidden="true" data-seed="band" data-style="stripes" data-cell="3" data-density="0.85" data-drift="3"></canvas>
+      </div>
+      <p class="lede">Kits to build your own noisy instruments, gift vouchers, and places on our workshops. Payment goes through SumUp's secure checkout, so we never see your card details. You can also find us at markets, where we take cards, contactless and cash.</p>
+    </div>
+  </section>
+
+  <section id="kits" aria-labelledby="kits-h">
+    <div class="wrap">
+      <div class="sec-head"><span class="num">01</span><h2 id="kits-h">kits</h2><span class="rule"></span></div>
+      <p class="sec-sub">Everything comes with printed instructions, and the designs are open: schematics and code are on our GitHub.</p>
+      <div class="grid">
+        <article class="card" aria-labelledby="p1-name">
+          <img class="pic" src="images/hs_dithered.png" alt="A squeal and scrape instrument held in two hands: a small speaker, a battery and a circuit board">
+          <div class="body">
+            <h3 id="p1-name">squeal & scrape kit</h3>
+            <p>Board, parts, speaker and instructions. No soldering experience needed.</p>
+            <p class="price">£20</p>
+            <p class="stock">In stock</p>
+            <div class="actions">
+              <a class="buy" href="#sumup-placeholder">buy<span class="visually-hidden"> the squeal & scrape kit</span> · £20<span class="visually-hidden"> (opens SumUp checkout)</span> ↗</a>
+            </div>
+          </div>
+        </article>
+        <article class="card" aria-labelledby="p2-name">
+          <div class="art">
+            <canvas class="noise" aria-hidden="true" data-seed="shoestring" data-cell="8" data-density="0.55"></canvas>
+            <span>photo to come</span>
+          </div>
+          <div class="body">
+            <h3 id="p2-name">shoestring synth board</h3>
+            <p>The 40106 oscillator from our Shoestring Synthesis workshop as a bare board, for people who'd like to source their own parts.</p>
+            <p class="price">£8</p>
+            <p class="stock low">Only 3 left</p>
+            <div class="actions">
+              <a class="buy" href="#sumup-placeholder">buy<span class="visually-hidden"> the shoestring synth board</span> · £8<span class="visually-hidden"> (opens SumUp checkout)</span> ↗</a>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="vouchers" aria-labelledby="vouchers-h">
+    <div class="wrap">
+      <div class="sec-head"><span class="num">02</span><h2 id="vouchers-h">gift vouchers</h2><span class="rule"></span></div>
+      <p class="sec-sub">For kits or paid workshops. Sent by email and valid for 12 months.</p>
+      <div class="grid">
+        <article class="card" aria-labelledby="v-name">
+          <div class="art">
+            <canvas class="noise" aria-hidden="true" data-seed="voucher" data-cell="6" data-density="0.7" data-fade="edges"></canvas>
+            <span>gift voucher</span>
+          </div>
+          <div class="body">
+            <h3 id="v-name">noise guaranteed gift voucher</h3>
+            <p>Choose an amount:</p>
+            <div class="actions">
+              <a class="buy" href="#sumup-placeholder">£10<span class="visually-hidden"> gift voucher (opens SumUp checkout)</span> ↗</a>
+              <a class="buy" href="#sumup-placeholder">£25<span class="visually-hidden"> gift voucher (opens SumUp checkout)</span> ↗</a>
+              <a class="buy" href="#sumup-placeholder">£50<span class="visually-hidden"> gift voucher (opens SumUp checkout)</span> ↗</a>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="workshops" aria-labelledby="workshops-h">
+    <div class="wrap">
+      <div class="sec-head"><span class="num">03</span><h2 id="workshops-h">workshop places</h2><span class="rule"></span></div>
+      <p class="sec-sub">When you book, we'll ask whether there's anything we can do to make the workshop accessible for you.</p>
+      <div class="grid">
+        <article class="event" aria-labelledby="w1-name">
+          <p class="when"><span>4 hours</span><span>Cityside Mall, Belfast</span></p>
+          <div class="body">
+            <h3 id="w1-name">Shoestring Synthesis</h3>
+            <p>Build a cheap and dirty oscillator with handmade wonky sensors. No experience in electronics or music needed.</p>
+            <p class="stock soon">Booking opens soon</p>
+            <span class="tag">FREE</span>
+            <p><a href="workshops.html">more about this workshop</a></p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="markets" aria-labelledby="markets-h">
+    <div class="wrap">
+      <div class="sec-head"><span class="num">04</span><h2 id="markets-h">find us at markets</h2><span class="rule"></span></div>
+      <p class="sec-sub">Come and try the instruments before you buy.</p>
+      <div class="grid">
+        <article class="event">
+          <p class="when"><span>SAT 7 NOV</span><span>Belfast</span></p>
+          <div class="body">
+            <h3>Market name (placeholder)</h3>
+            <p>Kits, vouchers and instruments to try.</p>
+            <span class="tag">CARD · CONTACTLESS · CASH</span>
+          </div>
+        </article>
+        <article class="event">
+          <p class="when"><span>SAT 5 DEC</span><span>Belfast</span></p>
+          <div class="body">
+            <h3>Market name (placeholder)</h3>
+            <p>Kits, vouchers and instruments to try.</p>
+            <span class="tag">CARD · CONTACTLESS · CASH</span>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="how" class="panel-section" aria-labelledby="how-h">
+    <div class="wrap">
+      <div class="sec-head"><span class="num">05</span><h2 id="how-h">how buying works</h2><span class="rule"></span></div>
+      <p class="sec-sub">From clicking buy to making noise.</p>
+      <ol class="process">
+        <li class="stage"><span class="n">STEP 1</span><h3>Choose</h3><p>Pick a kit, voucher or workshop place.</p></li>
+        <li class="stage"><span class="n">STEP 2</span><h3>Pay</h3><p>SumUp's secure checkout. Card, Apple Pay or Google Pay.</p></li>
+        <li class="stage"><span class="n">STEP 3</span><h3>Receive</h3><p>Kits posted within 5 working days. Vouchers and tickets come by email.</p></li>
+        <li class="stage"><span class="n">STEP 4</span><h3>Make noise</h3><p>Stuck? Email us or come to a workshop and we'll help.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="questions" aria-labelledby="questions-h">
+    <div class="wrap">
+      <div class="sec-head"><span class="num">06</span><h2 id="questions-h">questions</h2><span class="rule"></span></div>
+      <dl>
+        <dt>Where do you post to?</dt>
+        <dd>The UK and Ireland. (placeholder)</dd>
+        <dt>Can I return something?</dt>
+        <dd>You can return unused kits within 14 days of delivery for a full refund. Workshop places are for a set date, so they aren't covered by the 14-day rule, but we'll refund you if you tell us at least 7 days before. (placeholder: check against your own policy)</dd>
+        <dt>Something on this page or the checkout is hard to use</dt>
+        <dd>Please tell us at <a href="mailto:hello@example.com">hello@example.com</a> (placeholder) and we'll sort out your order directly.</dd>
+      </dl>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <canvas class="noise" aria-hidden="true" data-seed="footer" data-palette="soft" data-fade="ends" data-cell="4" data-density="0.8"></canvas>
+  <p class="stats">
+    <span>OPEN, REPAIRABLE DESIGNS</span>
+    <span>TRACKERS ON THIS SITE: <b>0</b></span>
+    <span>PAYMENTS: <b>SumUp</b></span>
+  </p>
+  <p class="foot"><b>noise guaranteed</b> · a noise-positive organisation · Belfast · 2025</p>
+</footer>
+
+<script src="js/noise.js"></script>
+</body>
+</html>

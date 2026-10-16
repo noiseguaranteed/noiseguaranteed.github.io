@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>noise guaranteed: noise lab</title>
+<link rel="stylesheet" href="css/noise.css">
+<link rel="stylesheet" href="css/noise-fx.css">
+<style>
+  canvas.noise { display: block; width: 100%; height: 16px; }
+  .strip-tall { height: 48px !important; }
+  .seeds { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+  .seeds figure { margin: 0; }
+  .seeds canvas.noise { height: 80px; background: white; }
+  .favicons { display: flex; gap: 20px; align-items: end; flex-wrap: wrap; }
+  .favicons canvas { image-rendering: pixelated; }
+  .controls { display: flex; flex-wrap: wrap; gap: 10px 20px; margin: 10px 0; }
+  .controls label { display: flex; flex-direction: column; }
+  .controls input, .controls select, .controls button { font: inherit; }
+  #lab { display: block; width: 100%; height: 200px; background: white; }
+  code { background: #fff6e6; padding: 0 3px; }
+  .header a { display: inline-block; }
+  .photo { display: block; width: 50%; margin: 0 auto; }
+  .photo img { width: 100%; display: block; }
+  .fringe-sample { font-size: 40px; margin: 10px 0; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="index.html"><img src="images/ng_logo_trans_bkg_sml.png" alt="noise guaranteed home" data-tear="hover"></a>
+</div>
+<canvas class="noise" aria-hidden="true" data-seed="noise guaranteed" data-cell="5" data-density="0.6" data-palette="wash"></canvas>
+
+<div class="topnav">
+  <a href="index.html">home</a>
+  <a href="workshops.html">workshops</a>
+  <a href="bookbuild.html">book & build</a>
+  <a href="people.html">people</a>
+  <a href="https://github.com/noiseguaranteed" style="float:right">github</a>
+</div>
+
+<div class="row">
+  <div class="leftcolumn">
+
+    <div class="card">
+      <h1 class="fringe">noise lab</h1>
+      <p>Test page for <code>js/noise.js</code>. Every noise strip is drawn by the script from a seed, so the same seed always gives the same pattern. The strip under the logo uses the seed <code>"noise guaranteed"</code> and the page's wash colours, or the logo's six colours when there's no wash.</p>
+    </div>
+
+    <div class="card">
+      <h2>washes</h2>
+      <p>Each page can take one tint from the combo 1 video by setting <code>data-wash</code> on its <code>&lt;html&gt;</code> tag. The wash colours the nav bar, cards, footer, any noise using the <code>wash</code> palette, and the colour fringes. Black text on every wash colour has a contrast of at least 8.5:1, above the 7:1 WCAG AAA level.</p>
+      <div class="controls">
+        <label>wash for this page
+          <select id="wash">
+            <option value="">none (current site)</option>
+            <option>green</option><option>teal</option><option>sage</option>
+            <option>ochre</option><option>rose</option><option>grey</option>
+          </select>
+        </label>
+      </div>
+      <canvas class="noise strip-tall" aria-hidden="true" data-seed="wash" data-palette="wash" data-cell="6" data-density="0.6"></canvas>
+    </div>
+
+    <div class="card">
+      <h2>tape effects</h2>
+      <h3>tearing</h3>
+      <p>Hover over the logo at the top, or tab to it with the keyboard, and it tears like a tape catching. It runs for under half a second. The logo is small enough to fall under the WCAG 2.3.1 size limit for flashes, so it can run quickly. Bigger images, like this photo, are slowed to three frames a second. Hover over it to compare:</p>
+      <div class="photo"><img src="images/holdsynth.jpeg" alt="a person holding a squeal and scrape instrument" data-tear="hover"></div>
+      <p>The real image always stays in the page, so screen readers still get its alt text. If your system asks for reduced motion, nothing tears.</p>
+
+      <h3>colour fringe</h3>
+      <p>Add <code>class="fringe"</code> to a large heading for the offset ghosts from the video, in the wash's colour pair. It's only for big text, since at small sizes the ghosts blur the letters. It turns off for people whose system asks for more contrast.</p>
+      <p class="fringe fringe-sample" aria-hidden="true">noise guaranteed</p>
+
+      <h3>tape stripes</h3>
+      <p><code>data-style="stripes"</code> draws vertical stripes that creep along like dot crawl, with the occasional torn line:</p>
+      <canvas class="noise strip-tall" aria-hidden="true" data-seed="stripes" data-style="stripes" data-palette="wash" data-cell="3" data-density="0.9"></canvas>
+      <p>With slow drift, where a few lines slip each tick:</p>
+      <canvas class="noise strip-tall" aria-hidden="true" data-seed="stripes 2" data-style="stripes" data-palette="wash" data-cell="3" data-density="0.85" data-drift="3"></canvas>
+      <p>As a divider, fading at both ends:</p>
+      <canvas class="noise" aria-hidden="true" data-seed="stripe divider" data-style="stripes" data-palette="wash" data-cell="2" data-density="0.9" data-fade="ends"></canvas>
+    </div>
+
+    <div class="card">
+      <h2>dividers</h2>
+      <p>Fading at both ends, in the softer nav colours:</p>
+      <canvas class="noise" aria-hidden="true" data-seed="divider" data-palette="soft" data-fade="ends" data-density="0.8" data-cell="4"></canvas>
+      <p>Fading to the right, in black only:</p>
+      <canvas class="noise" aria-hidden="true" data-seed="3" data-palette="mono" data-fade="right" data-density="0.7" data-cell="3"></canvas>
+      <p>A taller band with a new random seed on every load:</p>
+      <canvas class="noise strip-tall" aria-hidden="true" data-seed="random" data-cell="8" data-density="0.45"></canvas>
+    </div>
+
+    <div class="card">
+      <h2>slow drift</h2>
+      <p>A few blocks change twice a second. That's below the three-flashes-a-second limit in WCAG 2.3.1, and the strip stays still if your system asks for reduced motion.</p>
+      <canvas class="noise strip-tall" aria-hidden="true" data-seed="drift" data-cell="8" data-density="0.5" data-drift="6"></canvas>
+    </div>
+
+    <div class="card">
+      <h2>seeds</h2>
+      <p>Same settings, different seeds:</p>
+      <div class="seeds">
+        <figure><canvas class="noise" aria-hidden="true" data-seed="1"></canvas><figcaption>seed 1</figcaption></figure>
+        <figure><canvas class="noise" aria-hidden="true" data-seed="2"></canvas><figcaption>seed 2</figcaption></figure>
+        <figure><canvas class="noise" aria-hidden="true" data-seed="belfast"></canvas><figcaption>seed "belfast"</figcaption></figure>
+        <figure><canvas class="noise" aria-hidden="true" data-seed="squeal"></canvas><figcaption>seed "squeal"</figcaption></figure>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>favicon</h2>
+      <p>The tab icon on this page is drawn by the script: noise inside a black ring, like the logo. Shown here at real size and enlarged:</p>
+      <div class="favicons" id="favicons"></div>
+    </div>
+
+    <div class="card">
+      <h2>playground</h2>
+      <div class="controls">
+        <label>seed <input id="seed" value="noise guaranteed"></label>
+        <label>block size (px) <input id="cell" type="number" min="1" max="40" value="6"></label>
+        <label>density <input id="density" type="range" min="0" max="1" step="0.05" value="0.5"></label>
+        <label>palette
+          <select id="palette"><option>logo</option><option>soft</option><option>mono</option><option>wash</option></select>
+        </label>
+        <label>style
+          <select id="style"><option>blocks</option><option>stripes</option></select>
+        </label>
+        <label>fade
+          <select id="fade"><option>none</option><option>left</option><option>right</option><option>ends</option><option>edges</option></select>
+        </label>
+      </div>
+      <canvas id="lab" aria-hidden="true"></canvas>
+      <div class="controls">
+        <button id="shuffle" type="button">random seed</button>
+        <button id="save" type="button">save 1200×630 PNG (social preview size)</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="footer">
+  <small>noise guaranteed 2025</small>
+</div>
+
+<script src="js/noise.js"></script>
+<script>
+  var big = document.createElement('canvas');
+  big.width = big.height = 128;
+  function drawFavicon() {
+    var fav = NoiseGuaranteed.favicon({ seed: 'noise guaranteed', palette: 'wash' });
+    var ctx = big.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+    ctx.clearRect(0, 0, 128, 128);
+    ctx.drawImage(fav, 0, 0, 128, 128);
+    document.getElementById('favicons').replaceChildren(fav, big);
+  }
+  drawFavicon();
+
+  document.getElementById('wash').addEventListener('change', function () {
+    if (this.value) document.documentElement.dataset.wash = this.value;
+    else delete document.documentElement.dataset.wash;
+    NoiseGuaranteed.refresh();
+    drawFavicon();
+    update();
+  });
+
+  var lab = document.getElementById('lab');
+  var fields = ['seed', 'cell', 'density', 'palette', 'fade', 'style'];
+  function labOpts() {
+    var o = {};
+    fields.forEach(function (f) { o[f] = document.getElementById(f).value; });
+    return o;
+  }
+  function update() { NoiseGuaranteed.render(lab, labOpts()); }
+  fields.forEach(function (f) { document.getElementById(f).addEventListener('input', update); });
+  document.getElementById('shuffle').addEventListener('click', function () {
+    document.getElementById('seed').value = Math.floor(Math.random() * 100000);
+    update();
+  });
+  document.getElementById('save').addEventListener('click', function () {
+    var a = document.createElement('a');
+    a.download = 'noise-' + document.getElementById('seed').value + '.png';
+    a.href = NoiseGuaranteed.image(1200, 630, Object.assign(labOpts(), { bg: '#ffffff' })).toDataURL('image/png');
+    a.click();
+  });
+  new ResizeObserver(update).observe(lab);
+
+  // ?wash=teal previews a wash straight away.
+  var startWash = new URLSearchParams(location.search).get('wash');
+  if (startWash) {
+    var washSelect = document.getElementById('wash');
+    washSelect.value = startWash;
+    washSelect.dispatchEvent(new Event('change'));
+  }
+</script>
+</body>
+</html>

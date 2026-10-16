@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>noise guaranteed: graphics style</title>
+<link rel="stylesheet" href="css/noise-fx.css">
+<style>
+  :root { --ink: #000; --paper: #fdeac8; --panel: #fff; --nav: #81ff73; --hot: #f273ff; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Courier New', Courier, monospace; background: var(--paper); color: var(--ink); font-size: 15px; line-height: 1.6; }
+  a { color: inherit; }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+  header { background: var(--nav); border-bottom: 2px solid var(--ink); }
+  header .wrap { display: flex; align-items: center; padding-top: 10px; padding-bottom: 10px; }
+  header a { display: flex; align-items: center; gap: 10px; font-weight: bold; font-size: 18px; text-decoration: none; }
+  header img { width: 44px; height: 44px; }
+  canvas.noise { display: block; width: 100%; height: 16px; }
+  section { padding: 48px 0; }
+  h1 { font-size: clamp(30px, 5vw, 46px); line-height: 1.2; margin-bottom: 12px; }
+  h3 { font-size: 16px; margin-bottom: 4px; }
+  p { max-width: 65ch; margin-bottom: 10px; }
+  .sec-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 8px; }
+  .sec-head .num { font-size: 13px; }
+  .sec-head h2 { font-size: 24px; }
+  .sec-head .rule { flex: 1; border-bottom: 2px dotted var(--ink); transform: translateY(-6px); }
+
+  .panel { background: var(--panel); border: 2px solid var(--ink); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr)); gap: 16px; margin-top: 16px; }
+  figure { background: var(--panel); border: 2px solid var(--ink); }
+  figure > img, figure > canvas { display: block; width: 100%; height: auto; border-bottom: 2px solid var(--ink); }
+  .dithered canvas { image-rendering: pixelated; }
+  figcaption { padding: 8px 10px; font-size: 13px; }
+  .note { border: 2px dashed var(--ink); background: var(--panel); padding: 8px 12px; margin-top: 12px; }
+
+  .drawing { margin-top: 16px; padding: 12px; }
+  .drawing svg { display: block; width: 100%; height: auto; }
+  .parts figure svg { display: block; width: 100%; height: auto; border-bottom: 2px solid var(--ink); }
+
+  .sprites { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 20px; padding: 16px; margin-top: 16px; }
+  .sprites figure { border: none; background: none; text-align: center; }
+  .sprites figure > canvas { display: block; width: auto; border-bottom: none; margin: 0 auto 4px; image-rendering: pixelated; }
+
+  .btn { display: inline-block; background: var(--ink); color: var(--nav); border: 2px solid var(--ink); padding: 10px 16px; font: inherit; font-weight: bold; cursor: pointer; min-height: 44px; text-decoration: none; margin-top: 12px; }
+  .btn:hover { background: var(--hot); color: var(--ink); }
+  .btn:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+
+  table { border-collapse: collapse; width: 100%; background: var(--panel); margin-top: 16px; }
+  th, td { border: 2px solid var(--ink); padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--nav); }
+  ul.rules { margin: 12px 0 0 20px; max-width: 65ch; }
+  ul.rules li { margin-bottom: 6px; }
+  @media (max-width: 480px) { .wrap { padding: 0 16px; } section { padding: 36px 0; } }
+</style>
+</head>
+<body>
+
+<!-- The shared noise fill for drawings: a pattern of pixel noise from js/noise.js.
+     Without JavaScript the fills fall back to plain magenta. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <pattern id="ngfill" patternUnits="userSpaceOnUse" width="144" height="144">
+      <rect width="144" height="144" fill="#fff"/>
+      <image id="ngfill-img" width="144" height="144" style="image-rendering:pixelated"/>
+    </pattern>
+  </defs>
+</svg>
+
+<header>
+  <div class="wrap">
+    <a href="index.html"><img src="images/ng_logo_trans_bkg_sml.png" alt="">noise guaranteed</a>
+  </div>
+</header>
+<canvas class="noise" aria-hidden="true" data-seed="graphics" data-cell="5" data-density="0.6"></canvas>
+
+<main>
+  <section>
+    <div class="wrap">
+      <h1 class="fringe">graphics style</h1>
+      <p>One style for each kind of picture. They share the logo's grammar: a crisp black line, filled with pixel noise. This page shows each one, so we can see them side by side before we commit.</p>
+    </div>
+  </section>
+
+  <section aria-labelledby="photos-h">
+    <div class="wrap">
+      <div class="sec-head"><span class="num">01</span><h2 id="photos-h">photos: dithered</h2><span class="rule"></span></div>
+      <p>Photos get dithered into two or a few brand colours. It makes photos from different phones and people look like a set. These are made live from the original by <code>js/dither.js</code>; use the <a href="tools/dither.html">dither tool</a> to convert your own.</p>
+      <div class="grid dithered" id="dithers">
+        <figure>
+          <img id="photo" src="images/holdsynth.jpeg" alt="A person holding a squeal and scrape instrument: a speaker, a battery and a small circuit board">
+          <figcaption>original photo</figcaption>
+        </figure>
+      </div>
+      <p class="note" id="dither-note" hidden>Your browser blocks reading image pixels on pages opened straight from a file. View this page through a local web server or on GitHub Pages to see the dithered versions.</p>
+    </div>
+  </section>
+
+  <section aria-labelledby="line-h">
+    <div class="wrap">
+      <div class="sec-head"><span class="num">02</span><h2 id="line-h">synths and diagrams: line + noise</h2><span class="rule"></span></div>
+      <p>Clean black lines, all the same weight, with noise filling one or two parts, like the tick inside the logo's ring. Labels are real text in Courier, never drawn into the picture. Quick to make in Inkscape: download the drawing below and open it.</p>
+
+      <div class="panel drawing">
+        <svg id="synth" viewBox="0 0 760 380" role="img" aria-labelledby="synth-t synth-d">
+          <title id="synth-t">A shoestring synth, seen from above</title>
+          <desc id="synth-d">A box with a large speaker on the left, two knobs labelled pitch and rate, a light sensor, a power switch, and an output socket on the right-hand edge. The speaker cone and the light sensor are filled with pixel noise.</desc>
+          <g fill="none" stroke="#000" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+            <!-- box -->
+            <rect x="140" y="50" width="420" height="270" rx="18" fill="#fff" stroke-width="6"/>
+            <!-- speaker -->
+            <circle cx="270" cy="185" r="85" fill="#fff"/>
+            <circle cx="270" cy="185" r="66" fill="url(#ngfill) #f273ff" stroke-width="4"/>
+            <circle cx="270" cy="185" r="16" fill="#fff" stroke-width="4"/>
+            <!-- knobs -->
+            <circle cx="410" cy="110" r="26" fill="#fff"/>
+            <line x1="410" y1="110" x2="396" y2="91"/>
+            <circle cx="500" cy="110" r="26" fill="#fff"/>
+            <line x1="500" y1="110" x2="518" y2="93"/>
+            <!-- light sensor -->
+            <circle cx="500" cy="205" r="22" fill="url(#ngfill) #f273ff" stroke-width="4"/>
+            <path d="M486 196 H514 V205 H486 V214 H514" stroke="#fff" stroke-width="4"/>
+            <!-- power switch -->
+            <rect x="392" y="260" width="36" height="20" rx="4" fill="#fff" stroke-width="4"/>
+            <line x1="404" y1="270" x2="396" y2="250" stroke-width="4"/>
+            <!-- output socket -->
+            <rect x="548" y="250" width="26" height="40" rx="3" fill="#fff" stroke-width="4"/>
+            <circle cx="561" cy="270" r="6" fill="#000" stroke="none"/>
+            <!-- leader lines -->
+            <g stroke-width="2">
+              <polyline points="410,84 410,32 598,32"/>
+              <line x1="526" y1="110" x2="598" y2="110"/>
+              <line x1="522" y1="205" x2="598" y2="205"/>
+              <line x1="574" y1="270" x2="598" y2="270"/>
+              <polyline points="410,280 410,352 598,352"/>
+              <line x1="185" y1="185" x2="112" y2="185"/>
+            </g>
+          </g>
+          <g font-family="'Courier New', Courier, monospace" font-size="20" font-weight="bold" fill="#000">
+            <text x="606" y="38">pitch</text>
+            <text x="606" y="116">rate</text>
+            <text x="606" y="211">light sensor</text>
+            <text x="606" y="276">out</text>
+            <text x="606" y="358">power</text>
+            <text x="104" y="191" text-anchor="end">speaker</text>
+          </g>
+        </svg>
+      </div>
+      <button class="btn" id="svg-download" type="button">download drawing as SVG (for Inkscape)</button>
+
+      <h3 style="margin-top:28px">components</h3>
+      <p>The same rules at small sizes. Noise goes on the part's body, never behind its label.</p>
+      <div class="grid parts">
+        <figure>
+          <svg viewBox="0 0 160 125" role="img" aria-label="40106 chip: a 14-pin chip with seven legs on each side and a notch at one end">
+            <g stroke="#000" stroke-width="4" stroke-linejoin="round" fill="#fff">
+              <g id="pins-top"></g>
+              <path d="M30 37 H130 V87 H30 V71 A9 9 0 0 0 30 53 Z" fill="url(#ngfill) #f273ff"/>
+              <circle cx="42" cy="77" r="4" stroke-width="2"/>
+            </g>
+          </svg>
+          <figcaption>40106 hex inverter</figcaption>
+        </figure>
+        <figure>
+          <svg viewBox="0 0 160 125" role="img" aria-label="Resistor: a rounded body with a lead out of each end">
+            <g stroke="#000" stroke-width="4" stroke-linecap="round" fill="none">
+              <line x1="10" y1="62" x2="150" y2="62"/>
+              <rect x="45" y="47" width="70" height="30" rx="12" fill="url(#ngfill) #f273ff"/>
+            </g>
+          </svg>
+          <figcaption>resistor</figcaption>
+        </figure>
+        <figure>
+          <svg viewBox="0 0 160 125" role="img" aria-label="Ceramic capacitor: a round disc on two legs">
+            <g stroke="#000" stroke-width="4" stroke-linecap="round" fill="none">
+              <line x1="68" y1="70" x2="68" y2="112"/>
+              <line x1="92" y1="70" x2="92" y2="112"/>
+              <ellipse cx="80" cy="48" rx="34" ry="30" fill="url(#ngfill) #f273ff"/>
+            </g>
+          </svg>
+          <figcaption>ceramic capacitor</figcaption>
+        </figure>
+        <figure>
+          <svg viewBox="0 0 160 125" role="img" aria-label="Potentiometer: a round body with a central shaft and three legs">
+            <g stroke="#000" stroke-width="4" stroke-linecap="round" fill="none">
+              <line x1="62" y1="88" x2="62" y2="114"/>
+              <line x1="80" y1="88" x2="80" y2="114"/>
+              <line x1="98" y1="88" x2="98" y2="114"/>
+              <circle cx="80" cy="54" r="34" fill="#fff"/>
+              <circle cx="80" cy="54" r="15" fill="url(#ngfill) #f273ff"/>
+            </g>
+          </svg>
+          <figcaption>potentiometer</figcaption>
+        </figure>
+        <figure>
+          <svg viewBox="0 0 160 125" role="img" aria-label="Light-dependent resistor: a round sensor with a zigzag track, on two legs">
+            <g stroke="#000" stroke-width="4" stroke-linecap="round" fill="none">
+              <line x1="70" y1="80" x2="70" y2="114"/>
+              <line x1="90" y1="80" x2="90" y2="114"/>
+              <circle cx="80" cy="48" r="32" fill="url(#ngfill) #f273ff"/>
+              <path d="M60 34 H100 V44 H60 V54 H100 V64 H60" stroke="#fff" stroke-width="5"/>
+            </g>
+          </svg>
+          <figcaption>light sensor (LDR)</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="pixel-h">
+    <div class="wrap">
+      <div class="sec-head"><span class="num">03</span><h2 id="pixel-h">icons: pixel art</h2><span class="rule"></span></div>
+      <p>Proper pixel art only for small things: icons, the favicon, stickers. At these sizes it reads well. These two are 16 × 16, shown at real size and enlarged.</p>
+      <div class="panel sprites" id="sprites"></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="guide-h">
+    <div class="wrap">
+      <div class="sec-head"><span class="num">04</span><h2 id="guide-h">which style, when</h2><span class="rule"></span></div>
+      <table>
+        <thead><tr><th scope="col">Picture</th><th scope="col">Style</th><th scope="col">Tools</th></tr></thead>
+        <tbody>
+          <tr><td>Photos</td><td>Dithered, black + magenta or black + green</td><td>The <a href="tools/dither.html">dither tool</a></td></tr>
+          <tr><td>Synths, diagrams, components</td><td>Black line + noise fill in one or two parts</td><td>Inkscape; trace KiCad or FreeCAD exports for accuracy</td></tr>
+          <tr><td>Icons, favicon, stickers</td><td>Pixel art, 16 × 16 or 32 × 32, logo colours</td><td>Pixelorama (free), Aseprite</td></tr>
+          <tr><td>Zines, handouts</td><td>Hand-drawn, scanned, then dithered</td><td>Pen and paper, then the dither tool</td></tr>
+        </tbody>
+      </table>
+      <ul class="rules">
+        <li>Every label and value is real text, not drawn into the picture or set in a pixel font.</li>
+        <li>No text on top of noise.</li>
+        <li>Lines are all one weight (5 px at full size), with round ends.</li>
+        <li>Noise in one or two parts of a drawing, not everywhere.</li>
+        <li>Every picture has alt text that says what it shows, e.g. which parts a diagram labels, not just "diagram".</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<script src="js/noise.js"></script>
+<script src="js/dither.js"></script>
+<script>
+  // The noise fill: a 24 × 24 grid of noise, stretched to 144 units so each block is 6.
+  document.getElementById('ngfill-img').setAttribute('href',
+    NoiseGuaranteed.image(24, 24, { cell: 1, density: 0.6, seed: 'fill' }).toDataURL('image/png'));
+
+  // Chip legs: seven on each side.
+  var pins = document.getElementById('pins-top'), NS = 'http://www.w3.org/2000/svg';
+  for (var i = 0; i < 7; i++) {
+    [[22, 15], [87, 15]].forEach(function (yh) {
+      var r = document.createElementNS(NS, 'rect');
+      r.setAttribute('x', 37 + i * 14); r.setAttribute('y', yh[0]);
+      r.setAttribute('width', 6); r.setAttribute('height', yh[1]);
+      r.setAttribute('stroke-width', 3);
+      pins.appendChild(r);
+    });
+  }
+
+  // Dithered versions of the photo.
+  function makeDithers() {
+    var photo = document.getElementById('photo'), box = document.getElementById('dithers');
+    var versions = [
+      ['black + magenta, Atkinson', { palette: 'magenta', method: 'atkinson', width: 400 }],
+      ['black + green, Floyd-Steinberg', { palette: 'green', method: 'floyd', width: 400 }],
+      ['logo colours, Bayer, chunky', { palette: 'logo', method: 'bayer', width: 160 }]
+    ];
+    try {
+      versions.forEach(function (v) {
+        var c = NoiseDither.dither(photo, v[1]);
+        c.setAttribute('role', 'img');
+        c.setAttribute('aria-label', 'The same photo dithered: ' + v[0]);
+        var fig = document.createElement('figure'), cap = document.createElement('figcaption');
+        cap.textContent = v[0];
+        fig.append(c, cap);
+        box.append(fig);
+      });
+    } catch (e) {
+      document.getElementById('dither-note').hidden = false;
+    }
+  }
+  var photo = document.getElementById('photo');
+  if (photo.complete) makeDithers(); else photo.addEventListener('load', makeDithers);
+
+  // 16 × 16 pixel icons. Letters pick colours; "." is transparent.
+  var COLOURS = { k: '#000', w: '#fff', l: '#bbb', g: '#00ff00', b: '#0000ff', c: '#00ffff', m: '#ff40ff', y: '#ffff00', r: '#ff0000' };
+  var SPRITES = {
+    'synth': [
+      '................',
+      '.kkkkkkkkkkkkkk.',
+      '.kwwwwwwwwwwwwk.',
+      '.kwwkkkwwkkwrwk.',
+      '.kwkmcgkwkkwwwk.',
+      '.kwkybmkwwwwwwk.',
+      '.kwkgrckwkkwkwk.',
+      '.kwwkkkwwkkwwwk.',
+      '.kwwwwwwwwwwwwk.',
+      '.kkkkkkkkkkkkkk.',
+      '.kwkwkwwkwkwkwk.',
+      '.kwkwkwwkwkwkwk.',
+      '.kwwwwwwwwwwwwk.',
+      '.kkkkkkkkkkkkkk.',
+      '................',
+      '................'
+    ],
+    '40106 chip': [
+      '................',
+      '................',
+      '..l.l.l.l.l.l.l.',
+      '..l.l.l.l.l.l.l.',
+      '.kkkkkkkkkkkkkkk',
+      '.kmkgkckykbkrkmk',
+      '.kkkkkkkkkkkkkkk',
+      '..kkkkkkkkkkkkkk',
+      '..kkkkkkkkkkkkkk',
+      '.kkkkkkkkkkkkkkk',
+      '.kkwkkkkkkkkkkkk',
+      '.kkkkkkkkkkkkkkk',
+      '..l.l.l.l.l.l.l.',
+      '..l.l.l.l.l.l.l.',
+      '................',
+      '................'
+    ]
+  };
+  function sprite(rows, scale) {
+    var c = document.createElement('canvas');
+    c.width = c.height = 16 * scale;
+    var ctx = c.getContext('2d');
+    rows.forEach(function (row, y) {
+      for (var x = 0; x < row.length; x++) {
+        if (row[x] === '.') continue;
+        ctx.fillStyle = COLOURS[row[x]];
+        ctx.fillRect(x * scale, y * scale, scale, scale);
+      }
+    });
+    return c;
+  }
+  var sprites = document.getElementById('sprites');
+  Object.keys(SPRITES).forEach(function (name) {
+    [1, 2, 4, 8].forEach(function (s) {
+      var fig = document.createElement('figure'), cap = document.createElement('figcaption');
+      var c = sprite(SPRITES[name], s);
+      c.setAttribute('role', 'img');
+      c.setAttribute('aria-label', 'Pixel icon of a ' + name + ' at ' + s + ' times size');
+      cap.textContent = name + ' ' + s + '×';
+      fig.append(c, cap);
+      sprites.append(fig);
+    });
+  });
+
+  // Save the synth drawing with the noise fill built in, so it opens in Inkscape.
+  document.getElementById('svg-download').addEventListener('click', function () {
+    var svg = document.getElementById('synth').cloneNode(true);
+    svg.setAttribute('xmlns', NS);
+    svg.insertBefore(document.querySelector('defs').cloneNode(true), svg.firstChild);
+    var blob = new Blob([new XMLSerializer().serializeToString(svg)], { type: 'image/svg+xml' });
+    var a = document.createElement('a');
+    a.download = 'shoestring-synth.svg';
+    a.href = URL.createObjectURL(blob);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+  });
+</script>
+</body>
+</html>

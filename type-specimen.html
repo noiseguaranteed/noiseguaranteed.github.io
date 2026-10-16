@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>noise guaranteed: type specimen</title>
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/noise-fx.css">
+<style>
+  :root {
+    --ink: #000; --paper: #fdeac8; --panel: #fff; --nav: #81ff73; --hot: #f273ff;
+    --courier: 'Courier New', Courier, monospace;
+    --mono: 'Atkinson Hyperlegible Mono', 'Courier New', monospace;
+    --sans: 'Atkinson Hyperlegible Next', system-ui, sans-serif;
+    --pixel: 'Departure Mono', 'Atkinson Hyperlegible Mono', monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: var(--mono); background: var(--paper); color: var(--ink); font-size: 16px; line-height: 1.6; }
+  a { color: inherit; }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+  header { background: var(--nav); border-bottom: 2px solid var(--ink); }
+  header .wrap { display: flex; align-items: center; padding-top: 10px; padding-bottom: 10px; }
+  header a { display: flex; align-items: center; gap: 10px; font-weight: bold; font-size: 18px; text-decoration: none; }
+  header img { width: 44px; height: 44px; }
+  canvas.noise { display: block; width: 100%; height: 16px; }
+  main { padding: 40px 0 64px; }
+  .intro h1 { font-size: 32px; line-height: 1.2; margin-bottom: 8px; }
+  .intro p { max-width: 65ch; margin-bottom: 10px; }
+
+  /* the switch */
+  fieldset { border: 2px solid var(--ink); background: var(--panel); padding: 12px 16px 16px; margin: 24px 0; }
+  legend { font-weight: bold; padding: 0 6px; }
+  .choices { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr)); gap: 8px; }
+  .choices label { display: flex; gap: 10px; align-items: flex-start; border: 2px solid var(--ink); padding: 8px 10px; cursor: pointer; }
+  .choices label:has(input:checked) { background: var(--nav); }
+  .choices input { margin-top: 5px; width: 18px; height: 18px; accent-color: #000; }
+  .choices small { display: block; font-size: 13px; }
+  .size { margin-top: 12px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .size select { font: inherit; padding: 4px; border: 2px solid var(--ink); background: var(--panel); }
+  input:focus-visible, select:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+
+  /* the sample: each option sets these four roles */
+  .sample { --head: var(--mono); --body: var(--mono); --label: var(--mono); --display: var(--mono); --size: 16px; }
+  .sample[data-type="courier"] { --head: var(--courier); --body: var(--courier); --label: var(--courier); --display: var(--courier); }
+  .sample[data-type="mono"] { }
+  .sample[data-type="pair"] { --body: var(--sans); }
+  .sample[data-type="pixel"] { --body: var(--sans); --display: var(--pixel); }
+
+  .sample { font-family: var(--body); font-size: var(--size); border: 2px solid var(--ink); background: var(--paper); }
+  .sample h1, .sample h2, .sample h3, .sample .price, .sample .btn { font-family: var(--head); }
+  .sample .kicker, .sample .num, .sample .label, .sample .tag { font-family: var(--label); }
+  .sample .display { font-family: var(--display); }
+  .sample section { padding: 28px 24px; border-bottom: 2px dotted var(--ink); }
+  .sample section:last-child { border-bottom: none; }
+  .tagname { display: inline-block; font-family: var(--mono); font-size: 13px; background: var(--ink); color: var(--nav); padding: 0 8px; margin-bottom: 14px; }
+
+  .kicker { font-size: 0.8em; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 12px; }
+  .display { font-size: clamp(34px, 6vw, 54px); line-height: 1.15; max-width: 16ch; font-weight: bold; }
+  /* Departure Mono is sharpest at multiples of 11 px. */
+  .sample[data-type="pixel"] .display { font-size: 44px; line-height: 1.25; font-weight: normal; font-synthesis: none; }
+  @media (min-width: 700px) { .sample[data-type="pixel"] .display { font-size: 55px; } }
+  .display .mark { background: var(--nav); padding: 0 0.15em; }
+  .lede { margin-top: 18px; max-width: 60ch; font-size: 1.1em; }
+  .sample p { max-width: 65ch; }
+  .sample p + p { margin-top: 10px; }
+
+  .sec-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 8px; }
+  .sec-head .num { font-size: 0.8em; }
+  .sec-head h2 { font-size: 1.6em; }
+  .sec-head .rule { flex: 1; border-bottom: 2px dotted var(--ink); transform: translateY(-6px); }
+
+  .card { background: var(--panel); border: 2px solid var(--ink); max-width: 300px; margin-top: 12px; }
+  .card .art { aspect-ratio: 4 / 3; border-bottom: 2px solid var(--ink); position: relative; }
+  .card .art canvas.noise { position: absolute; inset: 0; height: 100%; }
+  .card .body { padding: 14px; display: flex; flex-direction: column; gap: 6px; }
+  .card h3 { font-size: 1.1em; }
+  .price { font-size: 1.3em; font-weight: bold; }
+  .label { font-size: 0.85em; }
+  .btn { align-self: flex-start; background: var(--ink); color: var(--nav); padding: 10px 16px; font-weight: bold; text-decoration: none; }
+
+  .steps { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(160px, 100%), 1fr)); gap: 12px; margin-top: 12px; }
+  .steps div { border-left: 3px solid var(--ink); padding-left: 12px; }
+  .steps .label { font-size: 0.8em; }
+  .steps h3 { font-size: 1em; }
+
+  /* confusable characters */
+  .glyphs { width: 100%; border-collapse: collapse; background: var(--panel); margin-top: 12px; }
+  .glyphs th, .glyphs td { border: 2px solid var(--ink); padding: 8px 10px; text-align: left; }
+  .glyphs th { font-family: var(--mono); font-size: 13px; background: var(--nav); }
+  .glyphs td { font-size: 26px; letter-spacing: 0.08em; white-space: nowrap; }
+  .glyphs td:first-child { font-family: var(--mono); font-size: 14px; letter-spacing: 0; white-space: normal; }
+  .scroll { overflow-x: auto; }
+
+  @media (max-width: 480px) { .wrap { padding: 0 16px; } .sample section { padding: 24px 16px; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a href="index.html"><img src="images/ng_logo_trans_bkg_sml.png" alt="">noise guaranteed</a>
+  </div>
+</header>
+<canvas class="noise" aria-hidden="true" data-seed="type" data-cell="5" data-density="0.6"></canvas>
+
+<main class="wrap">
+  <div class="intro">
+    <h1>type specimen</h1>
+    <p>The same real content in four type options. Switch between them below, and try it on your phone too: that's where Courier New changes most, as many Android phones don't have it.</p>
+  </div>
+
+  <fieldset>
+    <legend>Type option</legend>
+    <div class="choices">
+      <label><input type="radio" name="type" value="courier"><span><b>A. Courier New</b><small>what the site uses now</small></span></label>
+      <label><input type="radio" name="type" value="mono" checked><span><b>B. Atkinson Mono</b><small>everywhere</small></span></label>
+      <label><input type="radio" name="type" value="pair"><span><b>C. Mono + Next</b><small>mono headings and labels, sans paragraphs</small></span></label>
+      <label><input type="radio" name="type" value="pixel"><span><b>D. C + Departure</b><small>with a pixel font for the big headline</small></span></label>
+    </div>
+    <div class="size">
+      <label for="size"><b>Body text size</b></label>
+      <select id="size">
+        <option value="15px">15 px (site now)</option>
+        <option value="16px" selected>16 px</option>
+        <option value="17px">17 px</option>
+        <option value="18px">18 px</option>
+      </select>
+    </div>
+  </fieldset>
+
+  <p role="status" aria-live="polite" id="announce" class="visually-hidden"></p>
+
+  <div class="sample" id="sample" data-type="mono">
+    <section>
+      <span class="tagname">shop hero</span>
+      <p class="kicker">Shop · kits, vouchers &amp; workshop places · Belfast</p>
+      <p class="display">Make some noise. <span class="mark">We'll bring the parts.</span></p>
+      <p class="lede">Kits to build your own noisy instruments, gift vouchers, and places on our workshops.</p>
+    </section>
+
+    <section>
+      <span class="tagname">home page text</span>
+      <h2>noise guaranteed</h2>
+      <p class="label"><u><i>a noise-positive organisation</i></u></p>
+      <p>Based in Belfast, <b>noise guaranteed</b> is a collective effort to encourage and nurture critical perspectives on music technology. Together we learn through our practice of building electronic tools for music making.</p>
+      <p>If there's one thing we can guarantee in our workings, writings and speech, it's noise. In fact we want to make and embrace noise. We want to question the origins of the technology we use. We're not scientists, engineers or ethicists in the traditional sense. We are not formally trained in these disciplines. However, we have a right to question from a position of naivety. Our view from afar, our view from below will mature and our questions will refine.</p>
+    </section>
+
+    <section>
+      <span class="tagname">section heading, card and steps</span>
+      <div class="sec-head"><span class="num">01</span><h2>kits</h2><span class="rule"></span></div>
+      <div class="card">
+        <div class="art"><canvas class="noise" aria-hidden="true" data-seed="shoestring" data-cell="8" data-density="0.55"></canvas></div>
+        <div class="body">
+          <h3>shoestring synth board</h3>
+          <p>The 40106 oscillator from our workshop as a bare board, for people who'd like to source their own parts.</p>
+          <p class="price">£8</p>
+          <p class="label">◐ Only 3 left</p>
+          <span class="btn">buy · £8 ↗</span>
+        </div>
+      </div>
+      <div class="steps">
+        <div><span class="label">STEP 1</span><h3>Choose</h3><p>Pick a kit, voucher or workshop place.</p></div>
+        <div><span class="label">STEP 2</span><h3>Pay</h3><p>SumUp's secure checkout.</p></div>
+        <div><span class="label">STEP 3</span><h3>Receive</h3><p>Kits posted within 5 working days.</p></div>
+      </div>
+    </section>
+
+    <section>
+      <span class="tagname">Irish place names</span>
+      <p>Workshops in Béal Feirste, Doire and Gaillimh; with thanks to Seán, Aoife and Siobhán.</p>
+    </section>
+  </div>
+
+  <h2 style="margin-top:40px;font-size:24px">easily confused characters</h2>
+  <p style="max-width:65ch">Letters and numbers that look alike in many fonts. Atkinson Hyperlegible was designed so each one is distinct.</p>
+  <div class="scroll">
+    <table class="glyphs">
+      <thead><tr><th scope="col">Font</th><th scope="col">I l 1 |</th><th scope="col">O 0 o</th><th scope="col">rn m</th><th scope="col">cl d</th><th scope="col">5 S 8 B</th></tr></thead>
+      <tbody>
+        <tr><td>Courier New</td><td style="font-family:var(--courier)">I l 1 |</td><td style="font-family:var(--courier)">O 0 o</td><td style="font-family:var(--courier)">rn m</td><td style="font-family:var(--courier)">cl d</td><td style="font-family:var(--courier)">5 S 8 B</td></tr>
+        <tr><td>Atkinson Hyperlegible Mono</td><td style="font-family:var(--mono)">I l 1 |</td><td style="font-family:var(--mono)">O 0 o</td><td style="font-family:var(--mono)">rn m</td><td style="font-family:var(--mono)">cl d</td><td style="font-family:var(--mono)">5 S 8 B</td></tr>
+        <tr><td>Atkinson Hyperlegible Next</td><td style="font-family:var(--sans)">I l 1 |</td><td style="font-family:var(--sans)">O 0 o</td><td style="font-family:var(--sans)">rn m</td><td style="font-family:var(--sans)">cl d</td><td style="font-family:var(--sans)">5 S 8 B</td></tr>
+        <tr><td>Departure Mono</td><td style="font-family:var(--pixel);font-synthesis:none">I l 1 |</td><td style="font-family:var(--pixel);font-synthesis:none">O 0 o</td><td style="font-family:var(--pixel);font-synthesis:none">rn m</td><td style="font-family:var(--pixel);font-synthesis:none">cl d</td><td style="font-family:var(--pixel);font-synthesis:none">5 S 8 B</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="margin-top:20px;font-size:14px">Fonts: Atkinson Hyperlegible Mono and Next by the Braille Institute; Departure Mono by Helena Zhang. All under the SIL Open Font License, served from this site.</p>
+</main>
+
+<style>
+  .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+</style>
+<script src="js/noise.js"></script>
+<script>
+  var sample = document.getElementById('sample'), announce = document.getElementById('announce');
+  document.querySelectorAll('input[name="type"]').forEach(function (r) {
+    r.addEventListener('change', function () {
+      sample.dataset.type = r.value;
+      announce.textContent = 'Showing option ' + r.parentNode.querySelector('b').textContent;
+    });
+  });
+  document.getElementById('size').addEventListener('change', function () {
+    sample.style.setProperty('--size', this.value);
+  });
+  // ?type=pair opens a given option, handy for sharing.
+  var start = new URLSearchParams(location.search).get('type');
+  var startInput = start && document.querySelector('input[name="type"][value="' + start + '"]');
+  if (startInput) { startInput.checked = true; startInput.dispatchEvent(new Event('change')); }
+</script>
+</body>
+</html>
