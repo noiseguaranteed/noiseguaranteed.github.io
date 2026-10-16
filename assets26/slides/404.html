@@ -29,5 +29,19 @@
   <div id="app"></div>
   <div id="mermaid-rendering-container"></div>
   
+<script>
+  if (location.protocol === 'file:') {
+    document.addEventListener('DOMContentLoaded', function () {
+      document.body.innerHTML =
+        '<main style="max-width:40rem;margin:3rem auto;padding:0 1rem;font-family:\'Courier New\',monospace;font-size:18px;line-height:1.6;color:#000;background:#fdeac8">' +
+        '<h1 style="font-size:28px">These web slides need a web address</h1>' +
+        '<p>Browsers won\'t run the slide app from a file on your computer. To see the slides:</p>' +
+        '<ul><li><a href="../assets26-slides.pdf">open the PDF</a>, which works offline</li>' +
+        '<li><a href="../index.html">read the slides and script as a web page</a></li>' +
+        '<li>go online: <a href="https://noiseguaranteed.org/assets26/slides/">noiseguaranteed.org/assets26/slides</a></li></ul></main>';
+      document.body.style.background = '#fdeac8';
+    });
+  }
+</script>
 </body>
 </html>
