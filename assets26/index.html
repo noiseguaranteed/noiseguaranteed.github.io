@@ -4,54 +4,74 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Who makes music software accessible? – slides and script (ASSETS '26)</title>
+<link rel="icon" href="img/favicon.png">
 <meta name="description" content="Accessible text version of Alex Lucas's ASSETS '26 talk: every slide, image description and the full spoken script.">
 <style>
-@font-face { font-family: "Atkinson Hyperlegible"; src: url("fonts/AtkinsonHyperlegible-Regular.ttf"); font-weight: 400; font-display: swap; }
-@font-face { font-family: "Atkinson Hyperlegible"; src: url("fonts/AtkinsonHyperlegible-Bold.ttf"); font-weight: 700; font-display: swap; }
-@font-face { font-family: "Atkinson Hyperlegible"; src: url("fonts/AtkinsonHyperlegible-Italic.ttf"); font-style: italic; font-display: swap; }
-:root { --bg:#FFF8EC; --surface:#FFFFFF; --ink:#1B1B2F; --muted:#4A4A5A; --accent:#00575C; --quote:#5B2A86; --line:#1B1B2F; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#15151F; --surface:#20202C; --ink:#F4F1EA; --muted:#C9C6BF; --accent:#7FD6D2; --quote:#D9B8FF; --line:#C9C6BF; } }
-:root[data-theme="dark"] { --bg:#15151F; --surface:#20202C; --ink:#F4F1EA; --muted:#C9C6BF; --accent:#7FD6D2; --quote:#D9B8FF; --line:#C9C6BF; }
+@font-face { font-family: "Atkinson Hyperlegible Mono"; src: url("fonts/ahmono.woff2") format("woff2"); font-weight: 200 800; font-display: swap; }
+@font-face { font-family: "Atkinson Hyperlegible Mono"; src: url("fonts/ahmono-italic.woff2") format("woff2"); font-weight: 200 800; font-style: italic; font-display: swap; }
+/* noise guaranteed brand (BRAND.md): black text on cream or white only; green and magenta as backgrounds */
+:root { --ink:#000; --paper:#fdeac8; --panel:#fff; --nav:#81ff73; --hot:#f273ff; }
 * { box-sizing: border-box; }
-html { font-size: 112.5%; }
-body { margin:0; background:var(--bg); color:var(--ink); font-family:"Atkinson Hyperlegible", Verdana, Arial, sans-serif; line-height:1.6; }
-main { max-width: 44rem; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
-h1 { font-size: 2rem; line-height:1.2; color: var(--accent); margin: 0.5rem 0; }
-h2 { font-size: 1.45rem; line-height:1.25; margin: 0 0 0.75rem; }
-h3 { font-size: 1.05rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 1.25rem 0 .25rem; }
-a { color: var(--accent); text-underline-offset: 3px; }
-:focus-visible { outline: 4px solid var(--quote); outline-offset: 3px; }
-.links { display:flex; flex-wrap:wrap; gap:.75rem 1.5rem; padding:0; list-style:none; margin:1rem 0 2rem; }
-.links a { font-weight:700; }
-article { background:var(--surface); border:2px solid var(--line); border-radius:14px; padding:1.25rem; margin:0 0 1.5rem; }
-.num { color: var(--muted); font-weight:400; }
-blockquote { border-left:6px solid var(--quote); margin:1rem 0; padding:.25rem 1rem; }
-figure { margin: 1rem 0; }
-img { max-width:100%; height:auto; border-radius:8px; background:#FFF8EC; }
+body { margin:0; background:var(--paper); color:var(--ink); font-family:"Atkinson Hyperlegible Mono", "Courier New", monospace; font-size:17px; line-height:1.6; }
+a { color: inherit; text-underline-offset: 3px; }
+a:hover { background: var(--hot); }
+:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+.vh { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap; }
+header { background: var(--nav); border-bottom: 2px solid var(--ink); }
+.bar { max-width: 900px; margin: 0 auto; padding: 10px 24px; }
+.home { display:inline-flex; align-items:center; gap:10px; font-weight:700; font-size:18px; text-decoration:none; }
+.home img { width:44px; height:44px; }
+.strip { display:block; width:100%; height:10px; image-rendering: pixelated; object-fit: cover; object-position: left; }
+main { max-width: 900px; margin: 0 auto; padding: 40px 24px 64px; }
+.kicker { font-size: 14px; letter-spacing: .12em; text-transform: uppercase; margin: 0 0 12px; }
+h1 { font-size: clamp(30px, 6vw, 48px); line-height:1.15; margin: 0 0 24px; max-width: 18ch; }
+.mark { background: var(--nav); padding: 0 .15em; }
+.lede { max-width: 65ch; }
+.links { display:flex; flex-wrap:wrap; gap:12px; padding:0; list-style:none; margin:24px 0 48px; }
+.btn { display:inline-block; background:var(--ink); color:var(--nav); font-weight:700; text-decoration:none; padding:10px 16px; min-height:44px; border:2px solid var(--ink); }
+.btn:hover { background:var(--hot); color:var(--ink); }
+article { background:var(--panel); border:2px solid var(--ink); padding: 20px; margin:0 0 24px; }
+article h2 { display:flex; align-items:baseline; gap:12px; font-size: 22px; line-height:1.25; margin: 0 0 12px; }
+article h2::after { content:""; flex:1 1 24px; min-width:24px; border-bottom:2px dotted var(--ink); transform: translateY(-6px); }
+article h2 .num { font-size: 14px; font-weight: 400; flex: none; }
+h3 { font-size: 14px; text-transform: uppercase; letter-spacing: .1em; margin: 20px 0 4px; }
+article p, article li { max-width: 65ch; }
+main, footer { overflow-wrap: anywhere; }
+[hidden] { display: none !important; }
+blockquote { border-left: 10px solid var(--nav); box-shadow: inset 2px 0 0 var(--ink); margin: 16px 0; padding: 4px 16px; }
+figure { margin: 16px 0; }
+img { max-width:100%; height:auto; }
+article img { border: 2px solid var(--ink); }
 img.qr { display:none; }
-figcaption { font-style: italic; color: var(--muted); margin-top:.35rem; }
-.card { border-left:6px solid var(--accent); padding-left:.75rem; margin:.75rem 0; }
-.num-badge, .card .num { font-weight:700; }
-.script p { margin: 0 0 .9rem; }
-footer { color: var(--muted); font-size:.95rem; border-top:2px solid var(--line); margin-top:2rem; padding-top:1rem; }
+figcaption { font-style: italic; margin-top: 6px; }
+.card { border: 2px solid var(--ink); margin: 12px 0; }
+.card .label { margin:0; padding: 2px 12px; background: var(--nav); border-bottom: 2px solid var(--ink); font-size: 14px; text-transform: uppercase; letter-spacing: .08em; }
+.card h4, .card p:not(.label) { margin: 8px 12px; }
+.script p { margin: 0 0 14px; }
+footer { border-top:2px solid var(--ink); background: var(--panel); }
+footer p { max-width: 900px; margin: 0 auto; padding: 18px 24px; font-size: 14px; }
+@media (max-width: 480px) { .bar, main, footer p { padding-left:16px; padding-right:16px; } }
 </style>
 </head>
 <body>
+<header><div class="bar"><a class="home" href="../"><img src="img/ng-logo.png" alt="">noise guaranteed</a></div></header>
+<img class="strip" src="img/noise-strip.png" alt="">
 <main>
-<h1>Who makes music software accessible?</h1>
-<p>A talk at ASSETS '26 by Alex Lucas, on the paper <cite>The Qualities of Convivial Tools and Their Relevance to Music Software Accessibility</cite> by Alex Lucas, James Cunningham, Jacob Harrison, Franziska Schroeder and Andrew McPherson. ACM Transactions on Accessible Computing 18(3), 2025. <a href="https://doi.org/10.1145/3733606">doi.org/10.1145/3733606</a> (open access).</p>
-<p>This page has every slide, a description of every image, and the full script.</p>
+<p class="kicker">assets '26 · talk · slides and script</p>
+<h1>Who makes music software <span class="mark">accessible?</span></h1>
+<p class="lede">A talk at ASSETS '26 by Alex Lucas, on the paper <cite>The Qualities of Convivial Tools and Their Relevance to Music Software Accessibility</cite> by Alex Lucas, James Cunningham, Jacob Harrison, Franziska Schroeder and Andrew McPherson. ACM Transactions on Accessible Computing 18(3), 2025. <a href="https://doi.org/10.1145/3733606">doi.org/10.1145/3733606</a> (open access).</p>
+<p class="lede">This page has every slide, a description of every image, and the full script.</p>
 <ul class="links">
-  <li><a href="feedback/">Give feedback (2 minutes)</a></li>
-  <li><a href="slides/">Slides (web)</a></li>
-  <li><a href="assets26-slides.pdf">Slides (PDF)</a></li>
+  <li><a class="btn" href="feedback/">give feedback (2 minutes)</a></li>
+  <li><a class="btn" href="slides/">slides (web)</a></li>
+  <li><a class="btn" href="assets26-slides.pdf">slides (PDF)</a></li>
 </ul>
-<article aria-labelledby="s1"><h2 id="s1"><span class="num">Slide 1:</span> Who makes music software accessible?</h2><h3>On the slide</h3><p class="subtitle">The Qualities of Convivial Tools and Their Relevance to Music Software Accessibility</p>
+<article aria-labelledby="s1"><h2 id="s1"><span class="num"><span class="vh">Slide </span>01</span> Who makes music software accessible?</h2><h3>On the slide</h3><p class="kicker">assets '26 · queen's university belfast · imperial college london</p>
 
-<p class="authors">Alex Lucas · James Cunningham · Jacob Harrison · Franziska Schroeder · Andrew McPherson</p>
+<p class="subtitle">The Qualities of Convivial Tools and Their Relevance to Music Software Accessibility. ACM TACCESS 18(3), 2025</p>
 
-<p class="small">Queen's University Belfast · Imperial College London · ACM TACCESS 18(3), 2025</p><h3>Script</h3><div class="script"><p>Hello! I&#x27;m Alex Lucas from Queen&#x27;s University Belfast. My slides have a cream background with dark text, and I&#x27;ll read or describe everything on them as I go. They&#x27;re online now, with this script, at noiseguaranteed dot org slash assets26.</p><p>The title on screen is &quot;Who makes music software accessible?&quot; The paper is &quot;The Qualities of Convivial Tools and Their Relevance to Music Software Accessibility&quot;, in TACCESS this year, with James Cunningham, Jacob Harrison, Franziska Schroeder and Andrew McPherson.</p></div></article>
-<article aria-labelledby="s2"><h2 id="s2"><span class="num">Slide 2:</span> Designers can&#x27;t see the future</h2><h3>On the slide</h3><ul>
+<p class="authors">Alex Lucas · James Cunningham · Jacob Harrison · Franziska Schroeder · Andrew McPherson</p><h3>Script</h3><div class="script"><p>Hello! I&#x27;m Alex Lucas from Queen&#x27;s University Belfast. My slides are cream, with black text and strips of colourful pixel noise. I&#x27;ll read or describe everything on them as I go. They&#x27;re online now, with this script, at noiseguaranteed dot org slash assets26.</p><p>The title on screen is &quot;Who makes music software accessible?&quot; The paper is &quot;The Qualities of Convivial Tools and Their Relevance to Music Software Accessibility&quot;, in TACCESS this year, with James Cunningham, Jacob Harrison, Franziska Schroeder and Andrew McPherson.</p></div></article>
+<article aria-labelledby="s2"><h2 id="s2"><span class="num"><span class="vh">Slide </span>02</span> designers can&#x27;t see the future</h2><h3>On the slide</h3><ul>
 <li>Usability tests: a handful of people, for about an hour</li>
 <li>But tools live in a busy world of people, places and things</li>
 </ul>
@@ -59,13 +79,13 @@ footer { color: var(--muted); font-size:.95rem; border-top:2px solid var(--line)
 <p>"It isn't only that we use tools; we think with them." — Alva Noë</p>
 </blockquote>
 <p class="punchline">We can't fully anticipate how a tool will be used until it's in use.</p><h3>Script</h3><div class="script"><p>I&#x27;ll start with a confession. Before academia, I designed music technology products, and design involves a lot of guessing. We run usability tests with a handful of people, for about an hour. But an hour can&#x27;t show us how a tool will live in a busy world of people, places and things.</p><p>The slide quotes the philosopher Alva Noë: &quot;It isn&#x27;t only that we use tools; we think with them.&quot; And the bold line at the bottom says: we can&#x27;t fully anticipate how a tool will be used until it&#x27;s in use.</p><p>So when designers miss things, who fills the gaps?</p></div></article>
-<article aria-labelledby="s3"><h2 id="s3"><span class="num">Slide 3:</span> We talked with 20 sound creatives</h2><h3>On the slide</h3><p><figure><img alt="Twenty person icons in three groups by self-rated skill: 9 advanced, 9 intermediate, 2 beginners." src="img/participants.png" class="figure"><figcaption>Twenty person icons in three groups by self-rated skill: 9 advanced, 9 intermediate, 2 beginners.</figcaption></figure></p>
-<p class="small">All blind or visually impaired · 9 countries · 2-hour interviews and demos</p><h3>Script</h3><div class="script"><p>To find out, we talked with twenty visually impaired and blind sound creatives: producers, composers, audio engineers, sound designers and beat makers, in nine countries.</p><p>Each two-hour session on Zoom began with an interview. Then people showed us a task of their choosing, like mixing stems or designing a sound effect for a game. Participants chose to be named in the paper. We used reflexive thematic analysis, and my co-author James, who is visually impaired, was involved at every stage.</p><p>The picture shows twenty person icons in three groups, by self-rated skill: nine advanced, nine intermediate, and two beginners.</p></div></article>
-<article aria-labelledby="s4"><h2 id="s4"><span class="num">Slide 4:</span> Three gaps</h2><h3>On the slide</h3><p><figure><img alt="A path from ‘starting out’ to ‘making music’, broken by three gaps labelled education, information and technology. A bridge spans each gap, captioned ‘bridged by community’." src="img/gaps.png" class="figure"><figcaption>A path from ‘starting out’ to ‘making music’, broken by three gaps labelled education, information and technology. A bridge spans each gap, captioned ‘bridged by community’.</figcaption></figure></p>
+<article aria-labelledby="s3"><h2 id="s3"><span class="num"><span class="vh">Slide </span>03</span> 20 sound creatives</h2><h3>On the slide</h3><p><figure><img alt="Three boxes of person icons, grouped by self-rated skill: 9 advanced, 9 intermediate, 2 beginners." src="img/participants.png" class="figure"><figcaption>Three boxes of person icons, grouped by self-rated skill: 9 advanced, 9 intermediate, 2 beginners.</figcaption></figure></p>
+<p class="small">All blind or visually impaired · 9 countries · 2-hour interviews and demos</p><h3>Script</h3><div class="script"><p>To find out, we talked with twenty visually impaired and blind sound creatives: producers, composers, audio engineers, sound designers and beat makers, in nine countries.</p><p>Each two-hour session on Zoom began with an interview. Then people showed us a task of their choosing, like mixing stems or designing a sound effect for a game. Participants chose to be named in the paper. We used reflexive thematic analysis, and my co-author James, who is visually impaired, was involved at every stage.</p><p>The picture shows three boxes of person icons, by self-rated skill: nine advanced, nine intermediate, and two beginners.</p></div></article>
+<article aria-labelledby="s4"><h2 id="s4"><span class="num"><span class="vh">Slide </span>04</span> three gaps</h2><h3>On the slide</h3><p><figure><img alt="A path from ‘starting out’ to ‘making music’, broken by three gaps labelled education, information and technology. An arched bridge filled with colourful pixel noise spans each gap, under the highlighted caption ‘bridged by community’." src="img/gaps.png" class="figure"><figcaption>A path from ‘starting out’ to ‘making music’, broken by three gaps labelled education, information and technology. An arched bridge filled with colourful pixel noise spans each gap, under the highlighted caption ‘bridged by community’.</figcaption></figure></p>
 <blockquote>
 <p>"There is a lot of goodwill without the backup." — Peter Bosher</p>
-</blockquote><h3>Script</h3><div class="script"><p>We found three gaps. The picture shows a path, from &quot;starting out&quot; on the left to &quot;making music&quot; on the right, with a person icon at the start and a pair of musical notes at the end. The path is broken by three gaps, labelled education, information and technology. A bridge spans each one, captioned &quot;bridged by community&quot;.</p><p>The education gap: teachers often don&#x27;t know what&#x27;s possible. Peter Bosher called it &quot;a lot of goodwill without the backup&quot;. That&#x27;s the quote at the bottom of the slide.</p><p>The information gap: you often can&#x27;t find out whether a plugin works with a screen reader until you&#x27;ve paid for it.</p><p>And the technology gap: many tools simply don&#x27;t talk to screen readers.</p></div></article>
-<article aria-labelledby="s5"><h2 id="s5"><span class="num">Slide 5:</span> Communities build the bridges</h2><h3>On the slide</h3><ol>
+</blockquote><h3>Script</h3><div class="script"><p>We found three gaps. The picture shows a path, from &quot;starting out&quot; on the left to &quot;making music&quot; on the right, with a person icon at the start and a pair of musical notes at the end. The path is broken by three gaps, labelled education, information and technology. An arched bridge, filled with colourful pixel noise, spans each one, under the caption &quot;bridged by community&quot;.</p><p>The education gap: teachers often don&#x27;t know what&#x27;s possible. Peter Bosher called it &quot;a lot of goodwill without the backup&quot;. That&#x27;s the quote at the bottom of the slide.</p><p>The information gap: you often can&#x27;t find out whether a plugin works with a screen reader until you&#x27;ve paid for it.</p><p>And the technology gap: many tools simply don&#x27;t talk to screen readers.</p></div></article>
+<article aria-labelledby="s5"><h2 id="s5"><span class="num"><span class="vh">Slide </span>05</span> communities build the bridges</h2><h3>On the slide</h3><ol>
 <li><strong>Mailing lists and WhatsApp groups</strong> for each DAW (digital audio workstation)</li>
 <li><strong>OSARA</strong>: community-built screen-reader access for the Reaper DAW</li>
 <li><strong>Thousands of preset files</strong>, made by hand, so a synth can be browsed by ear</li>
@@ -73,10 +93,10 @@ footer { color: var(--muted); font-size:.95rem; border-top:2px solid var(--line)
 <blockquote>
 <p>"The WhatsApp groups are very voice message focused." — Rory McDonald</p>
 </blockquote><h3>Script</h3><div class="script"><p>So who builds the bridges? Communities of practice. The slide lists three examples.</p><p>One: mailing lists and WhatsApp groups for each DAW. DAW stands for digital audio workstation: the apps we use to record and produce music. One list is called &quot;Reapers without Peepers&quot;. Rory McDonald told us the WhatsApp groups are &quot;very voice message focused&quot;. You talk through your problem, and someone talks you through the fix.</p><p>Two: OSARA, the extension that makes the Reaper DAW work with screen readers. It&#x27;s built by community members, unpaid.</p><p>Three: one person in Australia made thousands of preset files by hand, so that a popular synth could be browsed with a screen reader.</p></div></article>
-<article aria-labelledby="s6"><h2 id="s6"><span class="num">Slide 6:</span> A DAW is often accessible only with the community&#x27;s knowledge.</h2><h3>On the slide</h3><p class="statement">A DAW is often accessible only <strong>with</strong> the community's knowledge.</p>
+<article aria-labelledby="s6"><h2 id="s6"><span class="num"><span class="vh">Slide </span>06</span> A DAW is often accessible only with the community&#x27;s knowledge.</h2><h3>On the slide</h3><p class="statement">A DAW is often accessible only <span class="mark">with</span> the community's knowledge.</p>
 
 <p class="aside">Sighted users get a working product at the point of purchase.</p><h3>Script</h3><div class="script"><p>Which leads to the big line on this slide: a DAW is often accessible only with the community&#x27;s knowledge. That&#x27;s invisible labour.</p><p>And the smaller line underneath: sighted users get a working product at the point of purchase. Blind users often have to finish building it themselves.</p></div></article>
-<article aria-labelledby="s7"><h2 id="s7"><span class="num">Slide 7:</span> Ivan Illich: Tools for Conviviality (1973)</h2><h3>On the slide</h3><div class="split">
+<article aria-labelledby="s7"><h2 id="s7"><span class="num"><span class="vh">Slide </span>07</span> Illich: Tools for Conviviality</h2><h3>On the slide</h3><div class="split">
 <div>
 <p>A convivial tool is:</p>
 <ol>
@@ -87,34 +107,40 @@ footer { color: var(--muted); font-size:.95rem; border-top:2px solid var(--line)
 <p class="punchline">…and community is at its heart.</p>
 </div>
 <div class="portrait">
-<p><figure><img alt="Black-and-white photo of Ivan Illich in 1969: a slim man with dark, swept-back hair and a short-sleeved shirt, sitting on a low bench and smiling as he talks on a corded telephone." src="img/illich-1969.jpg"><figcaption>Black-and-white photo of Ivan Illich in 1969: a slim man with dark, swept-back hair and a short-sleeved shirt, sitting on a low bench and smiling as he talks on a corded telephone.</figcaption></figure></p>
-<p class="credit">Photo: Associated Press, 1969. Public domain (US), via Wikimedia Commons</p>
+<p><figure><img alt="Photo of Ivan Illich in 1969, dithered into black and pink dots: a slim man with dark, swept-back hair and a short-sleeved shirt, sitting on a low bench and smiling as he talks on a corded telephone." src="img/illich-1969-dither.png"><figcaption>Photo of Ivan Illich in 1969, dithered into black and pink dots: a slim man with dark, swept-back hair and a short-sleeved shirt, sitting on a low bench and smiling as he talks on a corded telephone.</figcaption></figure></p>
+<p class="credit">Photo: AP, 1969. Public domain (US), Wikimedia Commons</p>
 </div>
-</div><h3>Script</h3><div class="script"><p>To make sense of this, we turned to Ivan Illich&#x27;s 1973 book, Tools for Conviviality. On the right is a black-and-white photo of Illich from 1969: a slim man with dark hair, smiling as he chats on an old corded phone. A man using a tool! Illich warns that tools can pass a tipping point, where they start to confine us instead of freeing us. Digital studios made recording far cheaper, but making them accessible takes specialist skill and effort.</p><p>Illich&#x27;s answer is the convivial tool. The slide lists three qualities: it&#x27;s easy to learn by using it; you choose when and where to use it; and it adapts to you. And the bold last line: community is at its heart.</p><p>That&#x27;s exactly what these communities are doing: making their tools convivial, together.</p></div></article>
-<article aria-labelledby="s8"><h2 id="s8"><span class="num">Slide 8:</span> Three design guidelines</h2><h3>On the slide</h3><div class="cards">
+</div><h3>Script</h3><div class="script"><p>To make sense of this, we turned to Ivan Illich&#x27;s 1973 book, Tools for Conviviality. On the right is a photo of Illich from 1969, in black and pink dots: a slim man with dark hair, smiling as he chats on an old corded phone. A man using a tool! Illich warns that tools can pass a tipping point, where they start to confine us instead of freeing us. Digital studios made recording far cheaper, but making them accessible takes specialist skill and effort.</p><p>Illich&#x27;s answer is the convivial tool. The slide lists three qualities: it&#x27;s easy to learn by using it; you choose when and where to use it; and it adapts to you. And the bold last line: community is at its heart.</p><p>That&#x27;s exactly what these communities are doing: making their tools convivial, together.</p></div></article>
+<article aria-labelledby="s8"><h2 id="s8"><span class="num"><span class="vh">Slide </span>08</span> three design guidelines</h2><h3>On the slide</h3><div class="cards">
 <div class="card">
-<p><span class="num">1</span><h4>Build accessible ecosystems</h4><p>Tutorials and manuals without visual cues</p></p>
+<p class="label">guideline 1</p>
+<h4>build accessible ecosystems</h4>
+<p>Tutorials and manuals without visual cues</p>
 </div>
 <div class="card">
-<p><span class="num">2</span><h4>Embrace interdependent access</h4><p>Credit community work, and point people to it</p></p>
+<p class="label">guideline 2</p>
+<h4>embrace interdependent access</h4>
+<p>Credit community work, and point people to it</p>
 </div>
 <div class="card">
-<p><span class="num">3</span><h4>Design for designers</h4><p>Open extension points: the DAW is ajar</p></p>
+<p class="label">guideline 3</p>
+<h4>design for designers</h4>
+<p>Open extension points: the DAW is ajar</p>
 </div>
 </div><h3>Script</h3><div class="script"><p>From this, we offer three Convivial Accessibility Design Guidelines, shown as three numbered cards.</p><p>One: build accessible ecosystems. The software is only part of it. Tutorials and manuals need to work without visual cues. So, no more &quot;just click the blue button&quot;.</p><p>Two: embrace interdependent access. Designers don&#x27;t have every answer. Credit the community&#x27;s access work, and point new users to it, for example from your product website.</p><p>Three: design for designers. See disabled people as designers, not only users. Reaper shows how. It&#x27;s commercial software, but its extension kit let the community build OSARA. As we say in the paper: the DAW is ajar!</p></div></article>
-<article aria-labelledby="s9"><h2 id="s9"><span class="num">Slide 9:</span> Make tools malleable, and support the communities who change them.</h2><h3>On the slide</h3><p class="statement">Make tools malleable, and support the communities who change them.</p>
+<article aria-labelledby="s9"><h2 id="s9"><span class="num"><span class="vh">Slide </span>09</span> Make tools malleable, and support the communities who change them.</h2><h3>On the slide</h3><p class="statement">Make tools <span class="mark">malleable</span>, and support the communities who change them.</p>
 
 <p class="aside">"Nothing about us without us", where <strong>us</strong> is a community.</p><h3>Script</h3><div class="script"><p>To sum up: make tools malleable, and support the communities who change them. &quot;Nothing about us without us&quot;, where &quot;us&quot; is a community.</p><p>And these communities aren&#x27;t just a workaround. They bring kinship and connection, and that would matter even if every gap were closed.</p></div></article>
-<article aria-labelledby="s10"><h2 id="s10"><span class="num">Slide 10:</span> Thank you!</h2><h3>On the slide</h3><div class="qr-row">
-<p><figure><img alt="QR code linking to the feedback form" src="img/qr-feedback.png" class="qr"><figcaption>QR code linking to the feedback form</figcaption></figure></p>
-<div class="qr-text">
-<p><strong>Feedback, 2 minutes:</strong><br>noiseguaranteed.org/assets26/feedback</p>
-<p><strong>Slides and script:</strong><br>noiseguaranteed.org/assets26</p>
-<p>a.lucas@qub.ac.uk</p>
+<article aria-labelledby="s10"><h2 id="s10"><span class="num"><span class="vh">Slide </span>10</span> thank you!</h2><h3>On the slide</h3><div class="qr-list">
+<div class="qr-item">
+<p><figure><img alt="QR code linking to the feedback form" src="img/qr-feedback.png" class="qr"><figcaption>QR code linking to the feedback form</figcaption></figure><p><strong>feedback, 2 minutes</strong><br>noiseguaranteed.org/assets26/feedback</p></p>
 </div>
-<p><figure><img alt="QR code linking to the slides and script" src="img/qr-slides.png" class="qr"><figcaption>QR code linking to the slides and script</figcaption></figure></p>
-</div><h3>Script</h3><div class="script"><p>Thank you, and a big thank you to our twenty participants.</p><p>I&#x27;d love your feedback. It&#x27;s a short, optional form, about two minutes, and it helps us show the impact of this work. It&#x27;s at noiseguaranteed dot org slash assets26 slash feedback. That&#x27;s the left-hand QR code; the right-hand one links to the slides and script. My email is a dot lucas at qub dot ac dot uk.</p><p>I&#x27;m happy to take questions.</p></div></article>
-<footer>Contact: <a href="mailto:a.lucas@qub.ac.uk">a.lucas@qub.ac.uk</a>. The typeface is Atkinson Hyperlegible, from the Braille Institute.</footer>
+<div class="qr-item">
+<p><figure><img alt="QR code linking to the slides and script" src="img/qr-slides.png" class="qr"><figcaption>QR code linking to the slides and script</figcaption></figure><p><strong>slides and script</strong><br>noiseguaranteed.org/assets26</p></p>
+</div>
+</div>
+<p class="contact">a.lucas@qub.ac.uk</p><h3>Script</h3><div class="script"><p>Thank you, and a big thank you to our twenty participants.</p><p>I&#x27;d love your feedback. It&#x27;s a short, optional form, about two minutes, and it helps us show the impact of this work. It&#x27;s at noiseguaranteed dot org slash assets26 slash feedback. That&#x27;s the top QR code; the one below it links to the slides and script. My email is a dot lucas at qub dot ac dot uk.</p><p>I&#x27;m happy to take questions.</p></div></article>
 </main>
+<footer><p>Contact: <a href="mailto:a.lucas@qub.ac.uk">a.lucas@qub.ac.uk</a> · noise guaranteed, Belfast · Typeface: Atkinson Hyperlegible Mono, from the Braille Institute</p></footer>
 </body>
 </html>
