@@ -52,7 +52,7 @@ One tint per page, taken from the combo 1 video. Set it with `<html data-wash="t
 | rose | `#e58aa4` | `#f5c6d3` | `#fbe6ec` | 8.5:1 |
 | grey | `#b4b0aa` | `#dcd9d4` | `#f1efec` | 9.7:1 |
 
-No page has been given a wash yet (see [Open decisions](#open-decisions)).
+**The site uses sage on every page** (`<html data-wash="sage">`). With sage, the nav-green and magenta roles above move to the wash: highlights and dated strips use the sage nav colour, hovers the sage hover colour, and the page background the sage card colour.
 
 ## 3. Typography
 
@@ -141,27 +141,31 @@ Same grammar as the logo: **a crisp black line, filled with noise.** See [graphi
 - **Noise:** in one or two parts only, such as a speaker cone or a chip body. Use the `ngfill` SVG pattern from [graphics-style.html](graphics-style.html), with plain magenta as the fallback (`fill="url(#ngfill) #f273ff"`).
 - **Labels:** real text in the brand font with thin (2px) leader lines. Never text drawn into the picture, and never a pixel font for labels.
 
+**Photos on the site:** dither to black and white, then show them on a box filled with the wash colour with `mix-blend-mode: multiply`, so they read as black + wash (see `.tint` and `.hero-pic` in [css/site.css](css/site.css)). Use the largest source available: the instrument photos are dithered at 900 × 600 from 1080px originals.
+
 **Dithering:** [js/dither.js](js/dither.js) offers Atkinson (the default: crisp and high contrast), Floyd-Steinberg (smoother) and Bayer (cross-hatched) dithering. Reading an image's pixels needs a same-origin image, so use GitHub Pages or `python -m http.server`, not `file://`.
 
 **Alt text:** every image gets alt text that says what it shows. For diagrams, say which parts are labelled, not just "diagram". Inline SVGs get `role="img"` with a `<title>` and `<desc>`.
 
 ## 8. Layout
 
-Based on [shop-v2.html](shop-v2.html):
+As built in the live pages and [css/site.css](css/site.css):
 
 - **One column, up to 900px wide.** Side padding 24px, or 16px under 480px wide.
-- **Header:** a nav-green bar with a 2px black bottom border. The logo and name on the left link home; links on the right **wrap onto a new line on small screens and are never hidden**. Mark the current page with `aria-current="page"`. A noise strip goes directly below.
+- **Header:** white. The logo (100px, 72px on phones) and the name in bold link home; links on the right **wrap onto a new line on small screens and are never hidden**. Mark the current page with `aria-current="page"`.
+- **Noise strip:** directly under the header, 32px tall (24px on phones), striped, in the wash palette, drifting by one row per tick. A square pause button sits at its right-hand end, beside the noise, never on it (WCAG 2.2.2). It has a fixed name ("pause moving noise") and `aria-pressed`, and is hidden under reduced motion. See [js/motion.js](js/motion.js).
 - **Hero:**
-  - a short all-caps line above the headline (`SHOP · … · BELFAST`)
-  - a large headline written as a sentence ("Make some noise. We'll bring the parts."), which can highlight a phrase with a nav-green background
-  - a bordered noise band
+  - on the home page, a dithered photo that tears on hover
+  - a short all-caps line above the headline (`INSTRUMENTS · …`)
+  - a large headline written as a sentence, which can highlight a phrase with a wash-coloured box. The colour split goes on the box, not the text.
   - an intro paragraph
 - **Section headings** are numbered like a lab sheet: `01` followed by the heading and a dotted rule to the right.
-- **Cards:** white, 2px solid black border, **square corners** (no rounded corners anywhere).
-- **Buttons:** black background, nav-green bold text, magenta background with black text on hover, at least 44px tall, and a 3px black focus outline offset by 3px.
-- **Dated cards** (workshops, markets) have a nav-green strip at the top with the date and place.
-- **Process steps:** an `<ol>` across the page, stacking on phones.
-- **Footer:** white, with a row of short facts and the name.
+- **Cards:** 2px solid black border, **square corners** (no rounded corners anywhere). Link cards have a thin noise strip on top.
+- **Buttons:** black background, white bold text, wash hover colour with black text on hover, at least 44px tall, and a 3px black focus outline offset by 3px.
+- **Dated cards** (workshops, markets) have a wash-coloured strip at the top with the date and place.
+- **Process steps:** a vertical `<ol role="list">`, each step a number in a box followed by one or two lines of text. The box number is decorative (screen readers announce list positions themselves), and the steps aren't headings.
+- **Contact:** the email address is assembled by [js/contact.js](js/contact.js), so it never appears whole in the page source. Without JavaScript it's spelled out in the footer. Phone contact is by call-back, never a published number.
+- **Footer:** white, with the contact line and the name.
 
 ## 9. Accessibility checklist
 
@@ -189,10 +193,9 @@ These are requirements, not nice-to-haves:
 
 | File | What it is | Status |
 |---|---|---|
-| [index.html](index.html), [workshops.html](workshops.html), [bookbuild.html](bookbuild.html), [people.html](people.html) | The live site | **Old style:** Courier New, `css/noise.css`, no brand updates yet |
-| [noise-demo.html](noise-demo.html) | Noise lab: strips, washes, tears, fringe, stripes, playground | Prototype |
-| [shop-v2.html](shop-v2.html) | Shop in the target layout | Prototype, placeholder products and links |
-| [shop.html](shop.html) | First shop draft in the old layout | Superseded by v2 |
+| [index.html](index.html), [instruments.html](instruments.html), [workshops.html](workshops.html), [bookbuild.html](bookbuild.html), [people.html](people.html) | The live site | **Live:** sage wash, [css/site.css](css/site.css) |
+| [noise-demo.html](noise-demo.html) | Noise lab: strips, washes, tears, fringe, stripes, playground | Prototype (uses the old `css/noise.css`) |
+| shop-v2.html, shop.html | Shop drafts | Removed from the site for now; in git history |
 | [graphics-style.html](graphics-style.html) | Graphics styles side by side | Prototype |
 | [type-specimen.html](type-specimen.html) | Type options A–D | Reference; option **B** chosen |
 | [tools/dither.html](tools/dither.html) | Photo dither tool | Ready to use |
@@ -200,8 +203,7 @@ These are requirements, not nice-to-haves:
 
 ## Open decisions
 
-- **Washes:** which wash, if any, each page uses.
-- **Rollout:** apply the shop-v2 layout and Atkinson Hyperlegible Mono to the live pages.
-- **Shop:** real products, prices, SumUp payment links, market dates and contact email. Confirm the refund policy.
-- **Ticketing:** confirm the service for workshop tickets.
-- **Tidy-up:** remove [shop.html](shop.html) once v2 is adopted.
+- **Shop:** brought back from git history when there are real products, prices, SumUp payment links and market dates. Confirm the refund policy.
+- **Ticketing:** Tito for the instrument design sprint, once dates and venue are set.
+- **Contact:** swap the published Proton address for an alias (e.g. hello@noiseguaranteed.org) in [js/contact.js](js/contact.js) and the footers.
+- **Instruments page:** add musicians' names and quotes once they've agreed, and a Switchcraft card once there's a description.

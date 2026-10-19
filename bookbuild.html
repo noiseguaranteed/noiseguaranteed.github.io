@@ -1,38 +1,77 @@
 <!DOCTYPE html>
-<html>
+<html lang="en-GB" data-wash="sage">
 <head>
-<link rel="stylesheet" href="css/noise.css">
-<title>noise guaranteed</title>
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>book &amp; build · noise guaranteed</title>
+<meta name="description" content="A free reading group at SARC, Queen's University Belfast, where we read about circuits and then build them.">
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/noise-fx.css">
+<link rel="stylesheet" href="css/site.css">
 </head>
 <body>
+<a class="skip" href="#main">skip to content</a>
 
-<div class="header">
-        <img src="images/ng_logo_trans_bkg_sml.png" alt="The noise guaranteed logo: a tick filled with blocks of pixelated colour within a black circle"></div>
+<header>
+  <nav class="nav" aria-label="main">
+    <a class="logo" href="index.html">
+      <img src="images/ng_logo_trans_bkg_sml.png" width="100" height="100" alt="" data-tear="hover">
+      <span class="wordmark">noise guaranteed</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">home</a></li>
+      <li><a href="instruments.html">instruments</a></li>
+      <li><a href="workshops.html">workshops</a></li>
+      <li><a href="bookbuild.html" aria-current="page">book &amp; build</a></li>
+      <li><a href="people.html">people</a></li>
+      <li><a href="https://github.com/noiseguaranteed">github</a></li>
+    </ul>
+  </nav>
+</header>
+<div class="topband">
+  <canvas class="noise" aria-hidden="true" data-seed="bookbuild" data-style="stripes" data-palette="wash" data-cell="3" data-density="0.85" data-drift="1"></canvas>
+  <button type="button" class="motion" data-motion aria-pressed="false" aria-label="pause moving noise" title="pause or play the moving noise">
+    <svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><rect x="3" y="2" width="4" height="12"/><rect x="9" y="2" width="4" height="12"/></svg>
+    <svg class="i-play" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 2 14 8 4 14z"/></svg>
+  </button>
 </div>
 
-<div class="topnav">
-  <a href="index.html">home</a>
-  <a href="workshops.html">workshops</a>
-  <a href="bookbuild.html"><b><u>book & build</u></b></a>
-  <a href="people.html">people</a>
-  <a href="https://github.com/noiseguaranteed" style="float:right">github</a>
-</div>
-
-<div class="row">
-  <div class="leftcolumn">
-    <div class="card">
-      <p>We meet on a semi-regular basis at SARC to talk through technical documentation related to handmade electronic music. This is similar to a book club, however, we also build the circuits described in the documents we read. We strive to make this group inclusive of all abilities. If you're interested in joining then please get in touch. We're currently working through the documentation for EDU range of synthesiser modules from Erica Synths.</p>
-    
+<main id="main">
+  <section class="hero">
+    <div class="wrap">
+      <p class="kicker">Book &amp; build · SARC · Queen's University Belfast</p>
+      <h1>A reading group, <span class="mark">with a soldering iron.</span></h1>
+      <p class="lede">We meet at the Sonic Arts Research Centre (SARC), Queen's University Belfast, to read about handmade electronic music, then build the circuits. A book club that ends in noise. Free, and open to everyone.</p>
+      <div class="actions">
+        <a class="buy" data-contact data-subject="Book & build" href="#contact">join the next one<span class="visually-hidden"> (opens email)</span></a>
+      </div>
     </div>
+  </section>
+
+  <section aria-labelledby="reading-h">
+    <div class="wrap">
+      <div class="sec-head"><span class="num">01</span><h2 id="reading-h">what we're reading</h2><span class="rule"></span></div>
+      <article class="card" aria-labelledby="vco-h" style="max-width: 520px">
+        <div class="strip"><canvas class="noise" aria-hidden="true" data-seed="edu vco" data-palette="wash" data-cell="6" data-density="0.6"></canvas></div>
+        <div class="body">
+          <h3 id="vco-h">EDU VCO, Erica Synths</h3>
+          <p>A voltage-controlled oscillator kit, documented so you learn how every part works.</p>
+        </div>
+      </article>
+      <p class="note">Reading a circuit tells you what it does. Building it tells you what the writer left out.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="site-foot" id="contact">
+  <div class="foot">
+    <p>Email <span data-contact-addr>alexmlucas at proton dot me</span>, or send us a number and a good time and we'll ring you.</p>
+    <p><b>noise guaranteed</b> · a noise-positive organisation · Belfast · open designs on GitHub · no trackers · 2026</p>
   </div>
-</div>
+</footer>
 
-<div class="footer">
-  <small>noise guaranteed 2025</small>
-</div>
-
+<script src="js/noise.js"></script>
+<script src="js/motion.js"></script>
+<script src="js/contact.js"></script>
 </body>
 </html>
-

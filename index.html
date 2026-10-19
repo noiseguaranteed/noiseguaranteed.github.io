@@ -1,45 +1,126 @@
 <!DOCTYPE html>
-<html>
+<html lang="en-GB" data-wash="sage">
 <head>
-<link rel="stylesheet" href="css/noise.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>noise guaranteed</title>
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+<meta name="description" content="A Belfast collective building open, repairable electronic instruments, co-designed with disabled musicians.">
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/noise-fx.css">
+<link rel="stylesheet" href="css/site.css">
 </head>
 <body>
+<a class="skip" href="#main">skip to content</a>
 
-<div class="header">
-
-        <img src="images/ng_logo_trans_bkg_sml.png" alt="The noise guaranteed logo: a tick filled with blocks of pixelated colour within a black circle"></div>
+<header>
+  <nav class="nav" aria-label="main">
+    <a class="logo" href="index.html">
+      <img src="images/ng_logo_trans_bkg_sml.png" width="100" height="100" alt="" data-tear="hover">
+      <span class="wordmark">noise guaranteed</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html" aria-current="page">home</a></li>
+      <li><a href="instruments.html">instruments</a></li>
+      <li><a href="workshops.html">workshops</a></li>
+      <li><a href="bookbuild.html">book &amp; build</a></li>
+      <li><a href="people.html">people</a></li>
+      <li><a href="https://github.com/noiseguaranteed">github</a></li>
+    </ul>
+  </nav>
+</header>
+<div class="topband">
+  <canvas class="noise" aria-hidden="true" data-seed="index" data-style="stripes" data-palette="wash" data-cell="3" data-density="0.85" data-drift="1"></canvas>
+  <button type="button" class="motion" data-motion aria-pressed="false" aria-label="pause moving noise" title="pause or play the moving noise">
+    <svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><rect x="3" y="2" width="4" height="12"/><rect x="9" y="2" width="4" height="12"/></svg>
+    <svg class="i-play" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 2 14 8 4 14z"/></svg>
+  </button>
 </div>
 
-<div class="topnav">
-  <a href="index.html"><b><u>home</u></b></a>
-  <a href="workshops.html">workshops</a>
-  <a href="bookbuild.html">book & build</a>
-  <a href="people.html">people</a>
-  <a href="https://github.com/noiseguaranteed" style="float:right">github</a>
-</div>
-
-<div class="row">
-  <div class="leftcolumn">
-    <div class="card">
-    <h1>noise guaranteed </h1>
-    <u><i>a noise-positive organisation</i></u>
-      <p>Based in Belfast, <b>noise guaranteed</b> is a collective effort to encourage and nuture critical perspectives on music technology. Together we learn through our practice of building electronic tools for music making.</p>
-      <img src="images/holdsynth.jpeg" alt="a person holding a squeal and scrape instrument" class="center">
-      
-      <p>If there's one thing we can guarantee in our workings, writings and speech, it's noise. In fact we want to make and embrace noise. We want to question the origins of the technology we use. We're not scientists, engineers or ethicists in the traditional sense. We are not formally trained in these disciplines. However, we have a right to question from a position of naivety. Our view from afar, our view from below will mature and our questions will refine.</p>
-      
-    
+<main id="main">
+  <section class="hero">
+    <div class="wrap">
+      <figure class="hero-pic">
+        <img src="images/breadboard_mono.png" width="900" height="450" alt="Close-up of a circuit on a breadboard: a chip, orange wires looping over it, a black knob and a red LED." data-tear="hover">
+      </figure>
+      <p class="kicker">Belfast · a noise-positive organisation</p>
+      <h1>Instruments you can <span class="mark">open, fix and change.</span></h1>
+      <p class="lede">We're a Belfast collective that builds electronic instruments you can open, repair and make your own. We co-design them with disabled musicians, and run workshops that pay for them.</p>
     </div>
+  </section>
+
+  <section aria-labelledby="why-h">
+    <div class="wrap prose">
+      <div class="sec-head"><span class="num">01</span><h2 id="why-h">why this matters</h2><span class="rule"></span></div>
+      <p>Accessible instruments are often expensive, made <em>for</em> disabled people rather than with them, and hard to repair. When one breaks or stops fitting the way someone plays, it ends up in a cupboard.</p>
+      <p>So we design instruments <b>with</b> disabled musicians, from cheap, standard parts, and show them how to fix and change them. An instrument its owner can maintain keeps getting played.</p>
+    </div>
+  </section>
+
+  <section aria-labelledby="what-h">
+    <div class="wrap">
+      <div class="sec-head"><span class="num">02</span><h2 id="what-h">what we do</h2><span class="rule"></span></div>
+      <div class="grid">
+        <a class="card card-link" href="instruments.html">
+          <div class="strip"><canvas class="noise" aria-hidden="true" data-seed="instruments" data-palette="wash" data-cell="6" data-density="0.6"></canvas></div>
+          <div class="body"><h3>instruments</h3><p>Free instruments, co-designed with disabled musicians.</p></div>
+        </a>
+        <a class="card card-link" href="workshops.html">
+          <div class="strip"><canvas class="noise" aria-hidden="true" data-seed="workshops" data-palette="wash" data-cell="6" data-density="0.6"></canvas></div>
+          <div class="body"><h3>workshops</h3><p>Build your own instrument. Your place helps pay for theirs.</p></div>
+        </a>
+        <a class="card card-link" href="instruments.html#organisations">
+          <div class="strip"><canvas class="noise" aria-hidden="true" data-seed="organisations" data-palette="wash" data-cell="6" data-density="0.6"></canvas></div>
+          <div class="body"><h3>working with organisations</h3><p>Co-design with music therapists, SEND schools and community groups.</p></div>
+        </a>
+        <a class="card card-link" href="bookbuild.html">
+          <div class="strip"><canvas class="noise" aria-hidden="true" data-seed="bookbuild" data-palette="wash" data-cell="6" data-density="0.6"></canvas></div>
+          <div class="body"><h3>book &amp; build</h3><p>A free reading group where we read about circuits, then build them.</p></div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel-section" aria-labelledby="fits-h">
+    <div class="wrap">
+      <div class="sec-head"><span class="num">03</span><h2 id="fits-h">how it fits together</h2><span class="rule"></span></div>
+      <ol class="steps" role="list">
+        <li><p><b>You book a workshop</b> and build an instrument.</p></li>
+        <li><p><b>Your fee covers your kit and the room.</b> The rest pays for instruments.</p></li>
+        <li><p><b>A disabled musician co-designs an instrument</b> with us, on the same parts you used.</p></li>
+        <li><p><b>They learn to fix and change it,</b> and so do you.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section aria-labelledby="critical-h">
+    <div class="wrap prose">
+      <div class="sec-head"><span class="num">04</span><h2 id="critical-h">critical making</h2><span class="rule"></span></div>
+      <p>We learn about technology by building it, and ask questions as we go. Where did this chip come from? Who was it designed for? Who gets left out?</p>
+      <p>Between us we've designed commercial synths, turned drums into controllers and wired up installations, but we still start with naive questions. Anyone can ask them, and they get sharper as you build.</p>
+    </div>
+  </section>
+
+  <section aria-labelledby="papers-h">
+    <div class="wrap prose">
+      <div class="sec-head"><span class="num">05</span><h2 id="papers-h">talks and papers</h2><span class="rule"></span></div>
+      <ul>
+        <li><a href="assets26/"><i>Who makes music software accessible?</i></a> ASSETS '26 talk, slides and script.</li>
+        <li><a href="https://doi.org/10.1145/3733606"><i>The Qualities of Convivial Tools and Their Relevance to Music Software Accessibility</i></a>. ACM TACCESS, 2025. Open access.</li>
+        <li><a href="https://alexmlucas.github.io/"><i>Inclusive musicking ecosystems</i></a>. Alex Lucas's PhD portfolio, Queen's University Belfast, 2021.</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<footer class="site-foot" id="contact">
+  <div class="foot">
+    <p>Email <span data-contact-addr>alexmlucas at proton dot me</span>, or send us a number and a good time and we'll ring you.</p>
+    <p><b>noise guaranteed</b> · a noise-positive organisation · Belfast · open designs on GitHub · no trackers · 2026</p>
   </div>
-</div>
+</footer>
 
-<div class="footer">
-  <small>noise guaranteed 2025</small>
-</div>
-
+<script src="js/noise.js"></script>
+<script src="js/motion.js"></script>
+<script src="js/contact.js"></script>
 </body>
 </html>
-
