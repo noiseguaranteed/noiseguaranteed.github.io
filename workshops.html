@@ -1,63 +1,116 @@
 <!DOCTYPE html>
-<html>
+<html lang="en-GB" data-wash="sage">
 <head>
-<link rel="stylesheet" href="css/noise.css">
-<title>noise guaranteed</title>
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>workshops · noise guaranteed</title>
+<meta name="description" content="Build an instrument and learn how it works. Workshop places help pay for instruments co-designed with disabled musicians.">
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/noise-fx.css">
+<link rel="stylesheet" href="css/site.css">
 </head>
 <body>
+<a class="skip" href="#main">skip to content</a>
 
-<div class="header">
-        <img src="images/ng_logo_trans_bkg_sml.png" alt="The noise guaranteed logo: a tick filled with blocks of pixelated colour within a black circle"></div>
+<header>
+  <nav class="nav" aria-label="main">
+    <a class="logo" href="index.html">
+      <img src="images/ng_logo_trans_bkg_sml.png" width="100" height="100" alt="" data-tear="hover">
+      <span class="wordmark">noise guaranteed</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">home</a></li>
+      <li><a href="instruments.html">instruments</a></li>
+      <li><a href="workshops.html" aria-current="page">workshops</a></li>
+      <li><a href="bookbuild.html">book &amp; build</a></li>
+      <li><a href="people.html">people</a></li>
+      <li><a href="https://github.com/noiseguaranteed">github</a></li>
+    </ul>
+  </nav>
+</header>
+<div class="topband">
+  <canvas class="noise" aria-hidden="true" data-seed="workshops" data-style="stripes" data-palette="wash" data-cell="3" data-density="0.85" data-drift="1"></canvas>
+  <button type="button" class="motion" data-motion aria-pressed="false" aria-label="pause moving noise" title="pause or play the moving noise">
+    <svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><rect x="3" y="2" width="4" height="12"/><rect x="9" y="2" width="4" height="12"/></svg>
+    <svg class="i-play" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 2 14 8 4 14z"/></svg>
+  </button>
 </div>
 
-<div class="topnav">
-  <a href="index.html">home</a>
-  <a href="workshops.html"><b><u>workshops</u></b></a>
-  <a href="bookbuild.html">book & build</a>
-  <a href="people.html">people</a>
-  <a href="https://github.com/noiseguaranteed" style="float:right">github</a>
-</div>
+<main id="main">
+  <section class="hero">
+    <div class="wrap">
+      <p class="kicker">Workshops · Northern Ireland and the UK</p>
+      <h1>Build an instrument. <span class="mark">Learn how it works.</span></h1>
+      <p class="lede">For anyone who wants to know what's inside the box. No experience needed. You leave with an instrument you made and understand.</p>
+    </div>
+  </section>
 
-<div class="row">
-  <div class="leftcolumn">
-    <div class="card">
-      <p>We run regular workshops on the island of Ireland focussed on building handmade electronic tools for music-making. Please get in touch if you're interested in hosting a workshop.</p>
+  <section aria-labelledby="sprint-h">
+    <div class="wrap">
+      <div class="sec-head"><span class="num">01</span><h2 id="sprint-h">instrument design sprint</h2><span class="rule"></span></div>
+      <article class="event" aria-labelledby="sprint-card-h">
+        <p class="when"><span>Dates to be announced</span><span>Belfast · venue TBC</span></p>
+        <div class="body">
+          <h3 id="sprint-card-h">instrument design sprint</h3>
+          <ul class="facts" aria-label="at a glance">
+            <li>3 sessions</li><li>12 places</li><li>£300</li><li>no experience needed</li>
+          </ul>
+          <p>Three sessions of electronics, coding and design. You build an instrument to take home. Materials and tools are included.</p>
+          <table class="split">
+            <caption>Where your £300 goes</caption>
+            <tbody>
+              <tr><th scope="row">your kit and materials</th><td>about £100</td></tr>
+              <tr><th scope="row">your share of the room and admin</th><td>about £60</td></tr>
+              <tr class="ours"><th scope="row">instruments for disabled musicians</th><td>about £140</td></tr>
+            </tbody>
+          </table>
+          <p>When you book, we'll ask what we can do to make the workshop accessible for you. Our venues have step-free access and a quiet space.</p>
+          <div class="actions">
+            <a class="buy" data-contact data-subject="Tell me when design sprint booking opens" href="#contact">tell me when booking opens<span class="visually-hidden"> (opens email)</span></a>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
 
-      <h2>Upcoming Workshops</h2>
+  <section aria-labelledby="community-h">
+    <div class="wrap">
+      <div class="sec-head"><span class="num">02</span><h2 id="community-h">community workshops</h2><span class="rule"></span></div>
+      <article class="event" aria-labelledby="shoestring-h">
+        <p class="when off"><span>Not running right now</span><span>Can be booked</span></p>
+        <div class="body">
+          <h3 id="shoestring-h">Shoestring Synthesis</h3>
+          <ul class="facts" aria-label="at a glance"><li>4 hours</li><li>free or hosted</li></ul>
+          <p>Build a cheap and dirty oscillator from the 40106 chip, with wonky handmade sensors to play it. Want to host one? Get in touch.</p>
+          <div class="actions">
+            <a class="buy" data-contact data-subject="Shoestring Synthesis" href="#contact">ask about Shoestring Synthesis<span class="visually-hidden"> (opens email)</span></a>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
 
-      <h3>Shoestring Synthesis</h3>
-
-      <p>In this four-hour workshop we'll build a cheap and dirty oscillator based on the infamous 40106 integrated circuit. We'll craft some handmade wonky sensors for controlling your oscillator and explore some basic sound modulation techniques. No prior experience in electronics or music is required.</p>
-      
-      <ul>
-        <li>Location: Cityside Mall, Belfast</li>
-        <li>Cost: free</li>
-        <li>Tickets: coming soon...</li>
-      </ul>
-      
-      <h3>Past Workshops</h3>
-
+  <section aria-labelledby="past-h">
+    <div class="wrap prose">
+      <div class="sec-head"><span class="num">03</span><h2 id="past-h">past workshops</h2><span class="rule"></span></div>
       <ul>
         <li>Make a Fuss</li>
-        <li>International Synth Design Hackathon 2025</li>
-        <li>Vapour Waves (NIME)</li>
-        <li>International Synth Design Hackathon 2024</li>
-        <li>Vapour Waves (DAS)</li>
-        <li>International Synth Design Hackathon 2023</li>
+        <li>International Synth Design Hackathon 2023, 2024 and 2025</li>
+        <li>Vapour Waves (NIME and DAS)</li>
       </ul>
-
-
-    
     </div>
+  </section>
+</main>
+
+<footer class="site-foot" id="contact">
+  <div class="foot">
+    <p>Email <span data-contact-addr>alexmlucas at proton dot me</span>, or send us a number and a good time and we'll ring you.</p>
+    <p><b>noise guaranteed</b> · a noise-positive organisation · Belfast · open designs on GitHub · no trackers · 2026</p>
   </div>
-</div>
+</footer>
 
-<div class="footer">
-  <small>noise guaranteed 2025</small>
-</div>
-
+<script src="js/noise.js"></script>
+<script src="js/motion.js"></script>
+<script src="js/contact.js"></script>
 </body>
 </html>
-

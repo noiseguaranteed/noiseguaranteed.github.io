@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>noise guaranteed: dither tool</title>
+<link rel="stylesheet" href="../css/noise-fx.css">
+<style>
+  :root { --ink: #000; --paper: #fdeac8; --panel: #fff; --nav: #81ff73; --hot: #f273ff; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Courier New', Courier, monospace; background: var(--paper); color: var(--ink); font-size: 15px; line-height: 1.6; }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+  header { background: var(--nav); border-bottom: 2px solid var(--ink); }
+  header .wrap { display: flex; align-items: center; gap: 10px; padding-top: 10px; padding-bottom: 10px; }
+  header a { display: flex; align-items: center; gap: 10px; font-weight: bold; font-size: 18px; text-decoration: none; color: inherit; }
+  header img { width: 44px; height: 44px; }
+  main { padding: 40px 0 64px; }
+  h1 { font-size: 32px; margin-bottom: 8px; }
+  h2 { font-size: 20px; margin: 32px 0 10px; }
+  p { max-width: 65ch; margin-bottom: 10px; }
+
+  .drop { border: 2px dashed var(--ink); background: var(--panel); padding: 20px; margin: 16px 0; }
+  .drop.over { background: var(--nav); }
+  .controls { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr)); gap: 14px 20px; background: var(--panel); border: 2px solid var(--ink); padding: 16px; }
+  label { display: flex; flex-direction: column; gap: 4px; font-weight: bold; }
+  input, select, button { font: inherit; }
+  select, input[type="number"] { padding: 6px; border: 2px solid var(--ink); background: var(--panel); }
+  input:focus-visible, select:focus-visible, button:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+  .hint { font-weight: normal; font-size: 13px; }
+
+  .btn { background: var(--ink); color: var(--nav); border: 2px solid var(--ink); padding: 10px 16px; font-weight: bold; cursor: pointer; min-height: 44px; }
+  .btn:hover { background: var(--hot); color: var(--ink); }
+  .btn[disabled] { background: #fff; color: #555; cursor: not-allowed; }
+
+  .results { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr)); gap: 18px; margin-top: 16px; }
+  figure { background: var(--panel); border: 2px solid var(--ink); }
+  figure canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; border-bottom: 2px solid var(--ink); }
+  figcaption { padding: 10px; display: flex; flex-direction: column; gap: 8px; font-size: 13px; }
+  .status { font-weight: bold; min-height: 1.6em; margin-top: 10px; }
+  @media (max-width: 480px) { .wrap { padding: 0 16px; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a href="../index.html"><img src="../images/ng_logo_trans_bkg_sml.png" alt="">noise guaranteed</a>
+  </div>
+</header>
+
+<main class="wrap">
+  <h1>dither tool</h1>
+  <p>Turn photos and scanned drawings into noise guaranteed colours. Everything happens in your browser: your images aren't uploaded anywhere.</p>
+
+  <h2>1. choose images</h2>
+  <div class="drop" id="drop">
+    <label>Images (you can choose several)
+      <input type="file" id="files" accept="image/*" multiple>
+    </label>
+    <p class="hint">Or drag and drop image files onto this box.</p>
+  </div>
+
+  <h2>2. settings</h2>
+  <div class="controls">
+    <label>Colours
+      <select id="palette">
+        <option value="magenta">black + magenta (like the site's photos)</option>
+        <option value="green">black + green</option>
+        <option value="mono">black + white</option>
+        <option value="logo">logo colours</option>
+      </select>
+    </label>
+    <label>Dither style
+      <select id="method">
+        <option value="atkinson">Atkinson: crisp, high contrast</option>
+        <option value="floyd">Floyd-Steinberg: smoother tones</option>
+        <option value="bayer">Bayer: regular cross-hatch</option>
+      </select>
+    </label>
+    <label>Dot size
+      <input type="number" id="pixel" min="1" max="8" value="2">
+      <span class="hint">1 is finest; bigger is chunkier</span>
+    </label>
+    <label>Largest width (dots)
+      <input type="number" id="maxw" min="50" max="3000" step="50" value="800">
+      <span class="hint">Keeps big photos quick to process</span>
+    </label>
+    <label>Contrast
+      <input type="range" id="contrast" min="-0.6" max="0.6" step="0.05" value="0">
+    </label>
+    <label>Brightness
+      <input type="range" id="brightness" min="-0.6" max="0.6" step="0.05" value="0">
+    </label>
+    <label>Download size
+      <select id="scale">
+        <option value="1">1× (one pixel per dot)</option>
+        <option value="2" selected>2×</option>
+        <option value="3">3×</option>
+        <option value="4">4×</option>
+      </select>
+      <span class="hint">Bigger keeps dots sharp when shown large</span>
+    </label>
+  </div>
+
+  <h2>3. download</h2>
+  <button class="btn" id="all" type="button" disabled>download all</button>
+  <p class="status" id="status" role="status" aria-live="polite"></p>
+  <div class="results" id="results"></div>
+</main>
+
+<script src="../js/dither.js"></script>
+<script>
+  var items = []; // { name, bitmap, canvas, fig }
+  var $ = function (id) { return document.getElementById(id); };
+  var status = $('status');
+
+  function settings() {
+    return {
+      palette: $('palette').value,
+      method: $('method').value,
+      pixel: Math.max(1, parseInt($('pixel').value, 10) || 1),
+      contrast: parseFloat($('contrast').value),
+      brightness: parseFloat($('brightness').value)
+    };
+  }
+
+  function outName(name) { return name.replace(/\.[^.]+$/, '') + '-dither.png'; }
+
+  function render(item) {
+    var s = settings();
+    var maxw = parseInt($('maxw').value, 10) || 800;
+    s.width = Math.min(maxw, Math.round(item.bitmap.width / s.pixel));
+    var c = NoiseDither.dither(item.bitmap, s);
+    c.setAttribute('role', 'img');
+    c.setAttribute('aria-label', 'Dithered version of ' + item.name);
+    item.fig.replaceChild(c, item.canvas);
+    item.canvas = c;
+    item.fig.querySelector('.size').textContent = c.width + ' × ' + c.height + ' dots';
+  }
+
+  var pending = 0;
+  function renderAll() {
+    cancelAnimationFrame(pending);
+    pending = requestAnimationFrame(function () {
+      items.forEach(render);
+      if (items.length) status.textContent = 'Dithered ' + items.length + (items.length === 1 ? ' image.' : ' images.');
+    });
+  }
+
+  function download(item) {
+    var a = document.createElement('a');
+    a.download = outName(item.name);
+    a.href = NoiseDither.scale(item.canvas, parseInt($('scale').value, 10)).toDataURL('image/png');
+    a.click();
+  }
+
+  function addFiles(list) {
+    var files = Array.prototype.filter.call(list, function (f) { return /^image\//.test(f.type); });
+    if (!files.length) { status.textContent = 'No image files found in that selection.'; return; }
+    status.textContent = 'Loading ' + files.length + '…';
+    Promise.all(files.map(function (f) {
+      return createImageBitmap(f).then(function (bitmap) { return { name: f.name, bitmap: bitmap }; });
+    })).then(function (loaded) {
+      loaded.forEach(function (item) {
+        var fig = document.createElement('figure');
+        var placeholder = document.createElement('canvas');
+        var cap = document.createElement('figcaption');
+        var title = document.createElement('b');
+        title.textContent = item.name;
+        var size = document.createElement('span');
+        size.className = 'size';
+        var btn = document.createElement('button');
+        btn.className = 'btn';
+        btn.type = 'button';
+        btn.textContent = 'download ' + outName(item.name);
+        btn.addEventListener('click', function () { download(item); });
+        cap.append(title, size, btn);
+        fig.append(placeholder, cap);
+        $('results').append(fig);
+        item.fig = fig;
+        item.canvas = placeholder;
+        items.push(item);
+      });
+      $('all').disabled = false;
+      renderAll();
+    }).catch(function () {
+      status.textContent = 'One of those files couldn’t be read as an image.';
+    });
+  }
+
+  $('files').addEventListener('change', function () { addFiles(this.files); this.value = ''; });
+  ['palette', 'method', 'pixel', 'maxw', 'contrast', 'brightness'].forEach(function (id) {
+    $(id).addEventListener('input', renderAll);
+  });
+  $('all').addEventListener('click', function () {
+    // Spaced out a little, as some browsers drop downloads fired all at once.
+    items.forEach(function (item, i) { setTimeout(function () { download(item); }, i * 300); });
+  });
+
+  var drop = $('drop');
+  drop.addEventListener('dragover', function (e) { e.preventDefault(); drop.classList.add('over'); });
+  drop.addEventListener('dragleave', function () { drop.classList.remove('over'); });
+  drop.addEventListener('drop', function (e) {
+    e.preventDefault();
+    drop.classList.remove('over');
+    addFiles(e.dataTransfer.files);
+  });
+</script>
+</body>
+</html>

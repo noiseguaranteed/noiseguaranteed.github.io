@@ -1,0 +1,186 @@
+/* site.css: the site's layout and components (BRAND.md). Load after css/fonts.css and
+   css/noise-fx.css. Colours come from the page's wash: every page uses <html data-wash="sage">.
+   With no wash, the original bright brand colours apply. */
+
+html:not([data-wash]) {
+  --wash: #81ff73;        /* nav green */
+  --wash-hover: #f273ff;  /* hover magenta */
+  --wash-soft: #fdeac8;   /* cream */
+  --wash-noise: #00ff00, #0000ff, #00ffff, #ff40ff, #ffff00, #ff0000;
+}
+:root { --ink: #000; --panel: #fff; }
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Atkinson Hyperlegible Mono', 'Courier New', monospace;
+  background: var(--wash-soft); color: var(--ink);
+  font-size: 16px; line-height: 1.6;
+}
+a { color: inherit; text-underline-offset: 3px; }
+a:hover { background: var(--wash-hover); }
+:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+h1, h2, h3 { line-height: 1.2; }
+p, li, dd { max-width: 65ch; }
+img { max-width: 100%; height: auto; }
+.wrap { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+section { padding: 44px 0; }
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+}
+canvas.noise { display: block; width: 100%; height: 16px; }
+
+.skip { position: absolute; left: 8px; top: -60px; background: var(--ink); color: #fff; padding: 10px 16px; font-weight: bold; z-index: 10; }
+.skip:focus { top: 8px; }
+
+/* header: white bar; links wrap onto a new line on small screens, never hidden */
+/* header: logo (at the live site's 100px) and name on the left, links on the right;
+   links wrap onto a new line when there isn't room, and are never hidden */
+header { background: var(--panel); }
+.nav {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 8px 24px; max-width: 900px; margin: 0 auto; padding: 12px 24px;
+}
+.logo { display: flex; align-items: center; gap: 14px; text-decoration: none; }
+.logo:hover { background: none; }
+.logo img { display: block; width: 100px; height: 100px; }
+/* the name: large, with the colour fringe; the gap colour matches the white header */
+.wordmark { font-weight: bold; font-size: clamp(24px, 4vw, 34px); line-height: 1.1; }
+.nav-links { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; list-style: none; }
+.nav-links a { display: block; padding: 8px; text-decoration: none; border-bottom: 4px solid transparent; }
+.nav-links a:focus-visible { outline-offset: -3px; }
+.nav-links a[aria-current="page"] { font-weight: bold; border-bottom-color: var(--ink); }
+
+
+
+/* the noise band, straight under the nav, with a square pause button at its right-hand end.
+   The button sits beside the noise, never on top of it. It has a fixed accessible name and
+   aria-pressed, so screen readers hear "pause moving noise, toggle button, pressed". */
+.topband { display: flex; border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink); background: var(--panel); }
+.topband canvas.noise { flex: 1; min-width: 0; width: auto; height: 32px; }
+.motion {
+  flex: none; width: 34px; height: 32px; padding: 0; display: grid; place-items: center;
+  background: var(--panel); color: var(--ink); border: 0; border-left: 2px solid var(--ink); cursor: pointer;
+}
+.motion svg { width: 14px; height: 14px; fill: currentColor; }
+.motion:hover { background: var(--wash-hover); }
+.motion:focus-visible { outline-offset: -5px; }
+.motion .i-play, .motion[aria-pressed="true"] .i-pause { display: none; }
+.motion[aria-pressed="true"] .i-play { display: block; }
+.motion[aria-pressed="true"] { background: var(--wash); }
+
+/* home page photo: dithered black and white, multiplied onto the wash colour so it reads as
+   black + wash in either scheme. The tear canvas (added by noise.js) blends the same way. */
+.hero-pic { margin: 0 0 28px; border: 2px solid var(--ink); background: var(--wash); line-height: 0; }
+.hero-pic > span { display: block !important; }
+.hero-pic img, .hero-pic canvas { mix-blend-mode: multiply; }
+.hero-pic img { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+
+/* hero */
+.hero { padding: 36px 0 40px; }
+.kicker { font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 14px; }
+h1 { font-size: clamp(32px, 5.5vw, 52px); max-width: 18ch; }
+/* headline highlight with the colour split on the box, not the text: a thin gap in the page
+   colour, then the scheme's two fringe colours trailing to the right. Each line of a wrapped
+   highlight gets its own. Off for people who ask for more contrast. */
+h1 .mark {
+  background: var(--wash); padding: 0 0.15em;
+  -webkit-box-decoration-break: clone; box-decoration-break: clone;
+  box-shadow: 2px 0 0 var(--wash-soft), 5px 0 0 var(--fringe-a), 8px 0 0 var(--fringe-b);
+}
+@media (prefers-contrast: more) { h1 .mark { box-shadow: none; } }
+.lede { margin-top: 20px; font-size: 17px; }
+
+/* numbered section headings with a dotted rule, like a lab sheet */
+.sec-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 14px; }
+.sec-head .num { font-size: 13px; }
+.sec-head h2 { font-size: 24px; }
+.sec-head .rule { flex: 1; min-width: 24px; border-bottom: 2px dotted var(--ink); transform: translateY(-6px); }
+.sec-sub { margin-bottom: 20px; }
+.prose p + p { margin-top: 12px; }
+.prose ul { margin: 12px 0 0 1.4em; }
+.prose li + li { margin-top: 6px; }
+
+/* steps: a plain vertical list with the number in a box.
+   role="list" keeps list semantics in Safari, which drops them when list-style is none.
+   The box number is decoration (the alt text after "/" is empty); screen readers
+   announce the item's position in the list themselves. */
+.steps { list-style: none; counter-reset: step; display: grid; gap: 14px; max-width: 65ch; }
+.steps li { counter-increment: step; display: grid; grid-template-columns: 44px 1fr; gap: 14px; align-items: start; }
+.steps li::before {
+  content: counter(step) / "";
+  display: grid; place-items: center; width: 44px; height: 44px;
+  background: var(--wash); border: 2px solid var(--ink); font-weight: bold; font-size: 18px;
+}
+.steps li p { padding-top: 9px; }
+
+/* cards */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(380px, 100%), 1fr)); gap: 18px; }
+.card { background: var(--panel); border: 2px solid var(--ink); display: flex; flex-direction: column; }
+/* photos are dithered black and white, then multiplied onto the wash colour,
+   so they read as black + wash in every colour scheme */
+.card .tint { background: var(--wash); border-bottom: 2px solid var(--ink); }
+.card .tint .pic { mix-blend-mode: multiply; border-bottom: 0; }
+.card .pic { display: block; width: 100%; aspect-ratio: 3 / 2; object-fit: cover; border-bottom: 2px solid var(--ink); }
+.card .art { position: relative; aspect-ratio: 3 / 2; border-bottom: 2px solid var(--ink); }
+.card .art canvas.noise { position: absolute; inset: 0; height: 100%; }
+.card .art span { position: absolute; left: 8px; bottom: 8px; background: var(--panel); border: 2px solid var(--ink); padding: 0 6px; font-weight: bold; }
+.card .strip { position: relative; height: 18px; border-bottom: 2px solid var(--ink); }
+.card .strip canvas.noise { position: absolute; inset: 0; height: 100%; }
+.grid > * { min-width: 0; }
+.card .body { padding: 14px; display: flex; flex-direction: column; flex: 1; gap: 8px; }
+.card h3 { font-size: 18px; }
+.card .with { font-size: 14px; }
+.card .links { margin-top: auto; padding-top: 6px; }
+a.card-link { text-decoration: none; }
+a.card-link:hover { background: var(--panel); }
+a.card-link:hover h3, a.card-link:focus-visible h3 { background: var(--wash-hover); align-self: flex-start; }
+a.card-link h3::after { content: " →" / ""; }
+
+blockquote { border-left: 10px solid var(--wash); box-shadow: inset 2px 0 0 var(--ink); padding: 2px 0 2px 14px; }
+blockquote .cite { font-size: 14px; margin-top: 4px; }
+blockquote .cite::before { content: "— " / ""; }
+
+/* buttons: white on black 21:1; black on the wash hover colour at least 7:1 */
+.buy {
+  display: inline-block; background: var(--ink); color: #fff; text-decoration: none;
+  padding: 10px 16px; font-weight: bold; border: 2px solid var(--ink); min-height: 44px;
+}
+.buy:hover { background: var(--wash-hover); color: var(--ink); }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 20px; }
+.note { margin-top: 10px; font-size: 15px; }
+
+/* dated cards for workshops */
+.event { background: var(--panel); border: 2px solid var(--ink); }
+.event .when { max-width: none; border-bottom: 2px solid var(--ink); padding: 8px 14px; font-size: 13px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 10px; background: var(--wash); text-transform: uppercase; letter-spacing: 0.08em; }
+.event .when.off { background: var(--panel); }
+.event .body { padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.event h3 { font-size: 20px; }
+.facts { display: flex; flex-wrap: wrap; gap: 6px 8px; list-style: none; }
+.facts li { font-size: 13px; border: 2px solid var(--ink); padding: 0 8px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+.split { border-collapse: collapse; width: 100%; max-width: 460px; background: var(--panel); }
+.split caption { text-align: left; font-weight: bold; margin-bottom: 6px; }
+.split th, .split td { border: 2px solid var(--ink); padding: 6px 10px; text-align: left; font-weight: normal; }
+.split td { text-align: right; font-weight: bold; white-space: nowrap; }
+.split tr.ours th, .split tr.ours td { background: var(--wash); }
+
+.panel-section { background: var(--panel); border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink); }
+
+.person + .person { margin-top: 24px; }
+.person h3 { font-size: 20px; margin-bottom: 6px; }
+
+/* footer */
+.site-foot { border-top: 2px solid var(--ink); background: var(--panel); }
+.foot { max-width: 900px; margin: 0 auto; padding: 20px 24px 28px; font-size: 14px; }
+.foot p + p { margin-top: 6px; }
+
+@media (max-width: 480px) {
+  .wrap, .nav, .foot { padding-left: 16px; padding-right: 16px; }
+  section { padding: 34px 0; }
+  .topband canvas.noise { height: 24px; }
+  .motion { width: 26px; height: 24px; }
+  .motion svg { width: 12px; height: 12px; }
+  .logo { gap: 10px; }
+  .logo img { width: 72px; height: 72px; }
+}

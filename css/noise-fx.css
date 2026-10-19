@@ -1,0 +1,82 @@
+/* noise-fx.css: page washes and colour fringes for noise guaranteed.
+   Load after noise.css. Nothing here changes a page until it opts in.
+
+   Washes: tints taken from the "Noise Guaranteed combo 1" video, one per page.
+     <html data-wash="teal">   green, teal, sage, ochre, rose, grey
+   Each wash sets:
+     --wash        nav bar background (black text on it passes WCAG AAA, 7:1)
+     --wash-hover  nav link hover/focus background (also 7:1 with black)
+     --wash-soft   card and footer background
+     --wash-noise  colours for noise.js's "wash" palette
+     --fringe-a/b  colour fringe pair, the complementary ghosts from the video
+     --fringe      the same pair for noise.js tears */
+
+:root {
+  --fringe-a: #ff0000;
+  --fringe-b: #00ffff;
+  --fringe: #ff0000, #00ffff;
+}
+
+[data-wash="green"] {
+  --wash: #4fd84a; --wash-hover: #b4f5a8; --wash-soft: #e6f6df;
+  --wash-noise: #035c00, #2fbf2f, #9cf28f, #ff40ff;
+  --fringe-a: #ff40ff; --fringe-b: #00c000; --fringe: #ff40ff, #00c000;
+}
+[data-wash="teal"] {
+  --wash: #6cc2b1; --wash-hover: #bfe6dd; --wash-soft: #e2f2ee;
+  --wash-noise: #17493a, #3a9a88, #a9dccf, #d02a2a;
+  --fringe-a: #d02a2a; --fringe-b: #2fb5a0; --fringe: #d02a2a, #2fb5a0;
+}
+[data-wash="sage"] {
+  --wash: #a9cba2; --wash-hover: #d6e8d0; --wash-soft: #eef5eb;
+  --wash-noise: #4e6a49, #8fb488, #d6e8d0, #ff40ff;
+  --fringe-a: #ff40ff; --fringe-b: #6f9a68; --fringe: #ff40ff, #6f9a68;
+}
+[data-wash="ochre"] {
+  --wash: #d6a454; --wash-hover: #eed3a3; --wash-soft: #f7ead5;
+  --wash-noise: #5a3b10, #b07a2a, #f0c27a, #0030ff;
+  --fringe-a: #0030ff; --fringe-b: #e08a1e; --fringe: #0030ff, #e08a1e;
+}
+[data-wash="rose"] {
+  --wash: #e58aa4; --wash-hover: #f5c6d3; --wash-soft: #fbe6ec;
+  --wash-noise: #6e1f38, #c04870, #f2a3bb, #0f9a4a;
+  --fringe-a: #0f9a4a; --fringe-b: #e0507a; --fringe: #0f9a4a, #e0507a;
+}
+[data-wash="grey"] {
+  --wash: #b4b0aa; --wash-hover: #dcd9d4; --wash-soft: #f1efec;
+  --wash-noise: #3e3d39, #8a8781, #d8d5cf, #ffffff;
+  --fringe-a: #8a8781; --fringe-b: #d8d5cf; --fringe: #8a8781, #d8d5cf;
+}
+
+[data-wash] .topnav { background-color: var(--wash); }
+[data-wash] .topnav a:hover,
+[data-wash] .topnav a:focus-visible { background-color: var(--wash-hover); }
+[data-wash] .card,
+[data-wash] .footer { background-color: var(--wash-soft); }
+
+/* A clear keyboard focus ring on the nav, which the base styles don't have. */
+.topnav a:focus-visible {
+  outline: 3px solid #000;
+  outline-offset: -3px;
+}
+
+/* Colour fringe: red/cyan (or the wash's pair) ghosts trailing to the right of large
+   headings, like the smear in the video. A 1px outline in the background colour keeps
+   the ghosts off the letters, so the letter edges stay sharp. Set --fringe-gap to the
+   colour behind the heading if it isn't the page cream, e.g. style="--fringe-gap:#fff"
+   on a white panel. Use on big text only. */
+:root { --fringe-gap: #fdeac8; }
+[data-wash] { --fringe-gap: var(--wash-soft); }
+/* Applied to children too, so a highlighted phrase can set its own --fringe-gap. */
+.fringe, .fringe * {
+  text-shadow:
+    1px 0 0 var(--fringe-gap), -1px 0 0 var(--fringe-gap),
+    0 1px 0 var(--fringe-gap), 0 -1px 0 var(--fringe-gap),
+    0.05em 0 0 var(--fringe-a), 0.09em 0 0 var(--fringe-b);
+}
+
+/* People who ask for more contrast get plain text. Forced-colours modes
+   (e.g. Windows High Contrast) drop text shadows by themselves. */
+@media (prefers-contrast: more) {
+  .fringe, .fringe * { text-shadow: none; }
+}

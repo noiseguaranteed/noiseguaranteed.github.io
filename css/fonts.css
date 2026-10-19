@@ -1,0 +1,41 @@
+/* fonts.css: the site's fonts, served from /fonts so visitors' browsers never
+   contact a font service. All three are under the SIL Open Font License (see /fonts).
+   Latin subset only: covers English and Irish, including fadas. */
+
+@font-face {
+  font-family: 'Atkinson Hyperlegible Mono';
+  src: url('../fonts/ahmono.woff2') format('woff2');
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Atkinson Hyperlegible Mono';
+  src: url('../fonts/ahmono-italic.woff2') format('woff2');
+  font-weight: 200 800;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Atkinson Hyperlegible Next';
+  src: url('../fonts/ahnext.woff2') format('woff2');
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Atkinson Hyperlegible Next';
+  src: url('../fonts/ahnext-italic.woff2') format('woff2');
+  font-weight: 200 800;
+  font-style: italic;
+  font-display: swap;
+}
+/* A pixel font for very large headings and stickers only. It's drawn on an
+   11 px grid, so it's sharpest at multiples of 11: 44, 55, 66 px. */
+@font-face {
+  font-family: 'Departure Mono';
+  src: url('../fonts/departure-mono.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
