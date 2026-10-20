@@ -113,6 +113,13 @@ h1 .mark {
   background: var(--wash); border: 2px solid var(--ink); font-weight: bold; font-size: 18px;
 }
 .steps li p { padding-top: 9px; }
+/* a list split into labelled groups carries on its numbering: <ol start="3"> */
+.steps[start="3"] { counter-reset: step 2; }
+.steps-label {
+  font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase;
+  margin: 0 0 10px; padding-bottom: 4px; border-bottom: 2px dotted var(--ink); max-width: 65ch;
+}
+.steps + .steps-label { margin-top: 26px; }
 
 /* cards */
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(380px, 100%), 1fr)); gap: 18px; }
