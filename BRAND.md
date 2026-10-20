@@ -151,7 +151,7 @@ Same grammar as the logo: **a crisp black line, filled with noise.** See [graphi
 
 As built in the live pages and [css/site.css](css/site.css):
 
-- **One column, up to 900px wide.** Side padding 24px, or 16px under 480px wide.
+- **One column, as wide as the text** (`--col: 705px`): 65 characters of 16px body text plus 24px side padding, so text, section rules, cards and photos share one right edge. Side padding 16px under 480px wide. Cards sit two to a row on wider screens and stack on phones.
 - **Header:** white. The logo (100px, 72px on phones) and the name in bold link home; links on the right **wrap onto a new line on small screens and are never hidden**. Mark the current page with `aria-current="page"`.
 - **Noise strip:** directly under the header, 32px tall (24px on phones), striped, in the wash palette, drifting by one row per tick. A square pause button sits at its right-hand end, beside the noise, never on it (WCAG 2.2.2). It has a fixed name ("pause moving noise") and `aria-pressed`, and is hidden under reduced motion. See [js/motion.js](js/motion.js).
 - **Hero:**
