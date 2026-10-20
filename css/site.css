@@ -159,6 +159,11 @@ blockquote .cite::before { content: "— " / ""; }
 .buy:hover { background: var(--wash-hover); color: var(--ink); }
 .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 20px; }
 .note { margin-top: 10px; font-size: 15px; }
+/* in the hero, give each block more room, so separate messages (the offer, the button,
+   call-back, organisations) read as separate */
+.hero .lede { margin-top: 24px; }
+.hero .note { margin-top: 18px; }
+.hero .actions { margin-top: 28px; }
 
 /* dated cards for workshops */
 .event { background: var(--panel); border: 2px solid var(--ink); }
