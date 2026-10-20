@@ -64,7 +64,7 @@ body { font-family: 'Atkinson Hyperlegible Mono', 'Courier New', monospace; }
 ```
 
 - **Served from the site:** the font files are in [fonts/](fonts/) and declared in [css/fonts.css](css/fonts.css). **Never link to Google Fonts or any other font service:** it sends visitors' IP addresses to a third party.
-- **Sizes:** body 16px (16–17px is fine), never smaller than 13px, even for labels. Line height 1.6. Paragraphs at most about 65 characters wide (`max-width: 65ch`).
+- **Sizes:** body 17px, intro paragraphs 18px, never smaller than 13px, even for labels. Line height 1.6. Paragraphs at most 70 characters wide (`max-width: 70ch`), within WCAG 1.4.8's 80.
 - **Weight:** bold for headings, prices and buttons; regular for everything else. The font is variable, so weights 200–800 are available, but keep to regular and bold.
 - **Headings:** lowercase, bold. Large page headings can use `clamp(34px, 6vw, 56px)`.
 - **All caps** only for short labels: `STEP 1`, `SHOP · BELFAST`, `FREE`. Use real lowercase text with `text-transform: uppercase`, so screen readers don't spell it out letter by letter.
@@ -151,7 +151,7 @@ Same grammar as the logo: **a crisp black line, filled with noise.** See [graphi
 
 As built in the live pages and [css/site.css](css/site.css):
 
-- **One column, as wide as the text** (`--col: 705px`): 65 characters of 16px body text plus 24px side padding, so text, section rules, cards and photos share one right edge. Side padding 16px under 480px wide. Cards sit two to a row on wider screens and stack on phones.
+- **One column, as wide as the text** (`--col: 800px`): 70 characters of 17px body text plus 24px side padding, so text, section rules, cards and photos share one right edge. Side padding 16px under 480px wide. Cards sit two to a row on wider screens and stack on phones.
 - **Header:** white. The logo (100px, 72px on phones) and the name in bold link home; links on the right **wrap onto a new line on small screens and are never hidden**. Mark the current page with `aria-current="page"`.
 - **Noise strip:** directly under the header, 32px tall (24px on phones), striped, in the wash palette, drifting by one row per tick. A square pause button sits at its right-hand end, beside the noise, never on it (WCAG 2.2.2). It has a fixed name ("pause moving noise") and `aria-pressed`, and is hidden under reduced motion. See [js/motion.js](js/motion.js).
 - **Hero:**

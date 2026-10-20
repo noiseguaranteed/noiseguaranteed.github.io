@@ -8,22 +8,22 @@ html:not([data-wash]) {
   --wash-soft: #fdeac8;   /* cream */
   --wash-noise: #00ff00, #0000ff, #00ffff, #ff40ff, #ffff00, #ff0000;
 }
-/* --col: the page column. Its content is exactly 65 characters of 16px Atkinson Hyperlegible
-   Mono (10.11px each, so 657px) plus 24px padding each side, so body text, section rules,
-   cards and photos all share one right edge. */
-:root { --ink: #000; --panel: #fff; --col: 705px; }
+/* --col: the page column. Its content is exactly 70 characters of 17px Atkinson Hyperlegible
+   Mono (10.74px each, so 752px) plus 24px padding each side, so body text, section rules,
+   cards and photos all share one right edge. 70 characters is within WCAG 1.4.8's 80. */
+:root { --ink: #000; --panel: #fff; --col: 800px; }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
   font-family: 'Atkinson Hyperlegible Mono', 'Courier New', monospace;
   background: var(--wash-soft); color: var(--ink);
-  font-size: 16px; line-height: 1.6;
+  font-size: 17px; line-height: 1.6;
 }
 a { color: inherit; text-underline-offset: 3px; }
 a:hover { background: var(--wash-hover); }
 :focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
 h1, h2, h3 { line-height: 1.2; }
-p, li, dd { max-width: 65ch; }
+p, li, dd { max-width: 70ch; }
 img { max-width: 100%; height: auto; }
 .wrap { max-width: var(--col); margin: 0 auto; padding: 0 24px; }
 section { padding: 44px 0; }
@@ -92,7 +92,7 @@ h1 .mark {
   box-shadow: 2px 0 0 var(--wash-soft), 5px 0 0 var(--fringe-a), 8px 0 0 var(--fringe-b);
 }
 @media (prefers-contrast: more) { h1 .mark { box-shadow: none; } }
-.lede { margin-top: 20px; font-size: 17px; }
+.lede { margin-top: 20px; font-size: 18px; }
 
 /* numbered section headings with a dotted rule, like a lab sheet */
 .sec-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 14px; }
@@ -108,7 +108,7 @@ h1 .mark {
    role="list" keeps list semantics in Safari, which drops them when list-style is none.
    The box number is decoration (the alt text after "/" is empty); screen readers
    announce the item's position in the list themselves. */
-.steps { list-style: none; counter-reset: step; display: grid; gap: 14px; max-width: 65ch; }
+.steps { list-style: none; counter-reset: step; display: grid; gap: 14px; max-width: 70ch; }
 .steps li { counter-increment: step; display: grid; grid-template-columns: 44px 1fr; gap: 14px; align-items: start; }
 .steps li::before {
   content: counter(step) / "";
@@ -120,7 +120,7 @@ h1 .mark {
 .steps[start="3"] { counter-reset: step 2; }
 .steps-label {
   font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase;
-  margin: 0 0 10px; padding-bottom: 4px; border-bottom: 2px dotted var(--ink); max-width: 65ch;
+  margin: 0 0 10px; padding-bottom: 4px; border-bottom: 2px dotted var(--ink); max-width: 70ch;
 }
 .steps + .steps-label { margin-top: 26px; }
 
