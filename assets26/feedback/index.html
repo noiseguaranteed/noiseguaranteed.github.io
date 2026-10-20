@@ -1,51 +1,26 @@
-<!doctype html>
-<html lang="en-GB">
+<!DOCTYPE html>
+<html lang="en-GB" data-wash="sage">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Talk feedback – Who makes music software accessible? (ASSETS '26)</title>
-<link rel="icon" href="../img/favicon.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Feedback · Who makes music software accessible? · noise guaranteed</title>
 <meta name="description" content="A short, optional feedback form for Alex Lucas's ASSETS '26 talk on convivial tools and music software accessibility.">
+<link rel="icon" href="../../favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="apple-touch-icon" href="../../images/apple-touch-icon.png">
+<link rel="stylesheet" href="../../css/fonts.css">
+<link rel="stylesheet" href="../../css/noise-fx.css">
+<link rel="stylesheet" href="../../css/site.css">
 <style>
-  @font-face { font-family: "Atkinson Hyperlegible Mono"; src: url("../fonts/ahmono.woff2") format("woff2"); font-weight: 200 800; font-display: swap; }
-  @font-face { font-family: "Atkinson Hyperlegible Mono"; src: url("../fonts/ahmono-italic.woff2") format("woff2"); font-weight: 200 800; font-style: italic; font-display: swap; }
-
-  /* noise guaranteed brand (BRAND.md): black text on cream or white only,
-     nav green and magenta as backgrounds, square corners, 2px black borders */
-  :root { --ink: #000; --paper: #fdeac8; --panel: #fff; --nav: #81ff73; --hot: #f273ff; }
-
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; background: var(--paper); color: var(--ink);
-    font-family: "Atkinson Hyperlegible Mono", "Courier New", monospace; font-size: 17px; line-height: 1.6;
-  }
-  a { color: inherit; text-underline-offset: 3px; }
-  a:hover { background: var(--hot); }
-  :focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
-  .skip { position: absolute; left: -999px; }
-  .skip:focus { left: 16px; top: 16px; background: var(--panel); border: 2px solid var(--ink); padding: 8px 16px; z-index: 2; }
-
-  header { background: var(--nav); border-bottom: 2px solid var(--ink); }
-  .bar { max-width: 900px; margin: 0 auto; padding: 10px 24px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 24px; }
-  .home { display: inline-flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; text-decoration: none; }
-  .home img { width: 44px; height: 44px; }
-  .bar .back { padding: 8px; }
-  .strip { display: block; width: 100%; height: 10px; image-rendering: pixelated; object-fit: cover; object-position: left; }
-
-  main { max-width: 900px; margin: 0 auto; padding: 40px 24px 64px; }
-  .kicker { font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase; margin: 0 0 12px; }
-  h1 { font-size: clamp(30px, 6vw, 48px); line-height: 1.15; margin: 0 0 24px; max-width: 18ch; }
-  .mark { background: var(--nav); padding: 0 0.15em; }
-  h2 { font-size: 20px; margin: 32px 0 8px; }
-  p { margin: 0 0 16px; max-width: 65ch; }
-  form { max-width: 44rem; }
-  main, footer { overflow-wrap: anywhere; }
-
-  fieldset { border: 2px solid var(--ink); margin: 0 0 24px; padding: 0 16px 8px; background: var(--panel); }
-  legend { font-weight: 700; font-size: 18px; padding: 2px 10px; background: var(--nav); border: 2px solid var(--ink); }
+  /* the feedback form, on top of css/site.css. Black text throughout; sage for highlights;
+     errors are marked with a symbol and a border, never colour alone. */
+  main, .foot { overflow-wrap: anywhere; }
+  [hidden] { display: none !important; }
+  form { max-width: 70ch; }
+  fieldset { border: 2px solid var(--ink); background: var(--panel); margin: 0 0 24px; padding: 0 16px 10px; }
+  legend { font-weight: bold; font-size: 18px; padding: 4px 12px; background: var(--wash); border: 2px solid var(--ink); }
   .hint { font-size: 15px; margin: 12px 0; }
   .field { margin: 0 0 24px; }
-  label.block { display: block; font-weight: 700; margin-bottom: 4px; }
+  label.block { display: block; font-weight: bold; margin-bottom: 4px; }
   .choice { display: flex; gap: 12px; align-items: flex-start; padding: 7px 0; }
   .choice input { width: 26px; height: 26px; margin: 0; flex: none; accent-color: #000; }
   .choice label { flex: 1; }
@@ -54,45 +29,59 @@
     border: 2px solid var(--ink); border-radius: 0; padding: 10px 12px;
   }
   textarea { min-height: 7rem; resize: vertical; }
-  .req { font-weight: 400; }
-
-  /* buttons: green on black is 16.5:1, black on magenta hover 8.7:1 */
-  button {
-    font: inherit; font-weight: 700; font-size: 18px; cursor: pointer;
-    background: var(--ink); color: var(--nav); border: 2px solid var(--ink); border-radius: 0;
-    padding: 10px 20px; min-height: 48px;
-  }
-  button:hover { background: var(--hot); color: var(--ink); }
-  button[disabled] { opacity: 0.6; cursor: progress; }
-
-  /* errors: black text on magenta with a symbol, so they never rely on colour */
-  .error-summary { border: 2px solid var(--ink); background: var(--hot); padding: 16px; margin: 0 0 24px; }
-  .error-summary h2 { margin-top: 0; }
-  .error-text { font-weight: 700; margin: 0 0 8px; background: var(--hot); display: inline-block; padding: 0 6px; }
-  .error-text::before { content: "⚠ " / ""; }
-  [hidden] { display: none !important; }
-  .status { border: 2px solid var(--ink); border-left: 12px solid var(--nav); padding: 16px; background: var(--panel); }
+  .req { font-weight: normal; }
+  button.buy { font: inherit; font-weight: bold; cursor: pointer; }
+  button.buy[disabled] { opacity: 0.6; cursor: progress; }
+  .error-summary { border: 4px solid var(--ink); background: var(--panel); padding: 16px; margin: 0 0 24px; }
+  .error-summary h2 { font-size: 20px; margin-bottom: 8px; }
+  .error-summary h2::before, .error-text::before { content: "⚠ " / ""; }
+  .error-summary ul { margin-left: 1.4em; }
+  .error-text { font-weight: bold; margin: 0 0 8px; background: var(--wash-hover); display: inline-block; padding: 0 6px; }
+  .status { border: 2px solid var(--ink); border-left: 14px solid var(--wash); background: var(--panel); padding: 16px; }
+  .status h2 { font-size: 20px; margin-bottom: 8px; }
   .honeypot { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
-  footer { border-top: 2px solid var(--ink); background: var(--panel); }
-  footer p { max-width: 900px; margin: 0 auto; padding: 18px 24px; font-size: 14px; }
-  @media (max-width: 480px) { .bar, main, footer p { padding-left: 16px; padding-right: 16px; } }
+  .privacy { margin-top: 28px; font-size: 15px; }
 </style>
 </head>
 <body>
-<a class="skip" href="#feedback-form">Skip to the form</a>
-<header>
-  <div class="bar">
-    <a class="home" href="../../index.html"><img src="../img/ng-logo.png" alt="">noise guaranteed</a>
-    <a class="back" href="../index.html">slides and script</a>
-  </div>
-</header>
-<img class="strip" src="../img/noise-strip.png" alt="">
-<main>
-  <p class="kicker">assets '26 · feedback</p>
-  <h1>Who makes music software accessible? <span class="mark">Your feedback</span></h1>
-  <p>Thanks for coming to the talk at ASSETS '26. This form takes about two minutes. <strong>Every question is optional except the one about quoting you.</strong> It works with screen readers and keyboards, and there's no time limit.</p>
-  <p>Your answers help us show the impact of this research, for example in a university impact case study.</p>
+<a class="skip" href="#main">skip to content</a>
 
+<header>
+  <nav class="nav" aria-label="main">
+    <a class="logo" href="../../index.html">
+      <img src="../../images/ng_logo_trans_bkg_sml.png" width="100" height="100" alt="" data-tear="hover">
+      <span class="wordmark">noise guaranteed</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="../../index.html">home</a></li>
+      <li><a href="../../instruments.html">instruments</a></li>
+      <li><a href="../../workshops.html">workshops</a></li>
+      <li><a href="../../bookbuild.html">book &amp; build</a></li>
+      <li><a href="../../people.html">people</a></li>
+      <li><a href="https://github.com/noiseguaranteed">github</a></li>
+    </ul>
+  </nav>
+</header>
+<div class="topband">
+  <canvas class="noise" aria-hidden="true" data-seed="assets26" data-style="stripes" data-palette="wash" data-cell="3" data-density="0.85" data-drift="1"></canvas>
+  <button type="button" class="motion" data-motion aria-pressed="false" aria-label="pause moving noise" title="pause or play the moving noise">
+    <svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><rect x="3" y="2" width="4" height="12"/><rect x="9" y="2" width="4" height="12"/></svg>
+    <svg class="i-play" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 2 14 8 4 14z"/></svg>
+  </button>
+</div>
+
+<main id="main">
+  <section class="hero">
+    <div class="wrap">
+      <p class="kicker">assets '26 · feedback</p>
+      <h1>Who makes music software accessible? <span class="mark">Your feedback.</span></h1>
+      <p class="lede">Thanks for coming to the talk. This form takes about two minutes. <b>Every question is optional except the one about quoting you.</b> It works with screen readers and keyboards, and there's no time limit.</p>
+      <p class="note">Your answers help us show the impact of this research, for example in a university impact case study. Back to the <a href="../index.html">slides and script</a>.</p>
+    </div>
+  </section>
+
+  <section aria-label="feedback form" style="padding-top: 0">
+    <div class="wrap">
   <div id="error-summary" class="error-summary" role="alert" tabindex="-1" hidden>
     <h2>There's a problem</h2>
     <ul id="error-list"></ul>
@@ -168,17 +157,23 @@
       <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
     </div>
 
-    <button type="submit" id="submit">Send feedback</button>
+    <button type="submit" id="submit" class="buy">send feedback</button>
   </form>
-
-  
-</main>
-<footer>
-<section aria-labelledby="privacy-h"><p>
-    <strong id="privacy-h">How we use your answers.</strong> Alex Lucas at Queen's University Belfast collects these answers to understand and report the impact of this research. Answers are stored in a private spreadsheet that only the research team can see. Contact details are deleted once the follow-up is done, and all responses by the end of 2029. To see, change or delete what you sent, email <a href="mailto:a.lucas@qub.ac.uk">a.lucas@qub.ac.uk</a>.</p>
+      <p class="privacy"><strong id="privacy-h">How we use your answers.</strong> Alex Lucas at Queen's University Belfast collects these answers to understand and report the impact of this research. Answers are stored in a private spreadsheet that only the research team can see. Contact details are deleted once the follow-up is done, and all responses by the end of 2029. To see, change or delete what you sent, email <a href="mailto:a.lucas@qub.ac.uk">a.lucas@qub.ac.uk</a>.</p>
+    </div>
   </section>
+</main>
+
+<footer class="site-foot" id="contact">
+  <div class="foot">
+    <p>About this talk: email <a href="mailto:a.lucas@qub.ac.uk">a.lucas@qub.ac.uk</a>. About noise guaranteed: email <span data-contact-addr>alexmlucas at proton dot me</span>, or send us a number and a good time and we'll ring you.</p>
+    <p><b>noise guaranteed</b> · a noise-positive organisation · Belfast · open designs on GitHub · no trackers · 2026</p>
+  </div>
 </footer>
 
+<script src="../../js/noise.js"></script>
+<script src="../../js/motion.js"></script>
+<script src="../../js/contact.js"></script>
 <script>
 (() => {
   const form = document.getElementById('feedback-form');
@@ -235,7 +230,7 @@
       status.focus();
     } catch (err) {
       button.disabled = false;
-      button.textContent = 'Send feedback';
+      button.textContent = 'send feedback';
       status.hidden = false;
       status.innerHTML = 'Sorry, that didn’t send. Please check your connection and try again, or email your thoughts to <a href="mailto:a.lucas@qub.ac.uk">a.lucas@qub.ac.uk</a>.';
       status.focus();
