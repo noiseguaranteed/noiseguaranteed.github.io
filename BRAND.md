@@ -77,6 +77,7 @@ body { font-family: 'Atkinson Hyperlegible Mono', 'Courier New', monospace; }
 - **In the header it links home.** If the link also contains the text "noise guaranteed", give the image `alt=""`; if the image is alone in the link, use `alt="noise guaranteed home"`.
 - **Optional:** `data-tear="hover"` makes it tear like tape when hovered or focused (see [Analogue effects](#6-analogue-effects)).
 - Don't recolour, stretch or redraw the logo. Leave white space around it.
+- **Favicon:** the logo on a white disc, so the ring still shows on dark browser tabs: [favicon.ico](favicon.ico) (16, 32 and 48px) and [images/apple-touch-icon.png](images/apple-touch-icon.png) (180px, on white, for phone home screens). Every page links both in its `<head>`.
 
 ## 5. Pixel noise: js/noise.js
 
@@ -109,7 +110,6 @@ JavaScript API: `NoiseGuaranteed.render(canvas, opts)`, `.image(w, h, opts)` (an
 - a strip under the header
 - dividers, often with `data-fade="ends"`
 - product and voucher artwork in place of missing photos
-- the favicon
 
 **Rules:**
 - **Never put text on top of noise.** Text always sits on a solid colour.
