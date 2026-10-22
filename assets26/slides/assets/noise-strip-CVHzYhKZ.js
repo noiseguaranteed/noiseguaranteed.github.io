@@ -1,1 +1,0 @@
-var e=`/assets26/slides/img/noise-strip.png`;export{e as t};

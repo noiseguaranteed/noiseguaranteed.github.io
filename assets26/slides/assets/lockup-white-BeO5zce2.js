@@ -1,0 +1,1 @@
+var e=`/assets26/slides/img/sarc/lockup-white.svg`;export{e as t};
