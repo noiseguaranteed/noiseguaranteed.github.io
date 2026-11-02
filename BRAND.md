@@ -199,7 +199,7 @@ These are requirements, not nice-to-haves:
 | [graphics-style.html](graphics-style.html) | Graphics styles side by side | Prototype |
 | [type-specimen.html](type-specimen.html) | Type options A–D | Reference; option **B** chosen |
 | [tools/dither.html](tools/dither.html) | Photo dither tool | Ready to use |
-| [janko/](janko/index.html) | Janko keyboard for touch screens, sound by AMY (WebAssembly in `janko/lib/`). A full-screen instrument page with its own layout, not linked from the nav. `janko/enable-threads.js` is a service worker, scoped to `janko/`, that adds the isolation headers AMY needs | Prototype |
+| [janko/](janko/index.html) | Janko keyboard for touch screens, sound by AMY (WebAssembly in `janko/lib/`), with a chord and scale library (`janko/theory.js`). A full-screen instrument page with its own layout, not linked from the nav. `janko/enable-threads.js` is a service worker, scoped to `janko/`, that adds the isolation headers AMY needs | Prototype |
 | [js/noise.js](js/noise.js), [js/dither.js](js/dither.js), [css/noise-fx.css](css/noise-fx.css), [css/fonts.css](css/fonts.css) | Shared code | Ready to use |
 
 ## Open decisions

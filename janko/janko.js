@@ -9,6 +9,14 @@
 // - chromatic: rowOffset = r, with no shift, so keys form a grid: the key directly above any key
 //   is a semitone higher and a vertical line is a chromatic scale.
 // Either way every scale/chord shape is the same in every key.
+//
+// The library (theory.js) adds chords and scales: latch captures notes to save under a name,
+// "play chords" sounds the chosen chord from any one key, and the chosen scale is marked on the
+// keys (or, with "scale only", is all that sounds).
+
+import {
+  PRESET_CHORDS, PRESET_SCALES, voice, chordIntervals, scaleIntervals, matchChord, matchScale,
+} from './theory.js?v=5';
 
 const SYNTH = 1;
 const DEFAULT_SYNTHS = [0, 1, 2, 10];
@@ -31,6 +39,9 @@ const QWERTY = [
 const $ = id => document.getElementById(id);
 const board = $('board');
 
+const presetChords = PRESET_CHORDS.map(c => ({ ...c, id: 'chord:' + c.name, kind: 'chord' }));
+const presetScales = PRESET_SCALES.map(s => ({ ...s, id: 'scale:' + s.name, kind: 'scale', root: 0 }));
+
 const state = {
   audio: false,
   lowNote: 48,                   // C3
@@ -41,9 +52,20 @@ const state = {
   patch: 0,
   sustain: false,
   held: new Map(),               // midi note -> number of fingers/keys holding it
-  pointers: new Map(),           // pointerId -> midi note (or null between keys)
-  keysDown: new Map(),           // KeyboardEvent.code -> midi note
+  pointers: new Map(),           // pointerId -> notes sounding for that finger
+  keysDown: new Map(),           // KeyboardEvent.code -> notes sounding for that key
   keyEls: new Map(),             // midi note -> [elements]
+  // Library
+  library: [],                   // the player's own chords and scales
+  latch: false,
+  captured: new Set(),           // notes caught by latch, waiting to be saved
+  latchSounding: new Set(),      // captured notes currently held on
+  chord: presetChords[0],
+  chordMode: false,
+  spread: 'close',
+  scale: null,
+  scaleRoot: 0,                  // pitch class
+  scaleOnly: false,
 };
 
 const cols = () => state.octaves * 6 + 1;   // row 0 runs C..C inclusive
@@ -55,6 +77,8 @@ const noteFor = (r, c) => state.lowNote + rowOffset(r) + 2 * c;
 const highestNote = () => Math.max(noteFor(state.rows - 1, cols() - 1), noteFor(state.rows - 2, cols() - 1));
 const octaveOf = n => Math.floor(n / 12) - 1;
 const noteName = n => NAMES[n % 12] + (n % 12 === 0 ? octaveOf(n) : '');   // octave on Cs only, to keep keys tidy
+const fullName = n => NAMES[n % 12] + octaveOf(n);
+const inScale = n => !!state.scale && state.scale.intervals.includes(((n - state.scaleRoot) % 12 + 12) % 12);
 
 function send(msg) {
   if (state.audio) amy_send(msg);
@@ -87,7 +111,21 @@ function layout() {
       state.keyEls.get(note).push(el);
     }
   }
-  $('range').textContent = `${noteName(state.lowNote)}–${NAMES[highestNote() % 12]}${octaveOf(highestNote())}`;
+  $('range').textContent = `${noteName(state.lowNote)}–${fullName(highestNote())}`;
+  markKeys();
+}
+
+// Scale and capture markings, redrawn whenever they change.
+function markKeys() {
+  for (const [note, els] of state.keyEls) {
+    const scaled = inScale(note);
+    for (const el of els) {
+      el.classList.toggle('in-scale', scaled);
+      el.classList.toggle('scale-root', scaled && ((note - state.scaleRoot) % 12 + 12) % 12 === 0);
+      el.classList.toggle('muted', state.scaleOnly && !!state.scale && !scaled);
+      el.classList.toggle('captured', state.captured.has(note));
+    }
+  }
 }
 
 // The whole cell is the hit area, so there are no dead zones between keys.
@@ -119,6 +157,7 @@ function press(note, vel) {
 
 function release(note) {
   const n = state.held.get(note) || 0;
+  if (n === 0) return;
   if (n > 1) { state.held.set(note, n - 1); return; }
   state.held.delete(note);
   send({ synth: SYNTH, note, vel: 0 });
@@ -132,7 +171,24 @@ function releaseAll() {
   }
   state.pointers.clear();
   state.keysDown.clear();
+  state.latchSounding.clear();
 }
+
+// What one key sounds: nothing outside the scale with "scale only", the chosen chord rooted on
+// the key with "play chords", otherwise just its own note.
+function notesForKey(note) {
+  if (state.scaleOnly && state.scale && !inScale(note)) return [];
+  if (state.chordMode && state.chord) return voice(note, state.chord.intervals, state.spread);
+  return [note];
+}
+
+function keyOn(note, vel) {
+  const notes = notesForKey(note);
+  for (const n of notes) press(n, vel);
+  return notes;
+}
+
+const keyOff = notes => { for (const n of notes) release(n); };
 
 const velocityFor = e =>
   e.pointerType === 'pen' && e.pressure > 0 ? Math.min(1, 0.15 + e.pressure) : Number($('vel').value);
@@ -141,28 +197,30 @@ const velocityFor = e =>
 
 board.addEventListener('pointerdown', e => {
   e.preventDefault();
-  try { board.setPointerCapture(e.pointerId); } catch {}
   const note = noteAt(e.clientX, e.clientY);
-  state.pointers.set(e.pointerId, note);
-  if (note !== null) press(note, velocityFor(e));
+  if (state.latch) {
+    if (note !== null) toggleCapture(note, velocityFor(e));
+    return;
+  }
+  try { board.setPointerCapture(e.pointerId); } catch {}
+  state.pointers.set(e.pointerId, { key: note, notes: note === null ? [] : keyOn(note, velocityFor(e)) });
 });
 
-// Sliding a finger onto another key releases the old note and plays the new one (glissando).
+// Sliding a finger onto another key releases the old note(s) and plays the new one(s) (glissando).
 board.addEventListener('pointermove', e => {
-  if (!state.pointers.has(e.pointerId)) return;
-  const prev = state.pointers.get(e.pointerId);
+  const finger = state.pointers.get(e.pointerId);
+  if (!finger) return;
   const note = noteAt(e.clientX, e.clientY);
-  if (note === prev) return;
-  if (prev !== null) release(prev);
-  if (note !== null) press(note, velocityFor(e));
-  state.pointers.set(e.pointerId, note);
+  if (note === finger.key) return;
+  keyOff(finger.notes);
+  state.pointers.set(e.pointerId, { key: note, notes: note === null ? [] : keyOn(note, velocityFor(e)) });
 });
 
 function endPointer(e) {
-  if (!state.pointers.has(e.pointerId)) return;
-  const note = state.pointers.get(e.pointerId);
+  const finger = state.pointers.get(e.pointerId);
+  if (!finger) return;
   state.pointers.delete(e.pointerId);
-  if (note !== null) release(note);
+  keyOff(finger.notes);
 }
 board.addEventListener('pointerup', endPointer);
 board.addEventListener('pointercancel', endPointer);
@@ -173,21 +231,23 @@ document.addEventListener('contextmenu', e => e.preventDefault());
 
 const QWERTY_NOTE = new Map();
 for (const row of QWERTY) row.codes.forEach((code, i) => QWERTY_NOTE.set(code, row.offset + 2 * i));
+const typing = e => e.target instanceof HTMLInputElement && e.target.type === 'text';
 
 window.addEventListener('keydown', e => {
-  if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.repeat || e.ctrlKey || e.metaKey || e.altKey || typing(e)) return;
+  if (e.key === 'Escape' && !$('picker').hidden) { closePicker(); return; }
   if (e.code === 'Space') { e.preventDefault(); setSustain(true); return; }
   if (!QWERTY_NOTE.has(e.code) || state.keysDown.has(e.code)) return;
   e.preventDefault();
   const note = state.lowNote + QWERTY_NOTE.get(e.code);
-  state.keysDown.set(e.code, note);
-  press(note, Number($('vel').value));
+  if (state.latch) { toggleCapture(note, Number($('vel').value)); return; }
+  state.keysDown.set(e.code, keyOn(note, Number($('vel').value)));
 });
 
 window.addEventListener('keyup', e => {
   if (e.code === 'Space') { setSustain(false); return; }
   if (!state.keysDown.has(e.code)) return;
-  release(state.keysDown.get(e.code));
+  keyOff(state.keysDown.get(e.code));
   state.keysDown.delete(e.code);
 });
 
@@ -238,6 +298,19 @@ function segmented(key, onChoose) {
   return show;
 }
 
+// A button that opens or closes a panel bar.
+function panelToggle(buttonId, panelId) {
+  $(buttonId).addEventListener('click', e => {
+    const open = $(panelId).hidden;
+    $(panelId).hidden = !open;
+    e.currentTarget.setAttribute('aria-expanded', String(open));
+  });
+}
+
+function toggleButton(id, on) {
+  $(id).setAttribute('aria-pressed', String(on));
+}
+
 function saveSetting(key, value) {
   try { localStorage.setItem('janko-' + key, value); } catch {}
 }
@@ -261,11 +334,8 @@ if (['2', '4', '6'].includes(loadSetting('rows'))) state.rows = Number(loadSetti
 fitRange();
 showLayout(state.layout); showOctaves(state.octaves); showRows(state.rows);
 
-$('settings-btn').addEventListener('click', e => {
-  const open = $('settings').hidden;
-  $('settings').hidden = !open;
-  e.currentTarget.setAttribute('aria-expanded', String(open));
-});
+panelToggle('settings-btn', 'settings');
+panelToggle('library-btn', 'library');
 $('patch-down').addEventListener('click', () => stepPatch(-1));
 $('patch-up').addEventListener('click', () => stepPatch(1));
 $('oct-down').addEventListener('click', () => shiftOctave(-1));
@@ -278,7 +348,7 @@ $('labels').addEventListener('click', e => {
 });
 function setFlipped(on) {
   document.documentElement.classList.toggle('flipped', on);
-  $('flip').setAttribute('aria-pressed', String(on));
+  toggleButton('flip', on);
   saveSetting('flipped', on ? '1' : '');
 }
 $('flip').addEventListener('click', () => { releaseAll(); setFlipped(!document.documentElement.classList.contains('flipped')); });
@@ -288,6 +358,209 @@ $('fullscreen').addEventListener('click', () => {
   else document.documentElement.requestFullscreen().catch(() => {});
 });
 new ResizeObserver(layout).observe(board);
+
+// ---- Library: latch and save ----
+
+function toggleCapture(note, vel) {
+  if (state.captured.has(note)) {
+    state.captured.delete(note);
+    if (state.latchSounding.delete(note)) release(note);
+  } else {
+    state.captured.add(note);
+    state.latchSounding.add(note);
+    press(note, vel);
+  }
+  showCapture();
+}
+
+function setLatch(on) {
+  state.latch = on;
+  toggleButton('latch', on);
+  if (!on) {
+    for (const n of state.latchSounding) release(n);
+    state.latchSounding.clear();
+  }
+}
+
+function clearCapture() {
+  for (const n of state.latchSounding) release(n);
+  state.latchSounding.clear();
+  state.captured.clear();
+  $('cap-name').value = '';
+  showCapture();
+}
+
+// Shows the captured notes, and suggests a name when they match a preset.
+function showCapture() {
+  const notes = [...state.captured].sort((a, b) => a - b);
+  $('captured').textContent = notes.length ? notes.map(fullName).join(' ') : 'latch on, then tap keys';
+  $('save-chord').disabled = notes.length < 2;
+  $('save-scale').disabled = notes.length < 2;
+  $('clear-capture').disabled = notes.length === 0;
+  let suggestion = 'name';
+  if (notes.length >= 2) {
+    const root = NAMES[notes[0] % 12];
+    const chord = matchChord(chordIntervals(notes));
+    const scale = matchScale(scaleIntervals(notes));
+    suggestion = chord ? `${root} ${chord.name}` : scale ? `${root} ${scale.name}` : `${root} shape`;
+  }
+  $('cap-name').placeholder = suggestion;
+  markKeys();
+}
+
+function saveCapture(kind) {
+  const notes = [...state.captured];
+  if (notes.length < 2) return;
+  const name = $('cap-name').value.trim() || $('cap-name').placeholder;
+  const item = kind === 'chord'
+    ? { id: 'mine:' + Date.now().toString(36), kind, name, intervals: chordIntervals(notes) }
+    : { id: 'mine:' + Date.now().toString(36), kind, name, intervals: scaleIntervals(notes), root: Math.min(...notes) % 12 };
+  state.library.push(item);
+  saveLibrary();
+  setLatch(false);
+  clearCapture();
+  if (kind === 'chord') chooseChord(item); else chooseScale(item);
+  announce(`saved ${kind} ${name}`);
+}
+
+function saveLibrary() {
+  saveSetting('library', JSON.stringify(state.library));
+}
+
+function loadLibrary() {
+  try {
+    const items = JSON.parse(loadSetting('library') || '[]');
+    state.library = items.filter(i => i && typeof i.name === 'string' && Array.isArray(i.intervals)
+      && (i.kind === 'chord' || i.kind === 'scale') && i.intervals.every(Number.isInteger));
+  } catch { state.library = []; }
+}
+
+const announce = text => { $('library-status').textContent = text; };
+
+$('latch').addEventListener('click', () => setLatch(!state.latch));
+$('clear-capture').addEventListener('click', clearCapture);
+$('save-chord').addEventListener('click', () => saveCapture('chord'));
+$('save-scale').addEventListener('click', () => saveCapture('scale'));
+$('cap-name').addEventListener('keydown', e => { if (e.key === 'Enter') saveCapture('chord'); });
+
+// ---- Library: chords and scales ----
+
+const allChords = () => [...presetChords, ...state.library.filter(i => i.kind === 'chord')];
+const allScales = () => [...presetScales, ...state.library.filter(i => i.kind === 'scale')];
+
+function chooseChord(item) {
+  releaseAll();
+  state.chord = item;
+  $('chord-pick').textContent = item.name;
+  saveSetting('chord', item.id);
+}
+
+function chooseScale(item) {
+  releaseAll();
+  state.scale = item;
+  if (item && item.id.startsWith('mine:')) state.scaleRoot = item.root ?? state.scaleRoot;
+  $('scale-pick').textContent = item ? item.name : 'none';
+  $('scale-only').disabled = !item;
+  showScaleRoot();
+  saveSetting('scale', item ? item.id : '');
+}
+
+function showScaleRoot() {
+  $('scale-root').textContent = NAMES[state.scaleRoot];
+  saveSetting('scale-root', String(state.scaleRoot));
+  markKeys();
+}
+
+// Plays the chosen chord briefly from middle C, so choosing from the list can be heard.
+function audition(item) {
+  if (!state.audio) return;
+  const notes = voice(60, item.intervals, state.spread);
+  for (const n of notes) press(n, Number($('vel').value));
+  setTimeout(() => keyOff(notes), 700);
+}
+
+const showSpread = segmented('spread', v => { releaseAll(); state.spread = v; saveSetting('spread', v); });
+$('chord-mode').addEventListener('click', () => {
+  releaseAll();
+  state.chordMode = !state.chordMode;
+  toggleButton('chord-mode', state.chordMode);
+});
+$('scale-only').addEventListener('click', () => {
+  releaseAll();
+  state.scaleOnly = !state.scaleOnly;
+  toggleButton('scale-only', state.scaleOnly);
+  markKeys();
+});
+$('root-down').addEventListener('click', () => { state.scaleRoot = (state.scaleRoot + 11) % 12; showScaleRoot(); });
+$('root-up').addEventListener('click', () => { state.scaleRoot = (state.scaleRoot + 1) % 12; showScaleRoot(); });
+
+// ---- Library: picker ----
+// An on-page list rather than a <select>, so it turns with the page when flipped.
+
+let pickerReturn = null;
+
+function openPicker(kind) {
+  pickerReturn = document.activeElement;
+  $('picker-title').textContent = kind === 'chord' ? 'choose a chord' : 'choose a scale';
+  const presets = $('picker-presets'), mine = $('picker-mine');
+  presets.replaceChildren();
+  mine.replaceChildren();
+  const current = kind === 'chord' ? state.chord : state.scale;
+  const choose = item => {
+    if (kind === 'chord') { chooseChord(item); audition(item); } else chooseScale(item);
+    closePicker();
+  };
+  const choice = item => {
+    const b = document.createElement('button');
+    b.textContent = item ? item.name : 'none';
+    b.setAttribute('aria-pressed', String((current?.id ?? null) === (item?.id ?? null)));
+    b.addEventListener('click', () => choose(item));
+    return b;
+  };
+  if (kind === 'scale') presets.append(choice(null));
+  for (const item of kind === 'chord' ? presetChords : presetScales) presets.append(choice(item));
+  const own = state.library.filter(i => i.kind === kind);
+  for (const item of own) {
+    const wrap = document.createElement('span');
+    wrap.className = 'own';
+    const del = document.createElement('button');
+    del.textContent = '×';
+    del.className = 'delete';
+    del.setAttribute('aria-label', `delete ${item.name}`);
+    del.addEventListener('click', () => {
+      state.library = state.library.filter(i => i !== item);
+      saveLibrary();
+      if (state.chord === item) chooseChord(presetChords[0]);
+      if (state.scale === item) chooseScale(null);
+      openPicker(kind);
+    });
+    wrap.append(choice(item), del);
+    mine.append(wrap);
+  }
+  $('picker-none').hidden = own.length > 0;
+  $('picker').hidden = false;
+  (presets.querySelector('[aria-pressed="true"]') || presets.firstChild).focus();
+}
+
+function closePicker() {
+  $('picker').hidden = true;
+  pickerReturn?.focus?.();
+}
+
+$('chord-pick').addEventListener('click', () => openPicker('chord'));
+$('scale-pick').addEventListener('click', () => openPicker('scale'));
+$('picker-close').addEventListener('click', closePicker);
+$('picker').addEventListener('click', e => { if (e.target === $('picker')) closePicker(); });
+
+// Restore the library and choices from last time.
+loadLibrary();
+chooseChord(allChords().find(i => i.id === loadSetting('chord')) || presetChords[0]);
+const savedRoot = Number(loadSetting('scale-root'));
+if (Number.isInteger(savedRoot) && savedRoot >= 0 && savedRoot < 12) state.scaleRoot = savedRoot;
+chooseScale(allScales().find(i => i.id === loadSetting('scale')) || null);
+if (['close', 'drop 2', 'drop 2+4', 'open', 'wide'].includes(loadSetting('spread'))) state.spread = loadSetting('spread');
+showSpread(state.spread);
+showCapture();
 
 // ---- Audio start ----
 
@@ -314,4 +587,4 @@ layout();
 })();
 
 // Exposed for experimenting from the browser console.
-window.janko = { state, press, release, noteAt, noteFor, layout };
+window.janko = { state, press, release, noteAt, noteFor, layout, voice };

@@ -65,24 +65,52 @@
   .key.white { background: var(--panel); color: var(--ink); }
   .key.black { background: var(--ink); color: #fff; }
   .key.c::before {
-    content: ""; position: absolute; top: 8px; width: 10px; height: 10px; background: var(--ink);
+    content: ""; position: absolute; top: 22px; width: 10px; height: 10px; background: var(--ink);
   }
   .key.lit { background: var(--wash); color: var(--ink); }
+  /* Scale notes get a band across the top, the root a thicker one: shape, not just colour. */
+  .key.in-scale::after { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 8px; background: var(--ink); }
+  .key.black.in-scale::after { background: #fff; }
+  .key.lit.in-scale::after { background: var(--ink); }
+  .key.scale-root::after { height: 16px; }
+  .key.muted { opacity: 0.25; }
+  .key.captured { box-shadow: inset 0 0 0 5px var(--wash); }
+  .key.captured.lit { box-shadow: inset 0 0 0 5px var(--ink); }
+
+  .captured-text { min-width: 12ch; font-weight: bold; }
+  input[type=text] {
+    font: inherit; min-height: 44px; width: 14ch; padding: 0 8px;
+    border: 2px solid var(--ink); border-radius: 0; background: var(--panel); color: var(--ink);
+    user-select: text; -webkit-user-select: text;
+  }
+  button.pick { background: var(--panel); color: var(--ink); min-width: 10ch; }
+  button.pick::after { content: " ▸"; }
+  button.pick:hover { background: var(--wash-hover); }
   .hide-labels .key { font-size: 0; }
   /* For playing with the laptop upside down, so wrists don't rest on its keyboard. */
   html.flipped body { transform: rotate(180deg); }
 
-  #start {
+  .overlay {
     position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center;
     padding: 16px; background: rgba(238, 245, 235, 0.92);
   }
-  #start .card {
-    max-width: 560px; background: var(--panel); border: 2px solid var(--ink); padding: 20px 22px;
+  .overlay .card {
+    max-width: 560px; max-height: 100%; overflow-y: auto;
+    background: var(--panel); border: 2px solid var(--ink); padding: 20px 22px;
     font-size: 17px; line-height: 1.6;
   }
-  #start h2 { margin: 0 0 10px; font-size: 24px; }
-  #start p { margin: 0 0 12px; max-width: 70ch; }
-  #start .small { font-size: 13px; }
+  .overlay .card.wide { max-width: 980px; }
+  .overlay h2 { margin: 0 0 10px; font-size: 24px; }
+  .overlay h3 { margin: 14px 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .overlay p { margin: 0 0 12px; max-width: 70ch; }
+  .overlay .small { font-size: 13px; }
+  .choices { display: flex; flex-wrap: wrap; gap: 6px; }
+  .choices button { background: var(--panel); color: var(--ink); font-weight: normal; }
+  .choices button:hover { background: var(--wash-hover); }
+  .choices button[aria-pressed="true"] { background: var(--wash); font-weight: bold; }
+  .choices .own { display: flex; }
+  .choices .own .delete { border-left: 0; font-weight: bold; }
+  #picker-close { margin-top: 16px; }
   #start-btn { font-size: 19px; min-height: 56px; padding: 0 28px; margin: 4px 0 14px; }
 </style>
 <script src="enable-threads.js"></script>
@@ -116,8 +144,8 @@
     <div class="spacer"></div>
     <button id="sustain" aria-pressed="false">sustain</button>
     <button id="flip" aria-pressed="false" title="turn the page upside down, for playing with the laptop flipped over">flip</button>
+    <button id="library-btn" aria-expanded="false" aria-controls="library">library</button>
     <button id="settings-btn" aria-expanded="false" aria-controls="settings">settings</button>
-    <button id="fullscreen">full screen</button>
   </div>
   <div class="bar" id="settings" hidden>
     <div class="group">
@@ -152,6 +180,42 @@
       <input type="range" id="volume" min="0" max="2" step="0.05" value="1">
     </div>
     <button id="labels" aria-pressed="true">note names</button>
+    <button id="fullscreen">full screen</button>
+  </div>
+  <div class="bar" id="library" hidden>
+    <div class="group">
+      <button id="latch" aria-pressed="false" title="tap keys to catch notes, then save them as a chord or scale">latch</button>
+      <span id="captured" class="captured-text" aria-live="polite"></span>
+      <input type="text" id="cap-name" aria-label="name for the captured notes" placeholder="name" maxlength="40" autocomplete="off">
+      <button id="save-chord" disabled>save chord</button>
+      <button id="save-scale" disabled>save scale</button>
+      <button id="clear-capture" disabled>clear</button>
+    </div>
+    <div class="group">
+      <span class="name">chord</span>
+      <button id="chord-pick" class="pick" aria-haspopup="dialog" aria-label="choose a chord">maj7</button>
+      <button id="chord-mode" aria-pressed="false" title="each key plays the chosen chord, rooted on that key">play chords</button>
+    </div>
+    <div class="group">
+      <span class="name" id="spread-name">spread</span>
+      <div class="seg" role="group" aria-labelledby="spread-name">
+        <button data-spread="close" aria-pressed="true">close</button>
+        <button data-spread="drop 2" aria-pressed="false" title="2nd voice from the top down an octave">drop 2</button>
+        <button data-spread="drop 2+4" aria-pressed="false" title="2nd and 4th voices from the top down an octave">drop 2+4</button>
+        <button data-spread="open" aria-pressed="false" title="every other voice up an octave">open</button>
+        <button data-spread="wide" aria-pressed="false" title="open, with the root down an octave">wide</button>
+      </div>
+    </div>
+    <div class="group">
+      <span class="name">scale</span>
+      <button id="scale-pick" class="pick" aria-haspopup="dialog" aria-label="choose a scale">none</button>
+      <span class="name">root</span>
+      <button id="root-down" aria-label="scale root down a semitone">−</button>
+      <span id="scale-root" class="readout" aria-live="polite">C</span>
+      <button id="root-up" aria-label="scale root up a semitone">+</button>
+      <button id="scale-only" aria-pressed="false" disabled title="only notes in the scale sound">scale only</button>
+    </div>
+    <p id="library-status" class="visually-hidden" aria-live="polite"></p>
   </div>
 </header>
 <canvas class="noise" aria-hidden="true" data-seed="janko" data-style="stripes" data-palette="wash" data-cell="3" data-density="0.85"></canvas>
@@ -159,12 +223,24 @@
 <div id="board" role="application"
      aria-label="Janko keyboard. Touch or click to play, or use the computer keyboard: rows Z and A, then Q and 1 an octave up. Space is sustain."></div>
 
-<div id="start">
+<div id="picker" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="picker-title">
+  <div class="card wide">
+    <h2 id="picker-title">choose</h2>
+    <h3>presets</h3>
+    <div id="picker-presets" class="choices"></div>
+    <h3>yours</h3>
+    <div id="picker-mine" class="choices"></div>
+    <p id="picker-none" class="small">Nothing saved yet. Turn on latch, tap some keys, then save them.</p>
+    <button id="picker-close">close</button>
+  </div>
+</div>
+
+<div id="start" class="overlay">
   <div class="card">
     <h2>janko keyboard</h2>
     <p>Each row is a whole-tone scale. The rows next to it are a semitone higher, shifted half a key. So every scale and chord
        has the same shape in every key. Slide a finger to glide across notes.</p>
-    <p>Settings has a chromatic layout too: keys in a grid, where the key directly above is a semitone higher.</p>
+    <p>Settings has a chromatic layout too: keys in a grid, where the key directly above is a semitone higher. Library has jazz chords and scales, and latch to catch and save your own.</p>
     <p>No touch screen? Play rows Z and A, then Q and 1 an octave up. Space is sustain.</p>
     <button id="start-btn" disabled>loading…</button>
     <p id="warn" hidden>Your browser blocked the helper this page needs to make sound. Try reloading, or use Chrome or Edge.</p>
@@ -174,6 +250,6 @@
 </div>
 
 <script src="../js/noise.js"></script>
-<script type="module" src="janko.js?v=4"></script>
+<script type="module" src="janko.js?v=5"></script>
 </body>
 </html>
