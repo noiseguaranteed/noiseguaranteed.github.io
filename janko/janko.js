@@ -77,7 +77,9 @@ const cols = () => state.octaves * 6 + 1;   // row 0 runs C..C inclusive
 const chromatic = () => state.layout === 'chromatic';
 const rowOffset = r => chromatic() ? r : r % 2;
 const rowShift = r => chromatic() ? 0 : (r % 2) * 0.5;      // in key widths
-const widthInKeys = () => cols() + (chromatic() ? 0 : 0.5);
+const baseWidth = () => cols() + (chromatic() ? 0 : 0.5);   // in key widths, without the split gap
+const SPLIT_GAP = 0.6;                                       // in key widths
+const widthInKeys = () => baseWidth() + (state.split ? SPLIT_GAP : 0);
 const noteFor = (r, c) => state.lowNote + rowOffset(r) + 2 * c;
 const highestNote = () => Math.max(noteFor(state.rows - 1, cols() - 1), noteFor(state.rows - 2, cols() - 1));
 const octaveOf = n => Math.floor(n / 12) - 1;
@@ -86,9 +88,17 @@ const fullName = n => NAMES[n % 12] + octaveOf(n);
 const inScale = n => !!state.scale && state.scale.intervals.includes(((n - state.scaleRoot) % 12 + 12) % 12);
 
 // Split: a key belongs to the half its centre is in. Janko rows are offset by half a key, so the
-// boundary steps between rows rather than cutting through keys.
+// boundary steps between rows rather than cutting through keys. The right half is moved over by
+// SPLIT_GAP, leaving a gap with a wall in it between the hands.
 const keyCentre = pos => { const [r, c] = pos.split(',').map(Number); return c + rowShift(r) + 0.5; };
-const leftHalf = pos => keyCentre(pos) < widthInKeys() / 2;
+const leftHalf = pos => keyCentre(pos) < baseWidth() / 2;
+function firstRightCol(r) {
+  let c = 0;
+  while (c < cols() && leftHalf(`${r},${c}`)) c++;
+  return c;
+}
+// A key's left edge, in key widths from the board's left edge.
+const keyLeft = (r, c) => c + rowShift(r) + (state.split && c >= firstRightCol(r) ? SPLIT_GAP : 0);
 const chordKey = pos => state.split ? !!pos && leftHalf(pos) : state.chordMode;
 // With the keyboard split, copies of a note in the other half belong to the other hand.
 const sameHalf = (positions, pos) =>
@@ -109,21 +119,26 @@ function layout() {
   const H = height / state.rows;
   const gap = Math.max(2, Math.min(W, H) * 0.06);
   for (let r = 0; r < state.rows; r++) {
-    const shift = rowShift(r);
     const top = (state.rows - 1 - r) * H;
+    if (state.split) {
+      const wall = document.createElement('div');
+      wall.className = 'split-wall';
+      wall.style.left = `${(firstRightCol(r) + rowShift(r) + SPLIT_GAP / 2) * W}px`;
+      wall.style.top = `${top}px`;
+      wall.style.height = `${H}px`;
+      board.append(wall);
+    }
     for (let c = 0; c < cols(); c++) {
       const note = noteFor(r, c);
       const el = document.createElement('div');
       el.className = 'key ' + (BLACK.has(note % 12) ? 'black' : 'white') + (note % 12 === 0 ? ' c' : '');
-      el.style.left = `${(c + shift) * W + gap / 2}px`;
+      el.style.left = `${keyLeft(r, c) * W + gap / 2}px`;
       el.style.top = `${top + gap / 2}px`;
       el.style.width = `${W - gap}px`;
       el.style.height = `${H - gap}px`;
       el.textContent = noteName(note);
+      el.append(Object.assign(document.createElement('span'), { className: 'tone' }));
       el.dataset.pos = `${r},${c}`;
-      if (state.split && leftHalf(el.dataset.pos) && !(c + 1 < cols() && leftHalf(`${r},${c + 1}`))) {
-        el.classList.add('split-edge');
-      }
       if (state.lit.has(el.dataset.pos)) el.classList.add('lit');
       board.append(el);
       if (!state.keyEls.has(note)) state.keyEls.set(note, []);
@@ -133,6 +148,7 @@ function layout() {
   }
   $('range').textContent = `${noteName(state.lowNote)}–${fullName(highestNote())}`;
   markKeys();
+  queueChordTones();
 }
 
 // Scale and capture markings, redrawn whenever they change.
@@ -161,7 +177,13 @@ function keyAtPoint(clientX, clientY) {
   const W = rect.width / widthInKeys();
   const H = rect.height / state.rows;
   const r = state.rows - 1 - Math.floor(y / H);
-  const c = Math.floor(x / W - rowShift(r));
+  const u = x / W - rowShift(r);
+  let c = Math.floor(u);
+  if (state.split) {
+    const first = firstRightCol(r);
+    if (u >= first + SPLIT_GAP) c = Math.floor(u - SPLIT_GAP);
+    else if (u >= first) return null;   // the gap between the halves
+  }
   if (c < 0 || c >= cols()) return null;
   return `${r},${c}`;
 }
@@ -213,7 +235,7 @@ const copiesOf = note => (state.keyEls.get(note) || []).map(el => el.dataset.pos
 function nearestCopies(notes, anchor) {
   const { width, height } = board.getBoundingClientRect();
   const W = width / widthInKeys(), H = height / state.rows;
-  const centre = pos => { const [r, c] = pos.split(',').map(Number); return [(c + rowShift(r)) * W, r * H]; };
+  const centre = pos => { const [r, c] = pos.split(',').map(Number); return [keyLeft(r, c) * W, r * H]; };
   const [ax, ay] = centre(anchor);
   return notes.flatMap(note => {
     let best = null, bestDist = Infinity;
@@ -237,6 +259,7 @@ function releaseAll() {
   state.pointers.clear();
   state.keysDown.clear();
   state.latchSounding.clear();
+  queueChordTones();
 }
 
 // What one key sounds: the chosen chord rooted on the key with "play chords" (or in the left half
@@ -259,12 +282,64 @@ function keyOn(note, vel, pos = copiesOf(note)[0]) {
     ? nearestCopies(notes, pos)
     : notes.flatMap(n => sameHalf(copiesOf(n), pos));
   light(lit);
+  queueChordTones();
   return { notes, lit, note, vel, pos, chord: chordKey(pos) && !!state.chord };
 }
 
 function keyOff({ notes, lit }) {
   for (const n of notes) release(n);
   unlight(lit);
+  queueChordTones();
+}
+
+// ---- Chord tones (split) ----
+// While the left hand holds chords, every key in the right half that's a tone of those chords is
+// marked, in the chord colour: a filled dot for guide tones, a ring for the rest. Guide tones
+// are the 3rd and 7th, which give a chord its quality; without a 7th the 6th stands in (6/9, m6,
+// dim7's bb7), and without a 3rd the sus note does.
+
+function guideIntervals(rel) {
+  const pick = (...options) => options.filter(i => rel.has(i)).slice(0, 1);
+  const third = pick(4, 3);
+  const seventh = pick(11, 10);
+  return [...(third.length ? third : pick(5, 2)), ...(seventh.length ? seventh : pick(9))];
+}
+
+function chordTones() {
+  const tones = new Map();   // pitch class -> 'guide' or 'tone'
+  if (!state.split) return tones;
+  for (const held of [...state.pointers.values(), ...state.keysDown.values()]) {
+    if (!held.chord || !held.pos || !leftHalf(held.pos)) continue;
+    const rel = new Set(held.notes.map(n => ((n - held.note) % 12 + 12) % 12));
+    const guides = new Set(guideIntervals(rel));
+    for (const i of rel) {
+      const pc = (held.note + i) % 12;
+      if (guides.has(i)) tones.set(pc, 'guide');
+      else if (!tones.has(pc)) tones.set(pc, 'tone');
+    }
+  }
+  return tones;
+}
+
+function showChordTones() {
+  const tones = chordTones();
+  for (const [note, els] of state.keyEls) {
+    const kind = tones.get(note % 12);
+    for (const el of els) {
+      const right = state.split && !leftHalf(el.dataset.pos);
+      el.classList.toggle('tone-guide', right && kind === 'guide');
+      el.classList.toggle('tone-other', right && kind === 'tone');
+    }
+  }
+}
+
+// Fingers are added to and removed from state.pointers/keysDown after keyOn/keyOff run, so the
+// markers are redrawn once the current event has finished.
+let chordTonesQueued = false;
+function queueChordTones() {
+  if (chordTonesQueued) return;
+  chordTonesQueued = true;
+  queueMicrotask(() => { chordTonesQueued = false; showChordTones(); });
 }
 
 // Re-voices a held chord key with the current chord type. The new chord goes on before the old

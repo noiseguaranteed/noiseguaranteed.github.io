@@ -13,6 +13,9 @@
   /* An instrument page: full-screen keyboard instead of the usual site layout.
      No <select>s: their pop-ups ignore the page's 180° flip. */
   :root { --ink: #000; --panel: #fff; }
+  /* Chord colour (the site's ochre wash): everything about chords -- the chord strip and the
+     chord-tone markers -- so it reads apart from the sage used for "on" and "sounding". */
+  :root { --chord: #d6a454; --chord-hover: #eed3a3; --chord-soft: #f7ead5; }
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
   html, body { margin: 0; height: 100%; }
@@ -62,11 +65,15 @@
 
   .stage { flex: 1; display: flex; min-height: 0; }
   #board { position: relative; flex: 1; margin: 10px; touch-action: none; }
-  /* Chord types, for the chord hand: tall buttons, easy to hit while the other hand plays. */
-  #strip { display: flex; flex-direction: column; gap: 6px; margin: 10px 0 10px 10px; touch-action: none; }
-  #strip button { flex: 1; min-width: 9ch; background: var(--panel); color: var(--ink); font-weight: normal; }
-  @media (hover: hover) { #strip button:hover { background: var(--wash-hover); } }
-  #strip button[aria-pressed="true"] { background: var(--wash); font-weight: bold; }
+  /* Chord types, for the chord hand: tall rounded buttons in the chord colour, unlike every other
+     (square) button, and easy to hit while the other hand plays. */
+  #strip { display: flex; flex-direction: column; gap: 8px; margin: 10px 0 10px 10px; touch-action: none; }
+  #strip button {
+    flex: 1; min-width: 9ch; border-radius: 22px; font-weight: normal;
+    background: var(--chord-soft); color: var(--ink); border: 3px solid var(--chord);
+  }
+  @media (hover: hover) { #strip button:hover { background: var(--chord-hover); } }
+  #strip button[aria-pressed="true"] { background: var(--chord); border: 3px solid var(--ink); font-weight: bold; }
   .key {
     position: absolute; display: flex; align-items: flex-end; justify-content: center;
     padding-bottom: 6px; font-size: 13px; font-weight: bold;
@@ -84,8 +91,17 @@
   .key.lit.in-scale::after { background: var(--ink); }
   .key.scale-root::after { height: 16px; }
   .key.muted { opacity: 0.25; }
-  /* Split: a thick edge on the last chord key of each row marks where the halves meet. */
-  .key.split-edge { border-right-width: 8px; }
+  /* Split: a wall in the gap between the halves, stepping with the rows. */
+  .split-wall { position: absolute; width: 6px; margin-left: -3px; background: var(--ink); pointer-events: none; }
+  /* Chord tones in the right half while chords are held on the left: a filled dot for guide
+     tones (3rds, 7ths), a ring for the other chord tones. Shape as well as colour. */
+  .key .tone {
+    display: none; position: absolute; top: 44%; left: 50%; transform: translate(-50%, -50%);
+    width: 34%; max-width: 30px; aspect-ratio: 1; border-radius: 50%;
+  }
+  .key.tone-guide .tone { display: block; background: var(--chord); box-shadow: 0 0 0 2px var(--ink); }
+  .key.tone-other .tone { display: block; border: 4px solid var(--chord); box-shadow: 0 0 0 2px var(--ink); }
+  .key.black.tone-guide .tone, .key.black.tone-other .tone { box-shadow: 0 0 0 2px #fff; }
   .key.captured { box-shadow: inset 0 0 0 5px var(--wash); }
   .key.captured.lit { box-shadow: inset 0 0 0 5px var(--ink); }
 
@@ -266,6 +282,6 @@
 </div>
 
 <script src="../js/noise.js"></script>
-<script type="module" src="janko.js?v=8"></script>
+<script type="module" src="janko.js?v=9"></script>
 </body>
 </html>
