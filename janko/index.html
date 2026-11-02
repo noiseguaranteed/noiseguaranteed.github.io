@@ -61,6 +61,8 @@
   }
   .key.lit { background: var(--wash); color: var(--ink); }
   .hide-labels .key { font-size: 0; }
+  /* For playing with the laptop upside down, so wrists don't rest on its keyboard. */
+  html.flipped body { transform: rotate(180deg); }
 
   #start {
     position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center;
@@ -125,6 +127,7 @@
   <div class="spacer"></div>
   <button id="sustain" aria-pressed="false">sustain</button>
   <button id="labels" aria-pressed="true">note names</button>
+  <button id="flip" aria-pressed="false" title="turn the page upside down, for playing with the laptop flipped over">flip</button>
   <button id="fullscreen">full screen</button>
 </header>
 <canvas class="noise" aria-hidden="true" data-seed="janko" data-style="stripes" data-palette="wash" data-cell="3" data-density="0.85"></canvas>

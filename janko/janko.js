@@ -82,7 +82,10 @@ function layout() {
 // The whole cell is the hit area, so there are no dead zones between keys.
 function noteAt(clientX, clientY) {
   const rect = board.getBoundingClientRect();
-  const x = clientX - rect.left, y = clientY - rect.top;
+  // When the page is rotated 180°, the board's top-left corner is at the rect's bottom-right.
+  const flipped = document.documentElement.classList.contains('flipped');
+  const x = flipped ? rect.right - clientX : clientX - rect.left;
+  const y = flipped ? rect.bottom - clientY : clientY - rect.top;
   if (x < 0 || y < 0 || x >= rect.width || y >= rect.height) return null;
   const W = rect.width / (cols() + 0.5);
   const H = rect.height / state.rows;
@@ -229,6 +232,13 @@ $('labels').addEventListener('click', e => {
   const hide = board.classList.toggle('hide-labels');
   e.currentTarget.setAttribute('aria-pressed', String(!hide));
 });
+function setFlipped(on) {
+  document.documentElement.classList.toggle('flipped', on);
+  $('flip').setAttribute('aria-pressed', String(on));
+  try { localStorage.setItem('janko-flipped', on ? '1' : ''); } catch {}
+}
+$('flip').addEventListener('click', () => { releaseAll(); setFlipped(!document.documentElement.classList.contains('flipped')); });
+try { if (localStorage.getItem('janko-flipped')) setFlipped(true); } catch {}
 $('fullscreen').addEventListener('click', () => {
   if (document.fullscreenElement) document.exitFullscreen();
   else document.documentElement.requestFullscreen().catch(() => {});
