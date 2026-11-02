@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en-GB" data-wash="sage">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>tritone recolouring · noise guaranteed</title>
+<meta name="description" content="A sketch in AMY: a C drone under a slow crossfade between two major triads a tritone apart, D major and A flat major.">
+<link rel="icon" href="../../favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="apple-touch-icon" href="../../images/apple-touch-icon.png">
+<link rel="stylesheet" href="../../css/fonts.css">
+<link rel="stylesheet" href="../../css/noise-fx.css">
+<link rel="stylesheet" href="../../css/site.css">
+<!-- AMY's web build needs a cross-origin-isolated page. GitHub Pages can't send the headers,
+     so this service worker adds them. It reloads the page once on a first visit, and its
+     scope is this folder only. -->
+<script src="enable-threads.js"></script>
+<script src="amy.js"></script>
+<style>
+/* triad fills on the clock: soft-palette yellow (D side) and blue (Ab side). Colour never
+   carries meaning alone: every note is also labelled with its name and interval. */
+:root { --tri-a: #fff273; --tri-b: #7381ff; }
+
+.player { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 760px) { .player { grid-template-columns: minmax(0, 1fr); } }
+.clock { background: var(--panel); border: 2px solid var(--ink); aspect-ratio: 1; max-width: 100%; }
+.clock canvas { display: block; width: 100%; height: 100%; }
+
+.controls { display: grid; gap: 18px; min-width: 0; }
+.controls fieldset { border: 2px solid var(--ink); background: var(--panel); padding: 10px 14px 12px; }
+.controls legend { font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; padding: 0 6px; background: var(--wash-soft); }
+.controls label.opt { display: flex; gap: 10px; align-items: baseline; padding: 6px 0; cursor: pointer; }
+.controls input[type=radio] { accent-color: var(--ink); width: 18px; height: 18px; transform: translateY(3px); flex: none; }
+.opt small { display: block; font-size: 14px; }
+.slider { display: grid; gap: 4px; }
+.slider label { display: flex; justify-content: space-between; gap: 12px; font-size: 15px; }
+.slider output { font-weight: bold; font-variant-numeric: tabular-nums; }
+.slider input { width: 100%; accent-color: var(--ink); height: 28px; }
+.ends { display: flex; justify-content: space-between; font-size: 13px; }
+.sliders { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 14px 20px; }
+
+.start { font: inherit; cursor: pointer; font-size: 18px; }
+.start[aria-pressed="true"] { background: var(--wash); color: var(--ink); }
+.status { background: var(--panel); border: 2px solid var(--ink); padding: 8px 12px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; font-size: 15px; font-variant-numeric: tabular-nums; }
+.status .phase { font-weight: bold; }
+.warn { background: var(--wash); border: 2px solid var(--ink); padding: 8px 12px; margin-top: 14px; max-width: 70ch; }
+
+.wire { background: var(--ink); color: #fff; padding: 12px 14px; font-size: 14px; line-height: 1.5; min-height: 12.5em; overflow-x: auto; white-space: pre; }
+.wire-wrap { margin-top: 14px; }
+
+table.map { border-collapse: collapse; width: 100%; background: var(--panel); margin-top: 6px; }
+.map caption { text-align: left; font-weight: bold; margin-bottom: 6px; }
+.map th, .map td { border: 2px solid var(--ink); padding: 6px 10px; text-align: left; vertical-align: top; }
+.map th { font-weight: normal; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; }
+.map tr.ours td { background: var(--wash); }
+.map td.n { font-weight: bold; white-space: nowrap; }
+.table-scroll { overflow-x: auto; max-width: 100%; }
+.prose h3 { font-size: 18px; margin-top: 22px; }
+.prose .table-scroll { margin: 16px 0; }
+.prose ul + p { margin-top: 12px; }
+.prose code { font-size: 15px; background: var(--panel); border: 1px solid var(--ink); padding: 0 4px; }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">skip to content</a>
+
+<header>
+  <nav class="nav" aria-label="main">
+    <a class="logo" href="../../index.html">
+      <img src="../../images/ng_logo_trans_bkg_sml.png" width="100" height="100" alt="" data-tear="hover">
+      <span class="wordmark">noise guaranteed</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="../../index.html">home</a></li>
+      <li><a href="../../instruments.html">instruments</a></li>
+      <li><a href="../../workshops.html">workshops</a></li>
+      <li><a href="../../bookbuild.html">book &amp; build</a></li>
+      <li><a href="../../people.html">people</a></li>
+      <li><a href="https://github.com/noiseguaranteed">github</a></li>
+    </ul>
+  </nav>
+</header>
+<div class="topband">
+  <canvas class="noise" aria-hidden="true" data-seed="tritone" data-style="stripes" data-palette="wash" data-cell="3" data-density="0.85" data-drift="1"></canvas>
+  <button type="button" class="motion" data-motion aria-pressed="false" aria-label="pause moving noise" title="pause or play the moving noise">
+    <svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><rect x="3" y="2" width="4" height="12"/><rect x="9" y="2" width="4" height="12"/></svg>
+    <svg class="i-play" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 2 14 8 4 14z"/></svg>
+  </button>
+</div>
+
+<main id="main">
+  <section class="hero">
+    <div class="wrap">
+      <p class="kicker">Sketch · AMY synthesiser in the browser · headphones help</p>
+      <h1>Two chords that share <span class="mark">no notes.</span></h1>
+      <p class="lede">A C drone underneath. Above it, a slow crossfade between D major and A♭ major, two chords a tritone apart. When one fades into the other, every note above the drone changes at once. Halfway, the fade stops for a while so you can hear all six notes together.</p>
+      <p class="note">The sound comes from <a href="https://github.com/shorepine/amy">AMY</a>, a small open-source synthesiser that also runs on microcontrollers. The page downloads about 5 MB the first time.</p>
+    </div>
+  </section>
+
+  <section class="panel-section" aria-labelledby="listen-h">
+    <div class="wrap">
+      <div class="sec-head"><span class="num" aria-hidden="true">01</span><h2 id="listen-h">listen</h2><span class="rule" aria-hidden="true"></span></div>
+
+      <div class="player">
+        <div class="clock">
+          <canvas id="clock" role="img" aria-label="Pitch-class clock with C at the top. It shows the drone and both chords, and dims each chord as it fades out."></canvas>
+        </div>
+
+        <div class="controls">
+          <div class="actions" style="margin-top:0">
+            <button type="button" class="buy start" id="start" aria-pressed="false">start the drone</button>
+          </div>
+          <div class="status"><span class="phase" id="phase" role="status" aria-live="polite">Press start to begin.</span><span id="left" aria-hidden="true"></span></div>
+
+          <fieldset>
+            <legend>chord pair</legend>
+            <label class="opt"><input type="radio" name="pair" id="pair-free" value="free" checked><span>D ↔ A♭<small>Floats. Nothing wants to resolve.</small></span></label>
+            <label class="opt"><input type="radio" name="pair" id="pair-loaded" value="loaded"><span>E ↔ B♭<small>Uneasy. The drone starts to sound like it's heading for F.</small></span></label>
+          </fieldset>
+
+          <fieldset>
+            <legend>motion</legend>
+            <label class="opt"><input type="radio" name="mode" id="mode-auto" value="auto" checked><span>Automatic<small>Fade halfway, stop, fade on, rest, come back.</small></span></label>
+            <label class="opt"><input type="radio" name="mode" id="mode-manual" value="manual"><span>By hand<small>Move the crossfade slider yourself.</small></span></label>
+          </fieldset>
+
+          <div class="slider">
+            <label for="pos">crossfade <output id="pos-out" for="pos">0%</output></label>
+            <input type="range" id="pos" min="0" max="1000" value="0" aria-describedby="pos-ends">
+            <div class="ends" id="pos-ends"><span id="end-a">D major</span><span>halfway</span><span id="end-b">A♭ major</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sliders" style="margin-top:22px">
+        <div class="slider"><label for="fade">fade, end to end <output id="fade-out" for="fade">40 s</output></label><input type="range" id="fade" min="20" max="180" step="5" value="40"></div>
+        <div class="slider"><label for="hold">stop halfway for <output id="hold-out" for="hold">25 s</output></label><input type="range" id="hold" min="0" max="120" step="5" value="25"></div>
+        <div class="slider"><label for="rest">rest on each chord <output id="rest-out" for="rest">10 s</output></label><input type="range" id="rest" min="0" max="60" step="5" value="10"></div>
+        <div class="slider"><label for="drone">drone level <output id="drone-out" for="drone">70%</output></label><input type="range" id="drone" min="0" max="100" value="70"></div>
+        <div class="slider"><label for="triad">chord level <output id="triad-out" for="triad">75%</output></label><input type="range" id="triad" min="0" max="100" value="75"></div>
+        <div class="slider"><label for="volume">volume <output id="volume-out" for="volume">80%</output></label><input type="range" id="volume" min="0" max="100" value="80"></div>
+        <div class="slider"><label for="speed">time scale <output id="speed-out" for="speed">1×</output></label><input type="range" id="speed" min="1" max="10" value="1"></div>
+      </div>
+
+      <p class="warn" id="iso-warn" hidden>This browser didn't allow the setup AMY needs. Reload the page once. If it still won't play, try a current version of Firefox, Chrome, Edge or Safari, outside a private window.</p>
+
+      <div class="wire-wrap">
+        <p class="kicker" style="margin:0 0 6px">messages sent to AMY, newest last</p>
+        <pre class="wire" id="wire" aria-label="The most recent messages this page sent to AMY">Nothing sent yet.</pre>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="why-h">
+    <div class="wrap prose">
+      <div class="sec-head"><span class="num" aria-hidden="true">02</span><h2 id="why-h">why these two chords</h2><span class="rule" aria-hidden="true"></span></div>
+      <p>Move a major chord up six semitones, a tritone, and the new chord has none of the old chord's notes. Nothing carries over from one to the other, so the colour of the whole sound changes at once. Chords a third apart would share a note, and that shared note would soften the change.</p>
+      <p>There are six pairs like this. Over a C drone, the question is whether either chord has a note that leans somewhere. Three intervals do: a flat seventh turns C into a chord that wants to move to F; a major seventh pulls up to C; a flat ninth grinds against it.</p>
+      <div class="table-scroll">
+        <table class="map">
+          <caption>The six tritone pairs of major chords, over C</caption>
+          <thead><tr><th scope="col">pair</th><th scope="col">first chord</th><th scope="col">second chord</th><th scope="col">notes that lean</th></tr></thead>
+          <tbody>
+            <tr><td class="n">C ↔ F♯</td><td>1, 3, 5</td><td>♯11, ♭7, ♭9</td><td>♭7, ♭9</td></tr>
+            <tr><td class="n">D♭ ↔ G</td><td>♭9, 11, ♭6</td><td>5, 7, 9</td><td>♭9, major 7</td></tr>
+            <tr class="ours"><td class="n">D ↔ A♭</td><td>9, ♯11, 13</td><td>♭6, 1, ♭3</td><td><b>none</b></td></tr>
+            <tr><td class="n">E♭ ↔ A</td><td>♭3, 5, ♭7</td><td>13, ♭9, 3</td><td>♭7, ♭9</td></tr>
+            <tr><td class="n">E ↔ B♭</td><td>3, ♯5, 7</td><td>♭7, 9, 11</td><td>♭7, major 7</td></tr>
+            <tr><td class="n">F ↔ B</td><td>11, 13, 1</td><td>7, ♯9, ♯11</td><td>major 7</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>On the clock, an arrow after an interval shows where that note leans: →F or →C.</p>
+      <p>D and A♭ is the only pair where nothing leans. Over C, D major gives the bright Lydian colour: the 9th, the sharp 11th and the 13th. A♭ major gives the dark minor colour: the flat 6th, the root and the flat 3rd. So the fade moves from about as bright as you can get over C to about as dark, and no note asks to resolve.</p>
+      <h3>halfway</h3>
+      <p>Halfway through the fade you hear C, D, E♭, F♯, A♭ and A. Four of those, C, E♭, F♯ and A, make a diminished seventh chord, built entirely from minor thirds. It is perfectly symmetrical, so it has no home key. Two of its notes come from each chord. On the clock, the dashed lines join each note to its tritone partner. They are darkest halfway, where the two chords become one balanced sound.</p>
+      <h3>the other pair</h3>
+      <p>E and B♭ is there for comparison. The B♭ makes the drone sound like a chord about to move to F, and the B in the E chord leans back up to C. It sounds vast and uneasy, as if it's about to go somewhere.</p>
+    </div>
+  </section>
+
+  <section class="panel-section" aria-labelledby="amy-h">
+    <div class="wrap prose">
+      <div class="sec-head"><span class="num" aria-hidden="true">03</span><h2 id="amy-h">how it's made</h2><span class="rule" aria-hidden="true"></span></div>
+      <p>AMY takes short text messages. Each one sets up an oscillator or changes it. For example, <code>v106w0n36a0.16l1Z</code> means: oscillator 106, sine wave, note 36 (the low C), level 0.16, start playing.</p>
+      <ul>
+        <li>The drone is two slightly detuned sawtooth waves through a slowly moving low-pass filter, with sine waves on C2 and C3.</li>
+        <li>Each chord note is two detuned sawtooth waves and a sine wave. Each note's filter drifts at its own slow rate.</li>
+        <li>The fade is equal-power. One chord's level follows a cosine curve and the other's a sine curve, so the total loudness stays steady. Halfway, each chord is 3 dB down.</li>
+        <li>Every twentieth of a second, the page works out where the fade has reached and sends each oscillator its new level. AMY smooths each change, so you don't hear steps.</li>
+      </ul>
+      <p>The same messages would work wherever AMY runs, including on small boards, so the browser here stands in for hardware. AMY is by Brian Whitman and Daniel PW Ellis, under the MIT licence (<a href="AMY-LICENSE.txt">licence text</a>).</p>
+    </div>
+  </section>
+</main>
+
+<footer class="site-foot" id="contact">
+  <div class="foot">
+    <p>Email <span data-contact-addr>alexmlucas at proton dot me</span>, or send us a number and a good time and we'll ring you.</p>
+    <p><b>noise guaranteed</b> · a noise-positive organisation · Belfast · open designs on GitHub · no trackers · 2026</p>
+  </div>
+</footer>
+
+<script src="../../js/noise.js"></script>
+<script src="../../js/motion.js"></script>
+<script src="../../js/contact.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  var PAIRS = {
+    free: {
+      A: { name: "D major", notes: [ { n: "D", m: 62, deg: "9" }, { n: "F♯", m: 66, deg: "♯11" }, { n: "A", m: 69, deg: "13" } ] },
+      B: { name: "A♭ major", notes: [ { n: "A♭", m: 56, deg: "♭6" }, { n: "C", m: 60, deg: "1" }, { n: "E♭", m: 63, deg: "♭3" } ] }
+    },
+    loaded: {
+      A: { name: "E major", notes: [ { n: "E", m: 64, deg: "3" }, { n: "G♯", m: 68, deg: "♯5" }, { n: "B", m: 71, deg: "7", lean: "→C" } ] },
+      B: { name: "B♭ major", notes: [ { n: "B♭", m: 58, deg: "♭7", lean: "→F" }, { n: "D", m: 62, deg: "9" }, { n: "F", m: 65, deg: "11" } ] }
+    }
+  };
+  var PC_NAMES = ["C", "D♭", "D", "E♭", "E", "F", "F♯", "G", "A♭", "A", "B♭", "B"];
+
+  // oscillator numbers: kept high, clear of the oscs AMY gives its built-in synths
+  var LFO_DRONE = 100, LFO_TRI = [101, 102, 103], DRONE = [104, 105, 106, 107];
+  var BANK = { free: 110, loaded: 140 };
+  var LEVEL = { saw: 0.042, sine: 0.068 };
+  var ENV = "A3000,1,6000,0";   // 3 s rise, 6 s release
+
+  var $ = function (id) { return document.getElementById(id); };
+  var state = { pair: "free", mode: "auto", pos: 0, cycT: 0, playing: false, gA: 1, gB: 0, engine: false, starting: false };
+  var lastAmp = {};
+
+  // ---------- talking to AMY ----------
+  var wireLines = [], wireDirty = false;
+  function send(msg) {
+    window.amy_add_message(msg);
+    wireLines.push(msg);
+    if (wireLines.length > 10) wireLines.shift();
+    wireDirty = true;
+  }
+  function fmt(x) { return (Math.round(x * 10000) / 10000).toString(); }
+  function hz(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+
+  function bank(pair) {
+    var base = BANK[pair], P = PAIRS[pair], list = [];
+    ["A", "B"].forEach(function (side, si) {
+      P[side].notes.forEach(function (n, i) {
+        var o = base + (si * 3 + i) * 3;
+        list.push({ o: o, side: side, m: n.m - 0.07, kind: "saw", lfo: LFO_TRI[i] });
+        list.push({ o: o + 1, side: side, m: n.m + 0.07, kind: "saw", lfo: LFO_TRI[(i + 1) % 3] });
+        list.push({ o: o + 2, side: side, m: n.m, kind: "sine" });
+      });
+    });
+    return list;
+  }
+
+  function triadLevel() { return $("triad").value / 100; }
+  function droneLevel() { return $("drone").value / 100; }
+  function ampFor(v) { return LEVEL[v.kind] * (v.side === "A" ? state.gA : state.gB) * triadLevel(); }
+
+  function setupEngine() {
+    send("S8192Z");                       // reset all oscillators
+    sendVolume();                         // AMY leaves headroom: a full sine at V1 peaks at -23 dBFS
+    send("k0Z");                          // chorus off
+    send("h0.5,0.9,0.5,3000Z");           // reverb: level, liveness, damping, crossover
+    send("v" + LFO_DRONE + "w0f0.03a1Z");
+    send("v" + LFO_TRI[0] + "w0f0.041a1Z");
+    send("v" + LFO_TRI[1] + "w0f0.057a1Z");
+    send("v" + LFO_TRI[2] + "w0f0.073a1Z");
+    send("v" + DRONE[0] + "w2n35.96G1F320,,,,,0.6L" + LFO_DRONE + "R0.8" + ENV + "Z");
+    send("v" + DRONE[1] + "w2n36.04G1F320,,,,,0.6L" + LFO_DRONE + "R0.8" + ENV + "Z");
+    send("v" + DRONE[2] + "w0n36" + ENV + "Z");
+    send("v" + DRONE[3] + "w0n48" + ENV + "Z");
+    state.engine = true;
+  }
+
+  function sendVolume() { send("V" + fmt($("volume").value / 10) + "Z"); }
+  function droneAmps() { var d = droneLevel(); return [0.15 * d, 0.15 * d, 0.24 * d, 0.09 * d]; }
+  function droneOn() {
+    var a = droneAmps(), notes = [35.96, 36.04, 36, 48];
+    DRONE.forEach(function (o, i) { send("v" + o + "n" + notes[i] + "a" + fmt(a[i]) + "l1Z"); });
+  }
+  function droneUpdate() {
+    if (!state.playing) return;
+    var a = droneAmps();
+    DRONE.forEach(function (o, i) { send("v" + o + "a" + fmt(a[i]) + "Z"); });
+  }
+
+  function bankOn(pair) {
+    bank(pair).forEach(function (v) {
+      var amp = ampFor(v); lastAmp[v.o] = amp;
+      if (v.kind === "saw") {
+        var cut = Math.round(Math.min(2400, hz(v.m) * 3.5));
+        send("v" + v.o + "w2n" + fmt(v.m) + "G1F" + cut + ",,,,,0.5L" + v.lfo + "R0.7" + ENV + "a" + fmt(amp) + "l1Z");
+      } else {
+        send("v" + v.o + "w0n" + v.m + ENV + "a" + fmt(amp) + "l1Z");
+      }
+    });
+  }
+  function bankOff(pair) { bank(pair).forEach(function (v) { send("v" + v.o + "l0Z"); }); }
+
+  function updateAmps(force) {
+    if (!state.playing) return;
+    bank(state.pair).forEach(function (v) {
+      var amp = ampFor(v);
+      if (force || Math.abs(amp - (lastAmp[v.o] || 0)) > 0.0003) { lastAmp[v.o] = amp; send("v" + v.o + "a" + fmt(amp) + "Z"); }
+    });
+  }
+
+  function waitForAmy(ms) {
+    return new Promise(function (resolve, reject) {
+      var t0 = Date.now();
+      (function poll() {
+        if (window.amy_module && window.amy_add_message) return resolve();
+        if (Date.now() - t0 > ms) return reject(new Error("timeout"));
+        setTimeout(poll, 100);
+      })();
+    });
+  }
+
+  async function togglePlay() {
+    if (state.starting) return;
+    if (state.playing) {
+      state.playing = false;
+      DRONE.forEach(function (o) { send("v" + o + "l0Z"); });
+      bankOff(state.pair);
+      setStart();
+      announce("Stopped. The sound fades out over a few seconds.");
+      return;
+    }
+    if (window.crossOriginIsolated === false) { $("iso-warn").hidden = false; return; }
+    state.starting = true;
+    announce("Loading AMY…");
+    try {
+      await waitForAmy(30000);
+      await window.amy_js_start();
+      if (!state.engine) setupEngine();
+      state.playing = true;
+      if (state.mode === "auto") syncCycleToPos();
+      tick();
+      droneOn();
+      bankOn(state.pair);
+      lastPhase = "";
+    } catch (e) {
+      $("iso-warn").hidden = false;
+      announce("AMY didn't start.");
+    }
+    state.starting = false;
+    setStart();
+  }
+  function setStart() {
+    $("start").setAttribute("aria-pressed", state.playing);
+    $("start").textContent = state.playing ? "stop" : "start the drone";
+  }
+
+  // ---------- the fade cycle ----------
+  function segments() {
+    var F = +$("fade").value / 2, H = +$("hold").value, R = +$("rest").value;
+    var A = PAIRS[state.pair].A.name, B = PAIRS[state.pair].B.name;
+    return [
+      { a: 0, b: .5, d: F, label: "Fading from " + A + " toward halfway" },
+      { a: .5, b: .5, d: H, label: "Halfway: all six notes" },
+      { a: .5, b: 1, d: F, label: "Fading into " + B },
+      { a: 1, b: 1, d: R, label: "Resting on " + B },
+      { a: 1, b: .5, d: F, label: "Fading from " + B + " toward halfway" },
+      { a: .5, b: .5, d: H, label: "Halfway: all six notes" },
+      { a: .5, b: 0, d: F, label: "Fading into " + A },
+      { a: 0, b: 0, d: R, label: "Resting on " + A }
+    ].filter(function (s) { return s.d > 0; });
+  }
+  function syncCycleToPos() {
+    var F = +$("fade").value / 2, H = +$("hold").value;
+    state.cycT = state.pos <= .5 ? (state.pos / .5) * F : F + H + ((state.pos - .5) / .5) * F;
+  }
+  function cycleAt(t) {
+    var segs = segments(), total = segs.reduce(function (s, x) { return s + x.d; }, 0);
+    t = ((t % total) + total) % total;
+    for (var i = 0; i < segs.length; i++) {
+      var s = segs[i];
+      if (t < s.d) return { pos: s.a + (s.b - s.a) * (t / s.d), label: s.label, left: s.d - t };
+      t -= s.d;
+    }
+    return { pos: 0, label: "", left: 0 };
+  }
+
+  var lastPhase = "";
+  function announce(text) { if (text !== lastPhase) { lastPhase = text; $("phase").textContent = text; } }
+
+  var last = performance.now();
+  function tick() {
+    var now = performance.now(), dt = Math.min(0.5, (now - last) / 1000); last = now;
+    var speed = +$("speed").value;
+    if (state.mode === "auto") {
+      if (state.playing) state.cycT += dt * speed;
+      var c = cycleAt(state.cycT);
+      state.pos = c.pos; $("pos").value = Math.round(c.pos * 1000);
+      if (state.playing) { announce(c.label); $("left").textContent = Math.ceil(c.left / speed) + " s"; }
+    } else {
+      state.pos = $("pos").value / 1000;
+      if (state.playing) announce(Math.abs(state.pos - .5) < 0.02 ? "Halfway: all six notes" : "Crossfade set by hand");
+      $("left").textContent = "";
+    }
+    state.gA = Math.cos(state.pos * Math.PI / 2);
+    state.gB = Math.sin(state.pos * Math.PI / 2);
+    $("pos-out").textContent = Math.round(state.pos * 100) + "%";
+    updateAmps(false);
+    draw();
+  }
+  setInterval(tick, 50);
+  setInterval(function () {
+    if (wireDirty) { $("wire").textContent = wireLines.join("\n"); wireDirty = false; }
+  }, 250);
+
+  // ---------- the clock ----------
+  function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+  function rgba(hex, a) {
+    var n = parseInt(hex.replace("#", ""), 16);
+    return "rgba(" + (n >> 16 & 255) + "," + (n >> 8 & 255) + "," + (n & 255) + "," + a + ")";
+  }
+  var lastDrawKey = "";
+  function draw() {
+    var cv = $("clock"), r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+    var key = [state.pair, state.pos.toFixed(3), r.width, dpr].join("|");
+    if (key === lastDrawKey) return;
+    lastDrawKey = key;
+    cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr);
+    var c = cv.getContext("2d"); c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var w = r.width, h = r.height, cx = w / 2, cy = h / 2, R = Math.min(w, h) * 0.33;
+    var P = PAIRS[state.pair], gA = state.gA, gB = state.gB;
+    var font = "'Atkinson Hyperlegible Mono', 'Courier New', monospace";
+    var A_FILL = css("--tri-a"), B_FILL = css("--tri-b"), WASH = css("--wash") || "#a9cba2";
+    function pt(pc, rad) { var a = -Math.PI / 2 + pc * Math.PI / 6; rad = rad || R; return [cx + Math.cos(a) * rad, cy + Math.sin(a) * rad]; }
+    var byPc = {};
+    P.A.notes.forEach(function (n) { byPc[n.m % 12] = { n: n, side: "A" }; });
+    P.B.notes.forEach(function (n) { byPc[n.m % 12] = { n: n, side: "B" }; });
+
+    c.clearRect(0, 0, w, h);
+    c.lineJoin = "round"; c.lineCap = "round";
+    c.strokeStyle = "#000"; c.lineWidth = 1.5;
+    c.beginPath(); c.arc(cx, cy, R, 0, Math.PI * 2); c.stroke();
+
+    // the drone, in the middle
+    c.fillStyle = WASH; c.beginPath(); c.arc(cx, cy, R * 0.3, 0, Math.PI * 2); c.fill();
+    c.lineWidth = 2; c.stroke();
+    c.fillStyle = "#000"; c.textAlign = "center"; c.textBaseline = "middle";
+    c.font = "bold " + Math.round(R * 0.2) + "px " + font; c.fillText("C", cx, cy - R * 0.04);
+    c.font = Math.max(13, Math.round(R * 0.07)) + "px " + font; c.fillText("drone", cx, cy + R * 0.14);
+
+    // tritone partners: darkest halfway
+    var sym = 4 * gA * gA * gB * gB;
+    c.setLineDash([5, 6]); c.strokeStyle = "rgba(0,0,0," + (0.15 + 0.75 * sym) + ")"; c.lineWidth = 1 + 1.5 * sym;
+    P.A.notes.forEach(function (n) { var a = pt(n.m % 12), b = pt((n.m + 6) % 12); c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.stroke(); });
+    c.setLineDash([]);
+
+    // the two chords
+    [[P.A, A_FILL, gA], [P.B, B_FILL, gB]].forEach(function (t) {
+      c.beginPath();
+      t[0].notes.forEach(function (n, i) { var q = pt(n.m % 12); if (i) c.lineTo(q[0], q[1]); else c.moveTo(q[0], q[1]); });
+      c.closePath();
+      c.fillStyle = rgba(t[1], 0.08 + 0.72 * t[2]); c.fill();
+      c.strokeStyle = "rgba(0,0,0," + (0.25 + 0.75 * t[2]) + ")"; c.lineWidth = 1 + 2 * t[2]; c.stroke();
+    });
+
+    // the twelve notes
+    var big = Math.max(14, Math.round(R * 0.085)), small = Math.max(13, Math.round(R * 0.062));
+    for (var pc = 0; pc < 12; pc++) {
+      var e = byPc[pc], p = pt(pc), g = e ? (e.side === "A" ? gA : gB) : 0;
+      var rad = e ? 6 + 9 * g : 3;
+      c.beginPath(); c.arc(p[0], p[1], rad, 0, Math.PI * 2);
+      c.fillStyle = e ? rgba(e.side === "A" ? A_FILL : B_FILL, 0.4 + 0.6 * g) : "#000"; c.fill();
+      if (e) { c.strokeStyle = "#000"; c.lineWidth = 2; c.stroke(); }
+      var l = pt(pc, R + Math.max(34, R * 0.24));
+      c.fillStyle = e ? "#000" : "rgba(0,0,0,0.55)";
+      c.font = (e ? "bold " : "") + big + "px " + font;
+      c.fillText(e ? e.n.n : PC_NAMES[pc], l[0], l[1] - (e ? small * 0.6 : 0));
+      if (e) {
+        c.font = small + "px " + font;
+        c.fillText(e.n.lean ? e.n.deg + " " + e.n.lean : e.n.deg, l[0], l[1] + small * 0.75);
+      }
+    }
+  }
+  window.addEventListener("resize", function () { lastDrawKey = ""; draw(); });
+
+  // ---------- controls ----------
+  $("start").addEventListener("click", togglePlay);
+  document.querySelectorAll("input[name=pair]").forEach(function (r) {
+    r.addEventListener("change", function () {
+      var old = state.pair; state.pair = r.value;
+      $("end-a").textContent = PAIRS[state.pair].A.name; $("end-b").textContent = PAIRS[state.pair].B.name;
+      if (state.playing) { bankOff(old); bankOn(state.pair); }
+      lastDrawKey = ""; draw();
+    });
+  });
+  document.querySelectorAll("input[name=mode]").forEach(function (r) {
+    r.addEventListener("change", function () { state.mode = r.value; if (state.mode === "auto") syncCycleToPos(); });
+  });
+  $("pos").addEventListener("input", function () {
+    if (state.mode !== "manual") { state.mode = "manual"; $("mode-manual").checked = true; }
+  });
+  [["fade", " s"], ["hold", " s"], ["rest", " s"], ["drone", "%"], ["triad", "%"], ["volume", "%"], ["speed", "×"]].forEach(function (s) {
+    var el = $(s[0]), out = $(s[0] + "-out");
+    var upd = function () { out.textContent = el.value + s[1]; };
+    el.addEventListener("input", upd); upd();
+  });
+  $("drone").addEventListener("input", droneUpdate);
+  $("triad").addEventListener("input", function () { updateAmps(true); });
+  $("volume").addEventListener("input", function () { if (state.engine) sendVolume(); });
+
+  if (window.crossOriginIsolated === false && !("serviceWorker" in navigator)) $("iso-warn").hidden = false;
+  tick();
+})();
+</script>
+</body>
+</html>
