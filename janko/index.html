@@ -78,6 +78,8 @@
   .key.lit.in-scale::after { background: var(--ink); }
   .key.scale-root::after { height: 16px; }
   .key.muted { opacity: 0.25; }
+  /* Split: a thick edge on the last chord key of each row marks where the halves meet. */
+  .key.split-edge { border-right-width: 8px; }
   .key.captured { box-shadow: inset 0 0 0 5px var(--wash); }
   .key.captured.lit { box-shadow: inset 0 0 0 5px var(--ink); }
 
@@ -199,6 +201,7 @@
       <span class="name">chord</span>
       <button id="chord-pick" class="pick" aria-haspopup="dialog" aria-label="choose a chord">maj7</button>
       <button id="chord-mode" aria-pressed="false" title="each key plays the chosen chord, rooted on that key">play chords</button>
+      <button id="split" aria-pressed="false" title="left half plays chords, right half single notes">split</button>
     </div>
     <div class="group">
       <span class="name" id="spread-name">spread</span>
@@ -254,6 +257,6 @@
 </div>
 
 <script src="../js/noise.js"></script>
-<script type="module" src="janko.js?v=5"></script>
+<script type="module" src="janko.js?v=7"></script>
 </body>
 </html>

@@ -52,9 +52,11 @@ const state = {
   patch: 0,
   sustain: false,
   held: new Map(),               // midi note -> number of fingers/keys holding it
-  pointers: new Map(),           // pointerId -> notes sounding for that finger
-  keysDown: new Map(),           // KeyboardEvent.code -> notes sounding for that key
+  lit: new Map(),                // key position "r,c" -> number of fingers/keys lighting it
+  pointers: new Map(),           // pointerId -> { key, notes, lit } for that finger
+  keysDown: new Map(),           // KeyboardEvent.code -> { notes, lit } for that key
   keyEls: new Map(),             // midi note -> [elements]
+  keyAt: new Map(),              // key position "r,c" -> element
   // Library
   library: [],                   // the player's own chords and scales
   latch: false,
@@ -62,6 +64,7 @@ const state = {
   latchSounding: new Set(),      // captured notes currently held on
   chord: presetChords[0],
   chordMode: false,
+  split: false,                  // left half plays chords, right half single notes
   spread: 'close',
   scale: null,
   scaleRoot: 0,                  // pitch class
@@ -80,6 +83,15 @@ const noteName = n => NAMES[n % 12] + (n % 12 === 0 ? octaveOf(n) : '');   // oc
 const fullName = n => NAMES[n % 12] + octaveOf(n);
 const inScale = n => !!state.scale && state.scale.intervals.includes(((n - state.scaleRoot) % 12 + 12) % 12);
 
+// Split: a key belongs to the half its centre is in. Janko rows are offset by half a key, so the
+// boundary steps between rows rather than cutting through keys.
+const keyCentre = pos => { const [r, c] = pos.split(',').map(Number); return c + rowShift(r) + 0.5; };
+const leftHalf = pos => keyCentre(pos) < widthInKeys() / 2;
+const chordKey = pos => state.split ? !!pos && leftHalf(pos) : state.chordMode;
+// With the keyboard split, copies of a note in the other half belong to the other hand.
+const sameHalf = (positions, pos) =>
+  state.split && pos ? positions.filter(p => leftHalf(p) === leftHalf(pos)) : positions;
+
 function send(msg) {
   if (state.audio) amy_send(msg);
 }
@@ -89,6 +101,7 @@ function send(msg) {
 function layout() {
   board.replaceChildren();
   state.keyEls.clear();
+  state.keyAt.clear();
   const { width, height } = board.getBoundingClientRect();
   const W = width / widthInKeys();
   const H = height / state.rows;
@@ -105,10 +118,15 @@ function layout() {
       el.style.width = `${W - gap}px`;
       el.style.height = `${H - gap}px`;
       el.textContent = noteName(note);
-      if (state.held.has(note)) el.classList.add('lit');
+      el.dataset.pos = `${r},${c}`;
+      if (state.split && leftHalf(el.dataset.pos) && !(c + 1 < cols() && leftHalf(`${r},${c + 1}`))) {
+        el.classList.add('split-edge');
+      }
+      if (state.lit.has(el.dataset.pos)) el.classList.add('lit');
       board.append(el);
       if (!state.keyEls.has(note)) state.keyEls.set(note, []);
       state.keyEls.get(note).push(el);
+      state.keyAt.set(el.dataset.pos, el);
     }
   }
   $('range').textContent = `${noteName(state.lowNote)}–${fullName(highestNote())}`;
@@ -122,14 +140,16 @@ function markKeys() {
     for (const el of els) {
       el.classList.toggle('in-scale', scaled);
       el.classList.toggle('scale-root', scaled && ((note - state.scaleRoot) % 12 + 12) % 12 === 0);
-      el.classList.toggle('muted', state.scaleOnly && !!state.scale && !scaled);
+      el.classList.toggle('muted', state.scaleOnly && !!state.scale && !scaled
+        && !(state.split && leftHalf(el.dataset.pos)));
       el.classList.toggle('captured', state.captured.has(note));
     }
   }
 }
 
 // The whole cell is the hit area, so there are no dead zones between keys.
-function noteAt(clientX, clientY) {
+// Returns the key's position "r,c", or null.
+function keyAtPoint(clientX, clientY) {
   const rect = board.getBoundingClientRect();
   // When the page is rotated 180°, the board's top-left corner is at the rect's bottom-right.
   const flipped = document.documentElement.classList.contains('flipped');
@@ -141,17 +161,19 @@ function noteAt(clientX, clientY) {
   const r = state.rows - 1 - Math.floor(y / H);
   const c = Math.floor(x / W - rowShift(r));
   if (c < 0 || c >= cols()) return null;
-  return noteFor(r, c);
+  return `${r},${c}`;
 }
 
+const posNote = pos => { const [r, c] = pos.split(',').map(Number); return noteFor(r, c); };
+const noteAt = (clientX, clientY) => { const pos = keyAtPoint(clientX, clientY); return pos && posNote(pos); };
+
 // ---- Notes ----
+// Sounding and lighting are counted separately: a note sounds once however many keys hold it,
+// but which keys light up depends on how it was played (see keyOn).
 
 function press(note, vel) {
   const n = state.held.get(note) || 0;
-  if (n === 0) {
-    send({ synth: SYNTH, note, vel });
-    for (const el of state.keyEls.get(note) || []) el.classList.add('lit');
-  }
+  if (n === 0) send({ synth: SYNTH, note, vel });
   state.held.set(note, n + 1);
 }
 
@@ -161,7 +183,46 @@ function release(note) {
   if (n > 1) { state.held.set(note, n - 1); return; }
   state.held.delete(note);
   send({ synth: SYNTH, note, vel: 0 });
-  for (const el of state.keyEls.get(note) || []) el.classList.remove('lit');
+}
+
+function light(positions) {
+  for (const pos of positions) {
+    const n = state.lit.get(pos) || 0;
+    if (n === 0) state.keyAt.get(pos)?.classList.add('lit');
+    state.lit.set(pos, n + 1);
+  }
+}
+
+function unlight(positions) {
+  for (const pos of positions) {
+    const n = state.lit.get(pos) || 0;
+    if (n === 0) continue;
+    if (n > 1) { state.lit.set(pos, n - 1); continue; }
+    state.lit.delete(pos);
+    state.keyAt.get(pos)?.classList.remove('lit');
+  }
+}
+
+// Every key on the board that sounds `note` (none if it's off the board).
+const copiesOf = note => (state.keyEls.get(note) || []).map(el => el.dataset.pos);
+
+// One key per note: the copy nearest the `anchor` key, measured on screen, so a chord lights up
+// as one compact shape next to the finger instead of on every repeat of its notes.
+function nearestCopies(notes, anchor) {
+  const { width, height } = board.getBoundingClientRect();
+  const W = width / widthInKeys(), H = height / state.rows;
+  const centre = pos => { const [r, c] = pos.split(',').map(Number); return [(c + rowShift(r)) * W, r * H]; };
+  const [ax, ay] = centre(anchor);
+  return notes.flatMap(note => {
+    let best = null, bestDist = Infinity;
+    const near = sameHalf(copiesOf(note), anchor);
+    for (const pos of near.length ? near : copiesOf(note)) {
+      const [x, y] = centre(pos);
+      const dist = (x - ax) ** 2 + (y - ay) ** 2;
+      if (dist < bestDist) { bestDist = dist; best = pos; }
+    }
+    return best ? [best] : [];
+  });
 }
 
 function releaseAll() {
@@ -169,58 +230,76 @@ function releaseAll() {
     state.held.set(note, 1);
     release(note);
   }
+  for (const pos of state.lit.keys()) state.keyAt.get(pos)?.classList.remove('lit');
+  state.lit.clear();
   state.pointers.clear();
   state.keysDown.clear();
   state.latchSounding.clear();
 }
 
-// What one key sounds: nothing outside the scale with "scale only", the chosen chord rooted on
-// the key with "play chords", otherwise just its own note.
-function notesForKey(note) {
-  if (state.scaleOnly && state.scale && !inScale(note)) return [];
-  if (state.chordMode && state.chord) return voice(note, state.chord.intervals, state.spread);
+// What one key sounds: the chosen chord rooted on the key with "play chords" (or in the left half
+// when split), otherwise just its own note. "Scale only" silences single notes outside the scale;
+// when split, chords in the left half are left alone, so any root can be played.
+function notesForKey(note, pos) {
+  const chord = chordKey(pos) && !!state.chord;
+  if (state.scaleOnly && state.scale && !inScale(note) && !(state.split && chord)) return [];
+  if (chord) return voice(note, state.chord.intervals, state.spread);
   return [note];
 }
 
-function keyOn(note, vel) {
-  const notes = notesForKey(note);
+// Plays one key. `pos` is the key that was touched; without one (computer keyboard) the lowest
+// copy of the note stands in. A chord lights each of its notes once, nearest that key; a single
+// note lights every copy (in its own half, when split), showing where else it sits on the board.
+function keyOn(note, vel, pos = copiesOf(note)[0]) {
+  const notes = notesForKey(note, pos);
   for (const n of notes) press(n, vel);
-  return notes;
+  const lit = chordKey(pos) && pos
+    ? nearestCopies(notes, pos)
+    : notes.flatMap(n => sameHalf(copiesOf(n), pos));
+  light(lit);
+  return { notes, lit };
 }
 
-const keyOff = notes => { for (const n of notes) release(n); };
+function keyOff({ notes, lit }) {
+  for (const n of notes) release(n);
+  unlight(lit);
+}
+
+const NOTHING = { notes: [], lit: [] };
 
 const velocityFor = e =>
   e.pointerType === 'pen' && e.pressure > 0 ? Math.min(1, 0.15 + e.pressure) : Number($('vel').value);
 
 // ---- Touch / mouse / pen ----
 
+const fingerOn = (pos, e) => ({ key: pos, ...(pos === null ? NOTHING : keyOn(posNote(pos), velocityFor(e), pos)) });
+
 board.addEventListener('pointerdown', e => {
   e.preventDefault();
-  const note = noteAt(e.clientX, e.clientY);
+  const pos = keyAtPoint(e.clientX, e.clientY);
   if (state.latch) {
-    if (note !== null) toggleCapture(note, velocityFor(e));
+    if (pos !== null) toggleCapture(posNote(pos), velocityFor(e));
     return;
   }
   try { board.setPointerCapture(e.pointerId); } catch {}
-  state.pointers.set(e.pointerId, { key: note, notes: note === null ? [] : keyOn(note, velocityFor(e)) });
+  state.pointers.set(e.pointerId, fingerOn(pos, e));
 });
 
 // Sliding a finger onto another key releases the old note(s) and plays the new one(s) (glissando).
 board.addEventListener('pointermove', e => {
   const finger = state.pointers.get(e.pointerId);
   if (!finger) return;
-  const note = noteAt(e.clientX, e.clientY);
-  if (note === finger.key) return;
-  keyOff(finger.notes);
-  state.pointers.set(e.pointerId, { key: note, notes: note === null ? [] : keyOn(note, velocityFor(e)) });
+  const pos = keyAtPoint(e.clientX, e.clientY);
+  if (pos === finger.key) return;
+  keyOff(finger);
+  state.pointers.set(e.pointerId, fingerOn(pos, e));
 });
 
 function endPointer(e) {
   const finger = state.pointers.get(e.pointerId);
   if (!finger) return;
   state.pointers.delete(e.pointerId);
-  keyOff(finger.notes);
+  keyOff(finger);
 }
 board.addEventListener('pointerup', endPointer);
 board.addEventListener('pointercancel', endPointer);
@@ -361,14 +440,19 @@ new ResizeObserver(layout).observe(board);
 
 // ---- Library: latch and save ----
 
+// Latched notes light every copy, like single notes: here the player is collecting notes, not
+// reading a shape.
+function latchOn(note, vel) { press(note, vel); light(copiesOf(note)); }
+function latchOff(note) { release(note); unlight(copiesOf(note)); }
+
 function toggleCapture(note, vel) {
   if (state.captured.has(note)) {
     state.captured.delete(note);
-    if (state.latchSounding.delete(note)) release(note);
+    if (state.latchSounding.delete(note)) latchOff(note);
   } else {
     state.captured.add(note);
     state.latchSounding.add(note);
-    press(note, vel);
+    latchOn(note, vel);
   }
   showCapture();
 }
@@ -377,13 +461,13 @@ function setLatch(on) {
   state.latch = on;
   toggleButton('latch', on);
   if (!on) {
-    for (const n of state.latchSounding) release(n);
+    for (const n of state.latchSounding) latchOff(n);
     state.latchSounding.clear();
   }
 }
 
 function clearCapture() {
-  for (const n of state.latchSounding) release(n);
+  for (const n of state.latchSounding) latchOff(n);
   state.latchSounding.clear();
   state.captured.clear();
   $('cap-name').value = '';
@@ -476,7 +560,10 @@ function audition(item) {
   if (!state.audio) return;
   const notes = voice(60, item.intervals, state.spread);
   for (const n of notes) press(n, Number($('vel').value));
-  setTimeout(() => keyOff(notes), 700);
+  const middleC = copiesOf(60)[0];
+  const lit = middleC ? nearestCopies(notes, middleC) : [];
+  light(lit);
+  setTimeout(() => keyOff({ notes, lit }), 700);
 }
 
 const showSpread = segmented('spread', v => { releaseAll(); state.spread = v; saveSetting('spread', v); });
@@ -485,6 +572,16 @@ $('chord-mode').addEventListener('click', () => {
   state.chordMode = !state.chordMode;
   toggleButton('chord-mode', state.chordMode);
 });
+function setSplit(on) {
+  releaseAll();
+  state.split = on;
+  toggleButton('split', on);
+  $('chord-mode').disabled = on;   // the split decides where chords play
+  saveSetting('split', on ? '1' : '');
+  layout();
+}
+$('split').addEventListener('click', () => setSplit(!state.split));
+if (loadSetting('split')) setSplit(true);
 $('scale-only').addEventListener('click', () => {
   releaseAll();
   state.scaleOnly = !state.scaleOnly;
@@ -587,4 +684,4 @@ layout();
 })();
 
 // Exposed for experimenting from the browser console.
-window.janko = { state, press, release, noteAt, noteFor, layout, voice };
+window.janko = { state, press, release, noteAt, keyAtPoint, noteFor, layout, voice };
