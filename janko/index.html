@@ -43,7 +43,11 @@
     border-radius: 0; touch-action: manipulation;
     background: var(--ink); color: #fff; border: 2px solid var(--ink);
   }
-  button:hover, button[aria-pressed="true"], button[aria-expanded="true"] { background: var(--wash); color: var(--ink); }
+  /* Hover must not look like "on": touch screens keep a tapped button in :hover until the next
+     touch, so a toggle switched off would still look on. Only devices with a real pointer get it,
+     and the "on" rule below comes later so it wins on a hovered "on" button. */
+  @media (hover: hover) { button:hover { background: #3a3a3a; } }
+  button[aria-pressed="true"], button[aria-expanded="true"] { background: var(--wash); color: var(--ink); }
   button:disabled { opacity: 0.4; }
   /* Segmented choices: one button per option, the chosen one in the wash colour. */
   .seg { display: flex; }
