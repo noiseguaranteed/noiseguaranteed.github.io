@@ -2,11 +2,12 @@
 //
 // Layout: row r (counted from the bottom, nearest the player), column c sounds
 //   lowNote + rowOffset(r) + 2c
-// so every row is a whole-tone scale, and odd rows are shifted right by half a key.
-// - janko: rowOffset = r % 2. Odd rows sit a semitone higher; rows 0/2/4 repeat the same notes,
-//   as do rows 1/3/5, so any note can be reached from several rows.
-// - chromatic: rowOffset = r. Each row is a semitone above the one below, so a chromatic scale
-//   runs straight up the keyboard, zig-zagging half a key; two rows up is a whole tone.
+// so every row is a whole-tone scale.
+// - janko: rowOffset = r % 2, and odd rows are shifted right by half a key. Odd rows sit a
+//   semitone higher; rows 0/2/4 repeat the same notes, as do rows 1/3/5, so any note can be
+//   reached from several rows.
+// - chromatic: rowOffset = r, with no shift, so keys form a grid: the key directly above any key
+//   is a semitone higher and a vertical line is a chromatic scale.
 // Either way every scale/chord shape is the same in every key.
 
 const SYNTH = 1;
@@ -46,7 +47,10 @@ const state = {
 };
 
 const cols = () => state.octaves * 6 + 1;   // row 0 runs C..C inclusive
-const rowOffset = r => state.layout === 'chromatic' ? r : r % 2;
+const chromatic = () => state.layout === 'chromatic';
+const rowOffset = r => chromatic() ? r : r % 2;
+const rowShift = r => chromatic() ? 0 : (r % 2) * 0.5;      // in key widths
+const widthInKeys = () => cols() + (chromatic() ? 0 : 0.5);
 const noteFor = (r, c) => state.lowNote + rowOffset(r) + 2 * c;
 const highestNote = () => Math.max(noteFor(state.rows - 1, cols() - 1), noteFor(state.rows - 2, cols() - 1));
 const octaveOf = n => Math.floor(n / 12) - 1;
@@ -62,11 +66,11 @@ function layout() {
   board.replaceChildren();
   state.keyEls.clear();
   const { width, height } = board.getBoundingClientRect();
-  const W = width / (cols() + 0.5);
+  const W = width / widthInKeys();
   const H = height / state.rows;
   const gap = Math.max(2, Math.min(W, H) * 0.06);
   for (let r = 0; r < state.rows; r++) {
-    const shift = (r % 2) * 0.5;
+    const shift = rowShift(r);
     const top = (state.rows - 1 - r) * H;
     for (let c = 0; c < cols(); c++) {
       const note = noteFor(r, c);
@@ -94,10 +98,10 @@ function noteAt(clientX, clientY) {
   const x = flipped ? rect.right - clientX : clientX - rect.left;
   const y = flipped ? rect.bottom - clientY : clientY - rect.top;
   if (x < 0 || y < 0 || x >= rect.width || y >= rect.height) return null;
-  const W = rect.width / (cols() + 0.5);
+  const W = rect.width / widthInKeys();
   const H = rect.height / state.rows;
   const r = state.rows - 1 - Math.floor(y / H);
-  const c = Math.floor(x / W - (r % 2) * 0.5);
+  const c = Math.floor(x / W - rowShift(r));
   if (c < 0 || c >= cols()) return null;
   return noteFor(r, c);
 }
