@@ -60,7 +60,13 @@
   .spacer { flex: 1; }
   canvas.noise { display: block; width: 100%; height: 8px; }
 
+  .stage { flex: 1; display: flex; min-height: 0; }
   #board { position: relative; flex: 1; margin: 10px; touch-action: none; }
+  /* Chord types, for the chord hand: tall buttons, easy to hit while the other hand plays. */
+  #strip { display: flex; flex-direction: column; gap: 6px; margin: 10px 0 10px 10px; touch-action: none; }
+  #strip button { flex: 1; min-width: 9ch; background: var(--panel); color: var(--ink); font-weight: normal; }
+  @media (hover: hover) { #strip button:hover { background: var(--wash-hover); } }
+  #strip button[aria-pressed="true"] { background: var(--wash); font-weight: bold; }
   .key {
     position: absolute; display: flex; align-items: flex-end; justify-content: center;
     padding-bottom: 6px; font-size: 13px; font-weight: bold;
@@ -227,8 +233,11 @@
 </header>
 <canvas class="noise" aria-hidden="true" data-seed="janko" data-style="stripes" data-palette="wash" data-cell="3" data-density="0.85"></canvas>
 
-<div id="board" role="application"
-     aria-label="Janko keyboard. Touch or click to play, or use the computer keyboard: rows Z and A, then Q and 1 an octave up. Space is sustain."></div>
+<div class="stage">
+  <div id="strip" role="group" aria-label="chord types: tap to change the chord, even while holding keys" hidden></div>
+  <div id="board" role="application"
+       aria-label="Janko keyboard. Touch or click to play, or use the computer keyboard: rows Z and A, then Q and 1 an octave up. Space is sustain. Up and down arrows change the chord type."></div>
+</div>
 
 <div id="picker" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="picker-title">
   <div class="card wide">
@@ -248,7 +257,7 @@
     <p>Each row is a whole-tone scale. The rows next to it are a semitone higher, shifted half a key. So every scale and chord
        has the same shape in every key. Slide a finger to glide across notes.</p>
     <p>Settings has a chromatic layout too: keys in a grid, where the key directly above is a semitone higher. Library has jazz chords and scales, and latch to catch and save your own.</p>
-    <p>No touch screen? Play rows Z and A, then Q and 1 an octave up. Space is sustain.</p>
+    <p>No touch screen? Play rows Z and A, then Q and 1 an octave up. Space is sustain. When playing chords, up and down arrows change the chord type.</p>
     <button id="start-btn" disabled>loading…</button>
     <p id="warn" hidden>Your browser blocked the helper this page needs to make sound. Try reloading, or use Chrome or Edge.</p>
     <p class="small">A prototype. Sound by the <a href="https://github.com/shorepine/amy">AMY synthesiser</a> (MIT licence).
@@ -257,6 +266,6 @@
 </div>
 
 <script src="../js/noise.js"></script>
-<script type="module" src="janko.js?v=7"></script>
+<script type="module" src="janko.js?v=8"></script>
 </body>
 </html>

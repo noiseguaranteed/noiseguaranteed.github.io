@@ -63,6 +63,8 @@ const state = {
   captured: new Set(),           // notes caught by latch, waiting to be saved
   latchSounding: new Set(),      // captured notes currently held on
   chord: presetChords[0],
+  strip: [],                     // chord ids on the chord strip
+  slot: 0,                       // the strip button in use; its chord is state.chord
   chordMode: false,
   split: false,                  // left half plays chords, right half single notes
   spread: 'close',
@@ -257,7 +259,7 @@ function keyOn(note, vel, pos = copiesOf(note)[0]) {
     ? nearestCopies(notes, pos)
     : notes.flatMap(n => sameHalf(copiesOf(n), pos));
   light(lit);
-  return { notes, lit };
+  return { notes, lit, note, vel, pos, chord: chordKey(pos) && !!state.chord };
 }
 
 function keyOff({ notes, lit }) {
@@ -265,7 +267,16 @@ function keyOff({ notes, lit }) {
   unlight(lit);
 }
 
-const NOTHING = { notes: [], lit: [] };
+// Re-voices a held chord key with the current chord type. The new chord goes on before the old
+// one comes off, so notes the two chords share keep sounding instead of restarting.
+function revoice(held) {
+  if (!held.chord) return held;
+  const next = keyOn(held.note, held.vel, held.pos);
+  keyOff(held);
+  return { ...held, ...next };
+}
+
+const NOTHING = { notes: [], lit: [], chord: false };
 
 const velocityFor = e =>
   e.pointerType === 'pen' && e.pressure > 0 ? Math.min(1, 0.15 + e.pressure) : Number($('vel').value);
@@ -316,6 +327,11 @@ window.addEventListener('keydown', e => {
   if (e.repeat || e.ctrlKey || e.metaKey || e.altKey || typing(e)) return;
   if (e.key === 'Escape' && !$('picker').hidden) { closePicker(); return; }
   if (e.code === 'Space') { e.preventDefault(); setSustain(true); return; }
+  if ((e.code === 'ArrowUp' || e.code === 'ArrowDown') && !$('strip').hidden) {
+    e.preventDefault();
+    selectSlot(state.slot + (e.code === 'ArrowUp' ? -1 : 1));
+    return;
+  }
   if (!QWERTY_NOTE.has(e.code) || state.keysDown.has(e.code)) return;
   e.preventDefault();
   const note = state.lowNote + QWERTY_NOTE.get(e.code);
@@ -532,11 +548,54 @@ $('cap-name').addEventListener('keydown', e => { if (e.key === 'Enter') saveCapt
 const allChords = () => [...presetChords, ...state.library.filter(i => i.kind === 'chord')];
 const allScales = () => [...presetScales, ...state.library.filter(i => i.kind === 'scale')];
 
-function chooseChord(item) {
-  releaseAll();
+// ---- Library: chord strip ----
+// Quick chord-type switching for the chord hand. Choosing a chord from the list puts it in the
+// strip button in use; tapping a strip button switches to its chord, even mid-chord.
+
+const STRIP_DEFAULTS = ['maj7', 'm7', '7', 'm7b5', '7sus4', 'dim7'].map(name => 'chord:' + name);
+const chordById = (id, fallback) =>
+  allChords().find(i => i.id === id) || allChords().find(i => i.id === fallback) || presetChords[0];
+
+function setChord(item) {
   state.chord = item;
   $('chord-pick').textContent = item.name;
   saveSetting('chord', item.id);
+}
+
+function chooseChord(item) {
+  releaseAll();
+  setChord(item);
+  state.strip[state.slot] = item.id;
+  saveSetting('strip', JSON.stringify(state.strip));
+  renderStrip();
+}
+
+function selectSlot(i) {
+  state.slot = (i + state.strip.length) % state.strip.length;
+  saveSetting('slot', String(state.slot));
+  setChord(chordById(state.strip[state.slot], STRIP_DEFAULTS[state.slot]));
+  renderStrip();
+  for (const [id, finger] of state.pointers) state.pointers.set(id, revoice(finger));
+  for (const [code, key] of state.keysDown) state.keysDown.set(code, revoice(key));
+}
+
+function renderStrip() {
+  $('strip').replaceChildren(...state.strip.map((id, i) => {
+    const b = document.createElement('button');
+    b.textContent = chordById(id, STRIP_DEFAULTS[i]).name;
+    b.setAttribute('aria-pressed', String(i === state.slot));
+    // On pointerdown, not click: click waits for the finger to lift. Click still serves the
+    // keyboard (detail 0), so the strip stays reachable with Tab and Enter.
+    b.addEventListener('pointerdown', e => { e.preventDefault(); selectSlot(i); });
+    b.addEventListener('click', e => { if (e.detail === 0) selectSlot(i); });
+    return b;
+  }));
+}
+
+// The strip shows only while some keys play chords.
+function showStrip() {
+  const show = state.split || state.chordMode;
+  if ($('strip').hidden === show) $('strip').hidden = !show;
 }
 
 function chooseScale(item) {
@@ -571,6 +630,7 @@ $('chord-mode').addEventListener('click', () => {
   releaseAll();
   state.chordMode = !state.chordMode;
   toggleButton('chord-mode', state.chordMode);
+  showStrip();
 });
 function setSplit(on) {
   releaseAll();
@@ -578,6 +638,7 @@ function setSplit(on) {
   toggleButton('split', on);
   $('chord-mode').disabled = on;   // the split decides where chords play
   saveSetting('split', on ? '1' : '');
+  showStrip();
   layout();
 }
 $('split').addEventListener('click', () => setSplit(!state.split));
@@ -628,6 +689,7 @@ function openPicker(kind) {
       state.library = state.library.filter(i => i !== item);
       saveLibrary();
       if (state.chord === item) chooseChord(presetChords[0]);
+      renderStrip();   // other strip buttons holding it fall back to their defaults
       if (state.scale === item) chooseScale(null);
       openPicker(kind);
     });
@@ -651,7 +713,14 @@ $('picker').addEventListener('click', e => { if (e.target === $('picker')) close
 
 // Restore the library and choices from last time.
 loadLibrary();
-chooseChord(allChords().find(i => i.id === loadSetting('chord')) || presetChords[0]);
+try {
+  const saved = JSON.parse(loadSetting('strip') || 'null');
+  state.strip = STRIP_DEFAULTS.map((id, i) => (Array.isArray(saved) && typeof saved[i] === 'string' ? saved[i] : id));
+} catch { state.strip = [...STRIP_DEFAULTS]; }
+const savedSlot = Number(loadSetting('slot'));
+state.slot = Number.isInteger(savedSlot) && savedSlot >= 0 && savedSlot < state.strip.length ? savedSlot : 0;
+setChord(chordById(state.strip[state.slot], STRIP_DEFAULTS[state.slot]));
+renderStrip();
 const savedRoot = Number(loadSetting('scale-root'));
 if (Number.isInteger(savedRoot) && savedRoot >= 0 && savedRoot < 12) state.scaleRoot = savedRoot;
 chooseScale(allScales().find(i => i.id === loadSetting('scale')) || null);
