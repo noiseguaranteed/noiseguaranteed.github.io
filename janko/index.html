@@ -10,7 +10,8 @@
 <link rel="stylesheet" href="../css/fonts.css">
 <link rel="stylesheet" href="../css/noise-fx.css">
 <style>
-  /* An instrument page: full-screen keyboard instead of the usual site layout. */
+  /* An instrument page: full-screen keyboard instead of the usual site layout.
+     No <select>s: their pop-ups ignore the page's 180° flip. */
   :root { --ink: #000; --panel: #fff; }
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
@@ -25,26 +26,33 @@
   :focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
   a { color: inherit; text-underline-offset: 3px; }
   a:hover { background: var(--wash-hover); }
+  .visually-hidden {
+    position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+  }
 
-  header {
+  .bar {
     display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px;
     padding: 6px 12px; background: var(--panel); border-bottom: 2px solid var(--ink);
   }
-  .home { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+  .home { display: flex; align-items: center; text-decoration: none; }
   .home img { display: block; width: 40px; height: 40px; }
-  h1 { font-size: 17px; margin: 0; }
   .group { display: flex; align-items: center; gap: 6px; }
   .group > label, .group > .name { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; }
-  button, select {
+  button {
     font: inherit; font-weight: bold; min-height: 44px; min-width: 44px; padding: 0 12px;
     border-radius: 0; touch-action: manipulation;
+    background: var(--ink); color: #fff; border: 2px solid var(--ink);
   }
-  button { background: var(--ink); color: #fff; border: 2px solid var(--ink); }
-  button:hover, button[aria-pressed="true"] { background: var(--wash); color: var(--ink); }
+  button:hover, button[aria-pressed="true"], button[aria-expanded="true"] { background: var(--wash); color: var(--ink); }
   button:disabled { opacity: 0.4; }
-  select { background: var(--panel); color: var(--ink); border: 2px solid var(--ink); }
+  /* Segmented choices: one button per option, the chosen one in the wash colour. */
+  .seg { display: flex; }
+  .seg button { background: var(--panel); color: var(--ink); font-weight: normal; }
+  .seg button + button { border-left: 0; }
+  .seg button:hover { background: var(--wash-hover); }
+  .seg button[aria-pressed="true"] { background: var(--wash); font-weight: bold; }
   .readout { min-width: 6ch; text-align: center; font-weight: bold; font-variant-numeric: tabular-nums; }
-  input[type=range] { width: 90px; accent-color: var(--ink); }
+  input[type=range] { width: 100px; accent-color: var(--ink); }
   .spacer { flex: 1; }
   canvas.noise { display: block; width: 100%; height: 8px; }
 
@@ -83,52 +91,68 @@
 </head>
 <body>
 <header>
-  <a class="home" href="../index.html">
-    <img src="../images/ng_logo_trans_bkg_sml.png" width="40" height="40" alt="noise guaranteed home">
-  </a>
-  <h1>janko keyboard</h1>
-  <div class="group">
-    <label for="bank">sound</label>
-    <select id="bank">
-      <option value="0">juno</option>
-      <option value="128">dx7</option>
-      <option value="256">piano</option>
-    </select>
-    <button id="patch-down" aria-label="previous patch">−</button>
-    <span id="patch" class="readout" aria-live="polite">1</span>
-    <button id="patch-up" aria-label="next patch">+</button>
+  <div class="bar">
+    <a class="home" href="../index.html">
+      <img src="../images/ng_logo_trans_bkg_sml.png" width="40" height="40" alt="noise guaranteed home">
+    </a>
+    <h1 class="visually-hidden">janko keyboard</h1>
+    <div class="group">
+      <span class="name" id="sound-name">sound</span>
+      <div class="seg" role="group" aria-labelledby="sound-name">
+        <button data-bank="0" aria-pressed="true">juno</button>
+        <button data-bank="128" aria-pressed="false">dx7</button>
+        <button data-bank="256" aria-pressed="false">piano</button>
+      </div>
+      <button id="patch-down" aria-label="previous patch">−</button>
+      <span id="patch" class="readout" aria-live="polite">1</span>
+      <button id="patch-up" aria-label="next patch">+</button>
+    </div>
+    <div class="group">
+      <span class="name">octave</span>
+      <button id="oct-down" aria-label="octave down">−</button>
+      <span id="range" class="readout" aria-live="polite">C3</span>
+      <button id="oct-up" aria-label="octave up">+</button>
+    </div>
+    <div class="spacer"></div>
+    <button id="sustain" aria-pressed="false">sustain</button>
+    <button id="flip" aria-pressed="false" title="turn the page upside down, for playing with the laptop flipped over">flip</button>
+    <button id="settings-btn" aria-expanded="false" aria-controls="settings">settings</button>
+    <button id="fullscreen">full screen</button>
   </div>
-  <div class="group">
-    <span class="name">octave</span>
-    <button id="oct-down" aria-label="octave down">−</button>
-    <span id="range" class="readout" aria-live="polite">C3</span>
-    <button id="oct-up" aria-label="octave up">+</button>
+  <div class="bar" id="settings" hidden>
+    <div class="group">
+      <span class="name" id="layout-name">layout</span>
+      <div class="seg" role="group" aria-labelledby="layout-name">
+        <button data-layout="janko" aria-pressed="true" title="rows repeat in pairs">janko</button>
+        <button data-layout="chromatic" aria-pressed="false" title="each row a semitone above the last, so chromatic scales run straight up">chromatic</button>
+      </div>
+    </div>
+    <div class="group">
+      <span class="name" id="width-name">width</span>
+      <div class="seg" role="group" aria-labelledby="width-name">
+        <button data-octaves="2" aria-pressed="false">2 oct</button>
+        <button data-octaves="3" aria-pressed="true">3 oct</button>
+        <button data-octaves="4" aria-pressed="false">4 oct</button>
+      </div>
+    </div>
+    <div class="group">
+      <span class="name" id="rows-name">rows</span>
+      <div class="seg" role="group" aria-labelledby="rows-name">
+        <button data-rows="2" aria-pressed="false">2</button>
+        <button data-rows="4" aria-pressed="true">4</button>
+        <button data-rows="6" aria-pressed="false">6</button>
+      </div>
+    </div>
+    <div class="group">
+      <label for="vel">velocity</label>
+      <input type="range" id="vel" min="0.1" max="1" step="0.05" value="0.8">
+    </div>
+    <div class="group">
+      <label for="volume">volume</label>
+      <input type="range" id="volume" min="0" max="2" step="0.05" value="1">
+    </div>
+    <button id="labels" aria-pressed="true">note names</button>
   </div>
-  <div class="group">
-    <select id="octaves" aria-label="width">
-      <option value="2">2 oct</option>
-      <option value="3" selected>3 oct</option>
-      <option value="4">4 oct</option>
-    </select>
-    <select id="rows" aria-label="rows">
-      <option value="2">2 rows</option>
-      <option value="4" selected>4 rows</option>
-      <option value="6">6 rows</option>
-    </select>
-  </div>
-  <div class="group">
-    <label for="vel">velocity</label>
-    <input type="range" id="vel" min="0.1" max="1" step="0.05" value="0.8">
-  </div>
-  <div class="group">
-    <label for="volume">volume</label>
-    <input type="range" id="volume" min="0" max="2" step="0.05" value="1">
-  </div>
-  <div class="spacer"></div>
-  <button id="sustain" aria-pressed="false">sustain</button>
-  <button id="labels" aria-pressed="true">note names</button>
-  <button id="flip" aria-pressed="false" title="turn the page upside down, for playing with the laptop flipped over">flip</button>
-  <button id="fullscreen">full screen</button>
 </header>
 <canvas class="noise" aria-hidden="true" data-seed="janko" data-style="stripes" data-palette="wash" data-cell="3" data-density="0.85"></canvas>
 
@@ -140,6 +164,7 @@
     <h2>janko keyboard</h2>
     <p>Each row is a whole-tone scale. The rows next to it are a semitone higher, shifted half a key. So every scale and chord
        has the same shape in every key. Slide a finger to glide across notes.</p>
+    <p>Settings has a chromatic layout too, where each row is a semitone above the last, so chromatic scales run straight up.</p>
     <p>No touch screen? Play rows Z and A, then Q and 1 an octave up. Space is sustain.</p>
     <button id="start-btn" disabled>loading…</button>
     <p id="warn" hidden>Your browser blocked the helper this page needs to make sound. Try reloading, or use Chrome or Edge.</p>

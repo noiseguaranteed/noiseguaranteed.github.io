@@ -1,10 +1,13 @@
 // Janko keyboard on AMY.
 //
 // Layout: row r (counted from the bottom, nearest the player), column c sounds
-//   lowNote + (r % 2) + 2c
-// so every row is a whole-tone scale, and odd rows sit a semitone higher, shifted right by half
-// a key. Rows 0/2/4 repeat the same notes, as do rows 1/3/5, so any note can be reached from
-// several rows and every scale/chord shape is the same in every key.
+//   lowNote + rowOffset(r) + 2c
+// so every row is a whole-tone scale, and odd rows are shifted right by half a key.
+// - janko: rowOffset = r % 2. Odd rows sit a semitone higher; rows 0/2/4 repeat the same notes,
+//   as do rows 1/3/5, so any note can be reached from several rows.
+// - chromatic: rowOffset = r. Each row is a semitone above the one below, so a chromatic scale
+//   runs straight up the keyboard, zig-zagging half a key; two rows up is a whole tone.
+// Either way every scale/chord shape is the same in every key.
 
 const SYNTH = 1;
 const DEFAULT_SYNTHS = [0, 1, 2, 10];
@@ -32,6 +35,7 @@ const state = {
   lowNote: 48,                   // C3
   octaves: 3,
   rows: 4,
+  layout: 'janko',
   bank: 0,
   patch: 0,
   sustain: false,
@@ -42,7 +46,11 @@ const state = {
 };
 
 const cols = () => state.octaves * 6 + 1;   // row 0 runs C..C inclusive
-const noteName = n => NAMES[n % 12] + (n % 12 === 0 ? Math.floor(n / 12) - 1 : '');
+const rowOffset = r => state.layout === 'chromatic' ? r : r % 2;
+const noteFor = (r, c) => state.lowNote + rowOffset(r) + 2 * c;
+const highestNote = () => Math.max(noteFor(state.rows - 1, cols() - 1), noteFor(state.rows - 2, cols() - 1));
+const octaveOf = n => Math.floor(n / 12) - 1;
+const noteName = n => NAMES[n % 12] + (n % 12 === 0 ? octaveOf(n) : '');   // octave on Cs only, to keep keys tidy
 
 function send(msg) {
   if (state.audio) amy_send(msg);
@@ -61,7 +69,7 @@ function layout() {
     const shift = (r % 2) * 0.5;
     const top = (state.rows - 1 - r) * H;
     for (let c = 0; c < cols(); c++) {
-      const note = state.lowNote + (r % 2) + 2 * c;
+      const note = noteFor(r, c);
       const el = document.createElement('div');
       el.className = 'key ' + (BLACK.has(note % 12) ? 'black' : 'white') + (note % 12 === 0 ? ' c' : '');
       el.style.left = `${(c + shift) * W + gap / 2}px`;
@@ -75,8 +83,7 @@ function layout() {
       state.keyEls.get(note).push(el);
     }
   }
-  const hi = state.lowNote + 12 * state.octaves;
-  $('range').textContent = `${noteName(state.lowNote)}–${noteName(hi)}`;
+  $('range').textContent = `${noteName(state.lowNote)}–${NAMES[highestNote() % 12]}${octaveOf(highestNote())}`;
 }
 
 // The whole cell is the hit area, so there are no dead zones between keys.
@@ -92,7 +99,7 @@ function noteAt(clientX, clientY) {
   const r = state.rows - 1 - Math.floor(y / H);
   const c = Math.floor(x / W - (r % 2) * 0.5);
   if (c < 0 || c >= cols()) return null;
-  return state.lowNote + (r % 2) + 2 * c;
+  return noteFor(r, c);
 }
 
 // ---- Notes ----
@@ -206,26 +213,59 @@ function setSustain(on) {
   send({ synth: SYNTH, pedal: on ? 1 : 0 });
 }
 
+// Keep the whole keyboard within MIDI notes 12..120.
+function fitRange() {
+  while (highestNote() > 120 && state.lowNote > 12) state.lowNote -= 12;
+}
+
 function shiftOctave(d) {
-  const next = state.lowNote + 12 * d;
-  if (next < 12 || next + 12 * state.octaves > 108) return;
+  const prev = state.lowNote;
+  state.lowNote += 12 * d;
+  if (state.lowNote < 12 || highestNote() > 120) { state.lowNote = prev; return; }
   releaseAll();
-  state.lowNote = next;
   layout();
 }
 
-$('bank').addEventListener('change', e => { state.bank = Number(e.target.value); state.patch = 0; loadPatch(); });
+// Wires up a .seg group: each button carries data-<key>; the pressed one shows the current value.
+function segmented(key, onChoose) {
+  const buttons = [...document.querySelectorAll(`[data-${key}]`)];
+  const show = value => buttons.forEach(b => b.setAttribute('aria-pressed', String(b.dataset[key] === String(value))));
+  buttons.forEach(b => b.addEventListener('click', () => { onChoose(b.dataset[key]); show(b.dataset[key]); }));
+  return show;
+}
+
+function saveSetting(key, value) {
+  try { localStorage.setItem('janko-' + key, value); } catch {}
+}
+function loadSetting(key) {
+  try { return localStorage.getItem('janko-' + key); } catch { return null; }
+}
+
+segmented('bank', v => { state.bank = Number(v); state.patch = 0; loadPatch(); });
+const showLayout = segmented('layout', v => {
+  releaseAll(); state.layout = v; fitRange(); layout(); saveSetting('layout', v);
+});
+const showOctaves = segmented('octaves', v => {
+  releaseAll(); state.octaves = Number(v); fitRange(); layout(); saveSetting('octaves', v);
+});
+const showRows = segmented('rows', v => {
+  releaseAll(); state.rows = Number(v); fitRange(); layout(); saveSetting('rows', v);
+});
+if (['janko', 'chromatic'].includes(loadSetting('layout'))) state.layout = loadSetting('layout');
+if (['2', '3', '4'].includes(loadSetting('octaves'))) state.octaves = Number(loadSetting('octaves'));
+if (['2', '4', '6'].includes(loadSetting('rows'))) state.rows = Number(loadSetting('rows'));
+fitRange();
+showLayout(state.layout); showOctaves(state.octaves); showRows(state.rows);
+
+$('settings-btn').addEventListener('click', e => {
+  const open = $('settings').hidden;
+  $('settings').hidden = !open;
+  e.currentTarget.setAttribute('aria-expanded', String(open));
+});
 $('patch-down').addEventListener('click', () => stepPatch(-1));
 $('patch-up').addEventListener('click', () => stepPatch(1));
 $('oct-down').addEventListener('click', () => shiftOctave(-1));
 $('oct-up').addEventListener('click', () => shiftOctave(1));
-$('octaves').addEventListener('change', e => {
-  releaseAll();
-  state.octaves = Number(e.target.value);
-  while (state.lowNote + 12 * state.octaves > 108) state.lowNote -= 12;
-  layout();
-});
-$('rows').addEventListener('change', e => { releaseAll(); state.rows = Number(e.target.value); layout(); });
 $('volume').addEventListener('input', e => send({ volume: Number(e.target.value) }));
 $('sustain').addEventListener('click', () => setSustain(!state.sustain));
 $('labels').addEventListener('click', e => {
@@ -235,10 +275,10 @@ $('labels').addEventListener('click', e => {
 function setFlipped(on) {
   document.documentElement.classList.toggle('flipped', on);
   $('flip').setAttribute('aria-pressed', String(on));
-  try { localStorage.setItem('janko-flipped', on ? '1' : ''); } catch {}
+  saveSetting('flipped', on ? '1' : '');
 }
 $('flip').addEventListener('click', () => { releaseAll(); setFlipped(!document.documentElement.classList.contains('flipped')); });
-try { if (localStorage.getItem('janko-flipped')) setFlipped(true); } catch {}
+if (loadSetting('flipped')) setFlipped(true);
 $('fullscreen').addEventListener('click', () => {
   if (document.fullscreenElement) document.exitFullscreen();
   else document.documentElement.requestFullscreen().catch(() => {});
@@ -270,4 +310,4 @@ layout();
 })();
 
 // Exposed for experimenting from the browser console.
-window.janko = { state, press, release, noteAt, layout };
+window.janko = { state, press, release, noteAt, noteFor, layout };
