@@ -33,7 +33,7 @@ window.KIOSK_CONFIG = {
     {
       key: "participant",
       title: "Participant",
-      who: "I took part in the Towards Inclusion project",
+      who: "I took part in the performance project",
       url: "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?embed=true&id=6ner6qW040mh6NbdI6Hyhu-UHCKBDGtHqTJOHW3nfdtUQVRFWEc5VDE4SUdISVgwTVI1SEk0MEdDSS4u",
       signifier: "dots",
       completeAfterLoads: null,
