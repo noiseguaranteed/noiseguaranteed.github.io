@@ -197,6 +197,7 @@ These are requirements, not nice-to-haves:
 | [noise-demo.html](noise-demo.html) | Noise lab: strips, washes, tears, fringe, stripes, playground | Prototype (uses the old `css/noise.css`) |
 | shop-v2.html, shop.html | Shop drafts | Removed from the site for now; in git history |
 | [graphics-style.html](graphics-style.html) | Graphics styles side by side | Prototype |
+| [community.html](community.html), [community-links.html](community-links.html), [css/community.css](css/community.css) | Community page for the members-only community on DFOS, and where links to it would sit on the live pages | Prototype; not linked from the site |
 | [type-specimen.html](type-specimen.html) | Type options A–D | Reference; option **B** chosen |
 | [tools/dither.html](tools/dither.html) | Photo dither tool | Ready to use |
 | [janko/](janko/index.html) | Janko keyboard for touch screens, sound by AMY (WebAssembly in `janko/lib/`), with a chord and scale library (`janko/theory.js`). A full-screen instrument page with its own layout, not linked from the nav. `janko/enable-threads.js` is a service worker, scoped to `janko/`, that adds the isolation headers AMY needs | Prototype |
@@ -204,6 +205,7 @@ These are requirements, not nice-to-haves:
 | [sketches/bubble-friends/](sketches/bubble-friends/index.html) | Bubble Friends, a gentle eye-gaze game for children: look at a bubble until it pops to free the sea friend inside. No timer or fail state. Gaze comes from the mouse pointer (Project IRIS, Talon). **Its own playful underwater look on purpose, not the site brand**; system fonts only, no external files, so the same file runs offline. Not linked from the nav. Built from the source in `C:\developmentubble-friends` | Prototype |
 | [sketches/gaze-harp/](sketches/gaze-harp/index.html) | Gaze harp, an EyeHarp-inspired instrument played with eye gaze (mouse pointer or a WebSocket on `ws://localhost:8765`): melody ring, loop editor and strings. A full-screen instrument page with its own layout and soft/dark/bright looks, not linked from the nav. Font, logo and `noise.js` are copied into the folder so it also runs offline. Built from the source in `C:\development\gaze-harp`; the Ableton Link bridge stays there | Prototype |
 | [belonging/](belonging/index.html) | Feedback survey picker for SARC's *Belonging on Stage*: the four Towards Inclusion Microsoft Forms plus a separate £50 prize-draw form, reached by QR codes in the hall. **SARC-branded on purpose, not noise guaranteed's brand.** League Gothic and Work Sans are self-hosted in `belonging/fonts/` (SIL OFL), with no CDNs. `noindex`, not linked from the nav. The source of truth is `C:\Users\Alex\sarc_survey_kiosk`, where the same page also runs the foyer kiosks. After changes, copy `index.html`, `config.js`, the logo and `fonts/` here | Live for the event |
+| [tools/video-titles.html](tools/video-titles.html) | Title cards, lower thirds and noise plates for video, as PNGs or PNG sequences | Ready to use |
 | [js/noise.js](js/noise.js), [js/dither.js](js/dither.js), [css/noise-fx.css](css/noise-fx.css), [css/fonts.css](css/fonts.css) | Shared code | Ready to use |
 
 ## Open decisions
