@@ -152,7 +152,8 @@
 
   @media (max-width: 1000px) {
     .intro { grid-template-columns: 1fr; }
-    .cards { grid-template-columns: repeat(2, 1fr); }
+    .cards { grid-template-columns: repeat(2, 1fr); flex: none; }
+    #home > * { flex-shrink: 0; }  /* let the page scroll instead of squashing the cards */
     body { overflow: auto; }
   }
   @media (max-width: 560px) {
