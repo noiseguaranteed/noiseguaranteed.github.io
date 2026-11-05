@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Belonging on Stage Feedback</title>
+<meta name="description" content="Feedback surveys for SARC's Belonging on Stage, with a chance to win a £50 One4all voucher.">
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+  /* SARC brand (guidelines v1.1): League Gothic caps headings, Work Sans body,
+     one base colour per signifier block. */
+  :root {
+    --lime: #9dc41a;    /* grid */
+    --purple: #350d83;  /* dots */
+    --gold: #9c8943;    /* bars */
+    --magenta: #bf099d; /* rings */
+    --ink: #000;
+    --paper: #fff;
+    --grey: #6b6b6b;
+    --line: #e4e4e4;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Work Sans', system-ui, sans-serif;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .display {
+    font-family: 'League Gothic', 'Arial Narrow', sans-serif;
+    font-weight: 400;
+    text-transform: uppercase;
+    line-height: 0.9;
+    letter-spacing: 0.005em;
+    margin: 0;
+  }
+  .label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--grey);
+  }
+  .screen { position: fixed; inset: 0; display: none; }
+  .screen.active { display: flex; }
+
+  /* ── Home ─────────────────────────────────────────── */
+  #home {
+    flex-direction: column;
+    padding: clamp(16px, 3.5vw, 56px) clamp(16px, 4.5vw, 72px);
+    gap: clamp(14px, 2.4vh, 32px);
+    overflow-y: auto;
+  }
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .top img { height: clamp(40px, 6vh, 72px); width: auto; }
+  .intro { display: grid; grid-template-columns: 1.35fr 1fr; gap: clamp(16px, 3vw, 48px); align-items: end; }
+  .intro h1 { font-size: clamp(3.2rem, 9.5vh, 7.5rem); }
+  .lede { font-size: clamp(1rem, 2.2vh, 1.45rem); font-weight: 300; line-height: 1.45; margin: 0.6em 0 0; max-width: 40rem; }
+
+  .prize {
+    background: var(--purple);
+    color: #fff;
+    padding: clamp(16px, 2.6vh, 32px) clamp(18px, 2.2vw, 36px);
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 6px 22px;
+    align-items: center;
+  }
+  .prize .amount { font-size: clamp(4rem, 12vh, 8.5rem); color: var(--lime); grid-row: span 3; }
+  .prize .ptitle { font-size: clamp(1.6rem, 4vh, 2.6rem); }
+  .prize p { margin: 0; font-size: clamp(0.95rem, 1.9vh, 1.2rem); line-height: 1.4; }
+  .prize .terms { font-size: clamp(0.75rem, 1.4vh, 0.9rem); opacity: 0.75; }
+
+  .choose { display: flex; align-items: center; gap: 12px; }
+  .choose .rule { flex: 1; border-top: 1px dotted var(--grey); }
+
+  .cards { flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(12px, 1.6vw, 28px); min-height: 0; }
+  .card {
+    all: unset;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 18px;
+    padding: clamp(16px, 2.2vw, 32px);
+    border: 2px solid var(--line);
+    background: var(--paper);
+    min-height: 200px;
+    transition: transform 120ms ease, border-color 120ms ease;
+  }
+  .card:focus-visible { outline: 4px solid var(--c); outline-offset: 3px; }
+  .card:active { transform: scale(0.98); border-color: var(--c); }
+  .card .head { display: flex; flex-direction: column; }
+  .card .head svg { margin-bottom: clamp(16px, 3vh, 40px); }
+  .card svg { width: clamp(56px, 9vh, 104px); height: auto; color: var(--c); overflow: visible; }
+  .card h2 { font-size: clamp(2.2rem, 5.5vh, 3.8rem); }
+  .card .who { margin: 0.5em 0 0; font-size: clamp(1rem, 2vh, 1.3rem); line-height: 1.35; }
+  .card .go {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--c); color: #fff;
+    font-weight: 600; font-size: clamp(1rem, 2vh, 1.25rem);
+    padding: 0.7em 1.1em; align-self: flex-start;
+  }
+
+  /* ── Survey ───────────────────────────────────────── */
+  #survey { flex-direction: column; }
+  .bar {
+    display: flex; align-items: center; gap: 16px;
+    padding: 10px clamp(16px, 2vw, 28px);
+    border-bottom: 4px solid var(--c, var(--ink));
+    background: var(--paper);
+  }
+  .bar svg { width: 36px; height: 36px; color: var(--c); flex: none; overflow: visible; }
+  .bar .display { font-size: 2.2rem; flex: 1; }
+  .btn {
+    all: unset; cursor: pointer;
+    font-weight: 600; font-size: 1.1rem;
+    padding: 0.75em 1.2em;
+    border: 2px solid var(--ink);
+    white-space: nowrap;
+  }
+  .btn.solid { background: var(--ink); color: #fff; }
+  .btn:active { transform: scale(0.97); }
+  iframe { flex: 1; width: 100%; border: 0; background: #fff; }
+
+  /* ── Overlays ─────────────────────────────────────── */
+  .overlay {
+    position: fixed; inset: 0; display: none;
+    align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.94);
+    padding: 16px; z-index: 10;
+  }
+  .overlay.active { display: flex; }
+  .panel { max-width: 46rem; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 22px; }
+  .panel h2 { font-size: clamp(3rem, 9vh, 6rem); }
+  .panel p { margin: 0; font-size: clamp(1.1rem, 2.4vh, 1.5rem); line-height: 1.45; }
+  .panel .row { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+  .panel .btn { font-size: 1.3rem; }
+  .count { font-variant-numeric: tabular-nums; font-weight: 600; }
+  #thanks { background: var(--paper); }
+  #thanks .sig { display: flex; gap: 14px; }
+  #thanks .sig svg { width: 64px; height: 64px; overflow: visible; }
+
+  /* On phones and laptops (not the foyer kiosk): normal scrolling and text selection */
+  body.web { user-select: auto; -webkit-user-select: auto; }
+  body.web #home { overflow-y: auto; }
+
+  @media (max-width: 1000px) {
+    .intro { grid-template-columns: 1fr; }
+    .cards { grid-template-columns: repeat(2, 1fr); }
+    body { overflow: auto; }
+  }
+  @media (max-width: 560px) {
+    .cards { grid-template-columns: 1fr; }
+    .card { min-height: 0; }
+    .card .head { flex-direction: row; flex-wrap: wrap; align-items: center; column-gap: 16px; }
+    .card .head svg { margin-bottom: 0; width: 48px; }
+    .card .who { flex-basis: 100%; }
+    .prize { grid-template-columns: 1fr; }
+    .prize .amount { grid-row: auto; }
+    .bar { gap: 8px; padding: 8px 10px; }
+    .bar svg { width: 28px; height: 28px; }
+    .bar .display { display: none; }
+    .bar #barSig { flex: 1; }
+    .top { flex-wrap: wrap; row-gap: 10px; }
+    .top .label { font-size: 0.7rem; }
+    .bar .btn { font-size: 0.9rem; padding: 0.6em 0.75em; }
+    .panel .btn { font-size: 1.1rem; }
+  }
+</style>
+</head>
+<body>
+
+<section id="home" class="screen active" aria-label="Choose a survey">
+  <div class="top">
+    <img src="sarc-qub-lockup-black.png" alt="Sonic Arts Research Centre, Queen's University Belfast">
+    <span class="label" id="label"></span>
+  </div>
+  <div class="intro">
+    <div>
+      <h1 class="display" id="heading"></h1>
+      <p class="lede" id="lede"></p>
+    </div>
+    <div class="prize" id="prize">
+      <span class="display amount">£50</span>
+      <span class="display ptitle" id="prizeTitle"></span>
+      <p id="prizeBody"></p>
+      <p class="terms" id="prizeTerms"></p>
+    </div>
+  </div>
+  <div class="choose"><span class="label">Click the one that fits you</span><span class="rule"></span></div>
+  <div class="cards" id="cards"></div>
+</section>
+
+<section id="survey" class="screen" aria-label="Survey">
+  <div class="bar">
+    <span id="barSig"></span>
+    <span class="display" id="barTitle"></span>
+    <button class="btn" id="startOver">Start over</button>
+    <button class="btn solid" id="finished">I'm finished</button>
+  </div>
+  <iframe id="frame" title="Survey" allow="clipboard-write"></iframe>
+</section>
+
+<div class="overlay" id="confirm" role="dialog" aria-modal="true">
+  <div class="panel">
+    <h2 class="display">Leave this survey?</h2>
+    <p>Any answers you haven't submitted will be lost.</p>
+    <div class="row">
+      <button class="btn" id="confirmNo">Keep going</button>
+      <button class="btn solid" id="confirmYes">Back to the start</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="idle" role="dialog" aria-modal="true">
+  <div class="panel">
+    <h2 class="display">Are you still there?</h2>
+    <p>Returning to the start in <span class="count" id="idleCount"></span> seconds.</p>
+    <div class="row"><button class="btn solid" id="idleKeep">I'm still here</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="thanks" role="dialog" aria-modal="true">
+  <div class="panel">
+    <div class="sig" id="thanksSig"></div>
+    <h2 class="display" id="thanksTitle">Thank you</h2>
+    <p id="thanksText"></p>
+    <div class="row">
+      <button class="btn" id="thanksDone">Done</button>
+      <button class="btn solid" id="thanksDraw">Enter the prize draw</button>
+    </div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script>
+(() => {
+  const C = window.KIOSK_CONFIG;
+  const $ = (id) => document.getElementById(id);
+  const params = new URLSearchParams(location.search);
+  // Foyer kiosk = opened from a local file (the Pis) or with ?kiosk.
+  // Otherwise it's someone's phone or laptop: no inactivity timeout, no
+  // automatic return to the start, and the browser back button works.
+  const KIOSK = location.protocol === 'file:' || params.has('kiosk');
+  if (!KIOSK) {
+    document.body.classList.add('web');
+    $('startOver').textContent = 'All surveys';
+  }
+  const colour = { grid: 'var(--lime)', dots: 'var(--purple)', bars: 'var(--gold)', rings: 'var(--magenta)' };
+
+  // SARC signifier blocks (guidelines p.5-7), 100x100 viewBox.
+  function sig(kind) {
+    const L = [15, 38, 62, 85], D = [10, 30, 50, 70, 90];
+    let g = '';
+    if (kind === 'grid') {
+      g = '<g stroke="currentColor" stroke-width="5">' +
+        L.map(x => `<line x1="${x}" y1="0" x2="${x}" y2="100"/><line x1="0" y1="${x}" x2="100" y2="${x}"/>`).join('') + '</g>';
+    } else if (kind === 'dots') {
+      g = '<g fill="currentColor">' + D.flatMap(y => D.map(x => `<circle cx="${x}" cy="${y}" r="7"/>`)).join('') + '</g>';
+    } else if (kind === 'bars') {
+      g = '<g fill="currentColor">' + [0, 35, 70].flatMap(y =>
+        Array.from({ length: 9 }, (_, i) => `<rect x="${i * 11.5}" y="${y}" width="8" height="30"/>`)).join('') + '</g>';
+    } else {
+      g = '<g fill="none" stroke="currentColor" stroke-width="5">' +
+        [47, 34, 21, 9].map(r => `<circle cx="50" cy="50" r="${r}"/>`).join('') + '</g>';
+    }
+    return `<svg viewBox="0 0 100 100" aria-hidden="true">${g}</svg>`;
+  }
+
+  // ── Fill the home screen from config ──
+  $('label').textContent = C.label || '';
+  $('heading').textContent = C.heading;
+  $('lede').textContent = C.lede;
+  $('prizeTitle').textContent = C.incentive.title;
+  $('prizeBody').textContent = C.incentive.body;
+  $('prizeTerms').textContent = C.incentive.terms || '';
+  $('thanksSig').innerHTML = ['grid', 'dots', 'bars', 'rings']
+    .map(k => `<span style="color:${colour[k]}">${sig(k)}</span>`).join('');
+
+  C.surveys.forEach((s, i) => {
+    const b = document.createElement('button');
+    b.className = 'card';
+    b.style.setProperty('--c', colour[s.signifier] || 'var(--ink)');
+    b.innerHTML = `<div class="head">${sig(s.signifier)}<h2 class="display"></h2><p class="who"></p></div>
+      <span class="go">Start survey <span aria-hidden="true">→</span></span>`;
+    b.querySelector('h2').textContent = s.title;
+    b.querySelector('.who').textContent = s.who;
+    b.addEventListener('click', () => openSurvey(i));
+    $('cards').appendChild(b);
+  });
+
+  // ── State ──
+  const frame = $('frame');
+  let current = null, loads = 0, lastActivity = 0, idleTimer = null, countTimer = null, thanksTimer = null, doneTimer = null;
+
+  const show = (id) => document.querySelectorAll('.screen').forEach(el => el.classList.toggle('active', el.id === id));
+  const overlay = (id, on) => $(id).classList.toggle('active', on);
+  const activity = () => { lastActivity = Date.now(); };
+
+  function openSurvey(i) {
+    current = C.surveys[i];
+    loads = 0;
+    const c = colour[current.signifier] || 'var(--ink)';
+    $('survey').style.setProperty('--c', c);
+    $('barSig').innerHTML = sig(current.signifier);
+    $('barTitle').textContent = current.title + ' survey';
+    $('finished').textContent = KIOSK ? "I'm finished" : 'Submitted? Enter the draw';
+    frame.src = current.url;
+    show('survey');
+    if (!KIOSK) history.pushState({ survey: 1 }, '');
+    activity();
+    startIdleWatch();
+  }
+
+  // On the web, leaving a survey goes through history so the phone's back
+  // button and our buttons behave the same.
+  function goHome() {
+    if (!KIOSK && history.state && history.state.survey) { history.back(); return; }
+    resetHome();
+  }
+  window.addEventListener('popstate', () => { if (current || $('thanks').classList.contains('active')) resetHome(); });
+
+  function resetHome() {
+    clearInterval(idleTimer); clearInterval(countTimer); clearTimeout(thanksTimer); clearTimeout(doneTimer);
+    ['confirm', 'idle', 'thanks'].forEach(id => overlay(id, false));
+    frame.src = 'about:blank';   // drop the old form so the next person starts fresh
+    current = null;
+    show('home');
+    $('home').scrollTop = 0;
+  }
+
+  // After a survey: thank them and offer the separate prize draw.
+  // After the draw form: confirm the entry and go home.
+  function thankYou() {
+    clearInterval(idleTimer); clearInterval(countTimer); clearTimeout(doneTimer); clearTimeout(thanksTimer);
+    overlay('idle', false); overlay('confirm', false);
+    const offerDraw = current && !current.isDraw && C.draw && C.draw.url;
+    $('thanksTitle').textContent = current && current.isDraw ? 'Good luck!' : 'Thank you';
+    $('thanksText').textContent = offerDraw
+      ? 'Your feedback helps shape what happens at SARC. Would you like to enter the draw for a £50 One4all voucher? It takes a few seconds, and your entry is kept separate from your survey answers.'
+      : current && current.isDraw
+        ? "If you submitted the form, you're in the draw for the £50 One4all voucher. We'll email the winner."
+        : 'Your feedback helps shape what happens at SARC.';
+    $('thanksDraw').style.display = offerDraw ? '' : 'none';
+    $('thanksDone').textContent = offerDraw ? 'No thanks' : 'Done';
+    $('thanksDone').classList.toggle('solid', !offerDraw);
+    overlay('thanks', true);
+    if (KIOSK) thanksTimer = setTimeout(goHome, (offerDraw ? C.drawOfferSeconds : C.thankYouSeconds) * 1000);
+  }
+
+  function openDraw() {
+    clearTimeout(thanksTimer);
+    overlay('thanks', false);
+    current = Object.assign({ isDraw: true, completeAfterLoads: null }, C.draw);
+    loads = 0;
+    $('survey').style.setProperty('--c', colour[current.signifier] || 'var(--ink)');
+    $('barSig').innerHTML = sig(current.signifier);
+    $('barTitle').textContent = current.title;
+    $('finished').textContent = 'Done';
+    frame.src = current.url;
+    show('survey');
+    activity();
+    startIdleWatch();
+  }
+
+  // ── Completion detection ──
+  // 1) The kiosk extension (or a done-page redirect) posts a message.
+  window.addEventListener('message', (e) => {
+    if (e.data && e.data.sarcKiosk === 'done' && current) thankYou();
+  });
+  // 2) Google Forms: each page/submit reloads the frame; the Nth load is the confirmation page.
+  frame.addEventListener('load', () => {
+    if (!current || frame.src === 'about:blank') return;
+    loads++;
+    activity();
+    if (current.completeAfterLoads && loads >= current.completeAfterLoads) {
+      clearTimeout(doneTimer);
+      doneTimer = setTimeout(thankYou, 3500);   // let them see "response recorded" first
+    }
+  });
+  // 3) Direct return (survey opened outside the frame and redirected home).
+  if (new URLSearchParams(location.search).has('done')) {
+    history.replaceState(null, '', location.pathname);
+    thankYou();
+  }
+
+  // ── Idle watch ──
+  // Taps inside the survey can't be seen from here (it's another site), so the
+  // clock resets on page loads, on taps on the kiosk bar, and whenever focus
+  // moves into the survey.
+  function startIdleWatch() {
+    clearInterval(idleTimer);
+    if (!KIOSK) return;
+    idleTimer = setInterval(() => {
+      if (!current || $('idle').classList.contains('active')) return;
+      if (Date.now() - lastActivity > C.idleSeconds * 1000) askStillThere();
+    }, 1000);
+  }
+  function askStillThere() {
+    let n = C.idleCountdownSeconds;
+    $('idleCount').textContent = n;
+    overlay('idle', true);
+    clearInterval(countTimer);
+    countTimer = setInterval(() => {
+      n--; $('idleCount').textContent = n;
+      if (n <= 0) goHome();
+    }, 1000);
+  }
+  window.addEventListener('blur', activity);
+  ['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, activity, true));
+
+  // ── Buttons ──
+  $('finished').addEventListener('click', thankYou);
+  $('startOver').addEventListener('click', () => overlay('confirm', true));
+  $('confirmNo').addEventListener('click', () => overlay('confirm', false));
+  $('confirmYes').addEventListener('click', goHome);
+  $('idleKeep').addEventListener('click', () => { clearInterval(countTimer); overlay('idle', false); activity(); });
+  $('thanksDone').addEventListener('click', goHome);
+  $('thanksDraw').addEventListener('click', openDraw);
+
+  // Deep link from a QR code: ?s=audience opens that survey straight away.
+  const deep = C.surveys.findIndex(x => x.key && x.key === params.get('s'));
+  if (deep >= 0) openSurvey(deep);
+
+  // Kiosk hygiene: no right-click menu.
+  if (KIOSK) document.addEventListener('contextmenu', e => e.preventDefault());
+})();
+</script>
+</body>
+</html>

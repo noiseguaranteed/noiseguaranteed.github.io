@@ -1,0 +1,16 @@
+/* Self-hosted SARC brand fonts (latin subset, from Google Fonts).
+   League Gothic and Work Sans are both under the SIL Open Font License 1.1. */
+@font-face {
+  font-family: 'League Gothic';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(league-gothic-latin.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Work Sans';
+  font-style: normal;
+  font-weight: 300 600;
+  font-display: swap;
+  src: url(work-sans-latin.woff2) format('woff2');
+}
