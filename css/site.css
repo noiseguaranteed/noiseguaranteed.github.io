@@ -165,6 +165,13 @@ blockquote .cite::before { content: "— " / ""; }
 .hero .note { margin-top: 18px; }
 .hero .actions { margin-top: 28px; }
 
+/* a partner's logo beside the first mention of them. The logo is shown as supplied (never
+   recoloured, torn or cropped) at 36px high; it's decorative (alt=""), since the name is
+   in the text next to it. */
+.partner { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-top: 18px; }
+.partner img { flex: none; height: 36px; width: auto; }
+.partner p { flex: 1 1 28ch; min-width: 0; font-size: 15px; }
+
 /* dated cards for workshops */
 .event { background: var(--panel); border: 2px solid var(--ink); }
 .event .when { max-width: none; border-bottom: 2px solid var(--ink); padding: 8px 14px; font-size: 13px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 10px; background: var(--wash); text-transform: uppercase; letter-spacing: 0.08em; }
