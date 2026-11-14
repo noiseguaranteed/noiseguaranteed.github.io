@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bubble Friends</title>
+<link rel="icon" href="../../favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="apple-touch-icon" href="../../images/apple-touch-icon.png">
+<style>
+  /* Bubble Friends: an eye-gaze game. Look at a bubble and keep looking to pop it
+     and free the sea friend inside. Gaze comes from the mouse pointer (Iris, Talon,
+     or a plain mouse). One file, no network: runs from file:// or a web server. */
+  :root {
+    --ink: #0b3954; --panel: #ffffffee; --pop: #ff8fab; --sun: #ffd166; --sea: #0a6e8a;
+  }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--sea); color: var(--ink);
+    font-family: "Segoe UI Rounded", "Arial Rounded MT Bold", "Nunito", "Segoe UI", system-ui, sans-serif; }
+  canvas { display: block; position: fixed; inset: 0; width: 100%; height: 100%; }
+  body.playing { cursor: none; }
+  .screen { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box; }
+  .screen[hidden] { display: none; }
+  .card { background: var(--panel); border-radius: 36px; padding: 28px 40px 32px; max-width: 760px; width: 100%;
+    box-sizing: border-box; text-align: center; box-shadow: 0 12px 48px #00284066; max-height: 100%; overflow: auto; }
+  h1 { font-size: clamp(42px, 7vw, 84px); margin: 0 0 4px; letter-spacing: .01em; }
+  h2 { font-size: clamp(36px, 6vw, 64px); margin: 0 0 4px; }
+  p { font-size: clamp(18px, 2.4vw, 24px); line-height: 1.4; margin: 8px 0; }
+  .big-emoji { font-size: clamp(40px, 7vw, 72px); line-height: 1.2; margin: 4px 0; word-break: break-all; }
+  .gaze { position: relative; overflow: hidden; font: inherit; font-size: clamp(26px, 4vw, 40px); font-weight: 700;
+    border: 0; border-radius: 999px; padding: 26px 56px; margin: 18px 8px 0; background: var(--sun); color: var(--ink);
+    cursor: pointer; min-width: min(320px, 100%); box-shadow: 0 6px 0 #d9a93b; }
+  .gaze::before { content: ""; position: absolute; inset: 0; background: var(--pop); transform-origin: left;
+    transform: scaleX(var(--p, 0)); }
+  .gaze span { position: relative; }
+  .gaze.quiet { background: #d8eef5; box-shadow: 0 6px 0 #a9cfdc; }
+  .gaze:focus-visible, .opt button:focus-visible, summary:focus-visible { outline: 4px solid var(--ink); outline-offset: 4px; }
+  #pauseBtn { position: fixed; top: 14px; right: 14px; min-width: 0; margin: 0; padding: 14px 22px; font-size: 22px;
+    box-shadow: none; background: #ffffffaa; }
+  #pauseBtn[hidden] { display: none; }
+  .hint { font-size: 17px; color: #2f5d73; }
+  #soundNote { font-weight: 700; }
+  details.grown { margin-top: 22px; text-align: left; font-size: 18px; }
+  details.grown summary { cursor: pointer; font-weight: 700; color: #2f5d73; text-align: center; }
+  .opt { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 12px 0; }
+  .opt > span { width: 150px; font-weight: 700; }
+  .opt button { font: inherit; font-size: 17px; border: 2px solid #2f5d73; background: #fff; color: var(--ink);
+    border-radius: 999px; padding: 8px 16px; cursor: pointer; }
+  .opt button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+  kbd { border: 1px solid #2f5d73; border-radius: 6px; padding: 0 6px; font-family: inherit; }
+</style>
+</head>
+<body>
+<canvas id="c" role="img" aria-label="An underwater scene with bubbles. Each bubble holds a sea friend."></canvas>
+
+<div class="screen" id="start">
+  <div class="card">
+    <h1>Bubble Friends</h1>
+    <p>The sea friends are stuck in bubbles!</p>
+    <p><b>Look at a bubble</b> and keep looking until it pops.</p>
+    <button class="gaze" id="go"><span>look here to start</span></button>
+    <p class="hint" id="soundNote">🔈 Sound comes on after one click or key press.</p>
+    <details class="grown">
+      <summary>settings for grown-ups</summary>
+      <div class="opt" data-key="look"><span>look time</span>
+        <button data-v="short">short</button><button data-v="medium">medium</button><button data-v="long">long</button><button data-v="xlong">extra long</button></div>
+      <div class="opt" data-key="size"><span>bubble size</span>
+        <button data-v="big">big</button><button data-v="medium">medium</button><button data-v="small">small</button></div>
+      <div class="opt" data-key="move"><span>movement</span>
+        <button data-v="still">still</button><button data-v="slow">slow</button><button data-v="lively">lively</button></div>
+      <div class="opt" data-key="count"><span>first round</span>
+        <button data-v="3">3 bubbles</button><button data-v="6">6 bubbles</button><button data-v="10">10 bubbles</button></div>
+      <div class="opt" data-key="sound"><span>sound</span>
+        <button data-v="on">on</button><button data-v="off">off</button></div>
+      <div class="opt" data-key="dot"><span>gaze dot</span>
+        <button data-v="on">on</button><button data-v="off">off</button></div>
+      <p class="hint">Gaze comes from the mouse pointer, so Iris (or any eye mouse) works. Turn off Iris's own dwell-click for this page, or it will click as well. There's nothing to lose: bubbles that float away come back from the bottom. Keys: <kbd>Esc</kbd> pause, <kbd>F11</kbd> full screen. Made by <a href="../../index.html">noise guaranteed</a>.</p>
+    </details>
+  </div>
+</div>
+
+<div class="screen" id="pause" hidden>
+  <div class="card">
+    <h2>having a rest</h2>
+    <button class="gaze" id="resume"><span>keep playing</span></button>
+    <button class="gaze quiet" id="restart"><span>start again</span></button>
+  </div>
+</div>
+
+<div class="screen" id="win" hidden>
+  <div class="card">
+    <h2>Hooray!</h2>
+    <p id="winText">You freed all the friends!</p>
+    <div class="big-emoji" id="winFriends" aria-hidden="true"></div>
+    <button class="gaze" id="next"><span>more bubbles</span></button>
+  </div>
+</div>
+
+<button class="gaze" id="pauseBtn" data-dwell="2200" aria-label="Pause" hidden><span>pause</span></button>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ---------- settings ----------
+const DEF = { look: 'medium', size: 'big', move: reduce ? 'still' : 'slow', count: '6', sound: 'on', dot: 'on' };
+const S = Object.assign({}, DEF);
+try { Object.assign(S, JSON.parse(localStorage.getItem('bubble-friends') || '{}')); } catch (e) {}
+const save = () => { try { localStorage.setItem('bubble-friends', JSON.stringify(S)); } catch (e) {} };
+const LOOK = { short: 600, medium: 1000, long: 1600, xlong: 2400 };
+const SIZE = { big: .12, medium: .09, small: .065 };
+const MOVE = { still: 0, slow: 22, lively: 48 };
+const lookMs = () => LOOK[S.look] || 1000;
+
+document.querySelectorAll('.opt').forEach(opt => {
+  const key = opt.dataset.key;
+  const mark = () => opt.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === S[key])));
+  opt.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    S[key] = b.dataset.v; save(); mark();
+  });
+  mark();
+});
+
+// ---------- canvas ----------
+const cv = $('#c'), ctx = cv.getContext('2d');
+let W = 0, H = 0, DPR = 1;
+const bg = document.createElement('canvas'), bgx = bg.getContext('2d');
+function resize() {
+  DPR = Math.min(2, window.devicePixelRatio || 1); W = innerWidth; H = innerHeight;
+  cv.width = bg.width = Math.round(W * DPR); cv.height = bg.height = Math.round(H * DPR);
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0); bgx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  buildBg();
+}
+function buildBg() {
+  const g = bgx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#6fd3ef'); g.addColorStop(.55, '#1f97b8'); g.addColorStop(1, '#0b5e80');
+  bgx.fillStyle = g; bgx.fillRect(0, 0, W, H);
+  // soft light rays
+  bgx.fillStyle = 'rgba(255,255,255,.07)';
+  for (let i = 0; i < 6; i++) {
+    const x = W * (i + .3) / 6;
+    bgx.beginPath(); bgx.moveTo(x - 30, 0); bgx.lineTo(x + 40, 0); bgx.lineTo(x + 160, H); bgx.lineTo(x + 20, H); bgx.fill();
+  }
+  // sandy floor
+  const sy = H - Math.max(40, H * .07);
+  bgx.fillStyle = '#f1d49c';
+  bgx.beginPath(); bgx.moveTo(0, H); bgx.lineTo(0, sy);
+  for (let x = 0; x <= W; x += 40) bgx.lineTo(x, sy + Math.sin(x / 90) * 8);
+  bgx.lineTo(W, H); bgx.fill();
+  bgx.fillStyle = '#d9b77a';
+  for (let i = 0; i < W / 30; i++) {
+    const x = (i * 97.3) % W, y = sy + 14 + ((i * 53) % 30);
+    bgx.beginPath(); bgx.ellipse(x, y, 6 + (i % 4) * 2, 4, 0, 0, Math.PI * 2); bgx.fill();
+  }
+}
+addEventListener('resize', resize);
+
+// ---------- gaze (mouse pointer) ----------
+const gaze = { x: -1e4, y: -1e4, sx: -1e4, sy: -1e4, seen: false };
+addEventListener('pointermove', e => {
+  gaze.x = e.clientX; gaze.y = e.clientY;
+  if (!gaze.seen) { gaze.sx = gaze.x; gaze.sy = gaze.y; gaze.seen = true; }
+});
+document.documentElement.addEventListener('pointerleave', () => { gaze.x = gaze.sx = -1e4; gaze.y = gaze.sy = -1e4; gaze.seen = false; });
+
+// ---------- sound ----------
+let ac = null, master = null;
+function audio() {
+  if (!ac) {
+    try {
+      ac = new (window.AudioContext || window.webkitAudioContext)();
+      master = ac.createGain(); master.gain.value = .6; master.connect(ac.destination);
+    } catch (e) { ac = null; }
+  }
+  if (ac && ac.state === 'suspended') ac.resume().then(noteSound, () => {});
+  return ac;
+}
+function noteSound() { $('#soundNote').hidden = !!(ac && ac.state === 'running'); }
+['pointerdown', 'keydown'].forEach(ev => addEventListener(ev, () => { audio(); setTimeout(noteSound, 50); }));
+const SCALE = [0, 2, 4, 7, 9];
+const note = i => { const o = Math.floor(i / 5), d = SCALE[((i % 5) + 5) % 5]; return 392 * Math.pow(2, (o * 12 + d) / 12); };
+function blip(freq, { type = 'sine', dur = .25, vol = .25, slide = 1, delay = 0 } = {}) {
+  if (S.sound !== 'on' || !ac || ac.state !== 'running') return;
+  const t0 = ac.currentTime + delay, o = ac.createOscillator(), g = ac.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, t0);
+  if (slide !== 1) o.frequency.exponentialRampToValueAtTime(freq * slide, t0 + dur * .4);
+  g.gain.setValueAtTime(.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + .01);
+  g.gain.exponentialRampToValueAtTime(.0001, t0 + dur);
+  o.connect(g).connect(master); o.start(t0); o.stop(t0 + dur + .05);
+}
+const popSound = i => { blip(note(i) * .5, { dur: .16, vol: .3, slide: 2 }); blip(note(i + 5), { type: 'triangle', dur: .5, vol: .12, delay: .07 }); };
+const winSound = () => [0, 1, 2, 3, 4, 5, 7].forEach((n, k) => blip(note(5 + n), { type: 'triangle', dur: .6, vol: .16, delay: k * .13 }));
+
+// ---------- game state ----------
+const EMO = ['🐟', '🐠', '🐡', '🐙', '🦀', '🐢', '🐳', '🐬', '🦭', '🦑', '🦐', '🐚', '🦦', '🐧', '🐸', '🦆', '🐌', '🐞', '🦋', '🐝'];
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
+let state = 'menu', round = 0, toPop = 0, spawned = 0, popped = 0, spawnTimer = 0, winTimer = 0, t = 0;
+let bubbles = [], friends = [], particles = [], confetti = [], roundEmo = [], target = null;
+const ambient = Array.from({ length: 16 }, () => ({ x: Math.random(), y: Math.random(), r: 3 + Math.random() * 10, v: .02 + Math.random() * .04, p: Math.random() * 6 }));
+
+function show(id) {
+  ['#start', '#pause', '#win'].forEach(s => { $(s).hidden = s !== id; });
+  $('#pauseBtn').hidden = id !== null;
+  document.body.classList.toggle('playing', id === null);
+  domLockUntil = t + 1;  // don't trigger a button the eyes happen to be resting on
+  if (id) { const b = $(id).querySelector('.gaze'); if (b) b.focus({ preventScroll: true }); }
+}
+function startRound(first) {
+  if (first) round = 0;
+  round++;
+  toPop = Math.min(20, (Number(S.count) || 6) + (round - 1) * 2);
+  spawned = popped = 0; spawnTimer = .3; winTimer = 0;
+  bubbles = []; friends = []; particles = []; confetti = []; target = null;
+  roundEmo = shuffle(EMO);
+  state = 'play'; show(null);
+}
+const maxOnScreen = () => Math.min(toPop, 2 + round, 7);
+const radius = () => Math.max(42, SIZE[S.size] * Math.min(W, H));
+
+function spawnBubble() {
+  const r = radius() * (.92 + Math.random() * .16), still = !MOVE[S.move], top = 110;
+  let x = W / 2, y = H / 2;
+  for (let i = 0; i < 50; i++) {
+    x = r + Math.random() * Math.max(1, W - 2 * r);
+    // still: anywhere below the tally; moving: the lower part of the screen, then they drift up
+    const y0 = still ? top + r : Math.max(top + r, H * .45), y1 = H - r - 50;
+    y = y0 + Math.random() * Math.max(1, y1 - y0);
+    if (bubbles.every(b => Math.hypot(b.x - x, b.y - y) > b.r + r + 24)) break;
+  }
+  bubbles.push({ x, y, bx: x, r, hue: Math.random() * 360, phase: Math.random() * 6.28, dwell: 0,
+    grow: 0, emoji: roundEmo[spawned % roundEmo.length], speed: .8 + Math.random() * .4 });
+  spawned++;
+}
+
+function pop(b) {
+  bubbles.splice(bubbles.indexOf(b), 1);
+  popSound(popped);
+  for (let i = 0; i < 12; i++) {
+    const a = i / 12 * Math.PI * 2, s = 60 + Math.random() * 80;
+    particles.push({ x: b.x + Math.cos(a) * b.r, y: b.y + Math.sin(a) * b.r, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 1, r: 3 + Math.random() * 5, hue: b.hue });
+  }
+  friends.push({ emoji: b.emoji, x0: b.x, y0: b.y, x: b.x, y: b.y, t: 0, slot: popped, size0: b.r * .9 });
+  popped++; spawnTimer = .7;
+}
+
+function slot(i) {
+  const size = Math.min(60, (W - 160) / Math.max(1, toPop));
+  return { x: (W - size * toPop) / 2 + size * (i + .5), y: 46, size };
+}
+
+function win() {
+  state = 'win'; winSound();
+  $('#winText').textContent = `You freed all ${toPop} friends!`;
+  $('#winFriends').textContent = friends.map(f => f.emoji).join('');
+  if (!reduce) for (let i = 0; i < 90; i++) confetti.push({ x: Math.random() * W, y: -20 - Math.random() * H * .6,
+    vx: (Math.random() - .5) * 40, vy: 50 + Math.random() * 60, rot: Math.random() * 6, vr: (Math.random() - .5) * 4,
+    c: ['#ff8fab', '#ffd166', '#bde0fe', '#caffbf', '#ffffff'][i % 5] });
+  show('#win');
+}
+
+// ---------- gaze on HTML buttons ----------
+let domTarget = null, domDwell = 0, domLockUntil = 0;
+function updateDom(dt) {
+  const el = gaze.seen ? document.elementFromPoint(gaze.sx, gaze.sy) : null;
+  const btn = el && el.closest ? el.closest('.gaze') : null;
+  if (btn !== domTarget) { if (domTarget) domTarget.style.setProperty('--p', 0); domTarget = btn; domDwell = 0; }
+  if (!btn || t < domLockUntil) return;
+  domDwell += dt * 1000 / (Number(btn.dataset.dwell) || lookMs() * 1.4);
+  btn.style.setProperty('--p', Math.min(1, domDwell).toFixed(3));
+  if (domDwell >= 1) { domDwell = 0; btn.style.setProperty('--p', 0); btn.click(); }
+}
+$('#go').onclick = () => { audio(); startRound(true); };
+$('#next').onclick = () => startRound(false);
+$('#resume').onclick = () => { state = 'play'; show(null); };
+$('#restart').onclick = () => startRound(true);
+$('#pauseBtn').onclick = () => { if (state === 'play') { state = 'menu'; show('#pause'); } };
+addEventListener('keydown', e => {
+  if (e.key === 'Escape') { if (state === 'play') $('#pauseBtn').click(); else if (!$('#pause').hidden) $('#resume').click(); }
+});
+
+// ---------- update ----------
+function update(dt) {
+  t += dt;
+  const k = Math.min(1, dt * 14);
+  gaze.sx += (gaze.x - gaze.sx) * k; gaze.sy += (gaze.y - gaze.sy) * k;
+  updateDom(dt);
+
+  if (state === 'play') {
+    spawnTimer -= dt;
+    if (spawnTimer <= 0 && spawned < toPop && bubbles.length < maxOnScreen()) { spawnBubble(); spawnTimer = .9; }
+
+    // which bubble is being looked at? (generous hit area)
+    target = null; let best = Infinity;
+    if (gaze.seen) for (const b of bubbles) {
+      const d = Math.hypot(b.x - gaze.sx, b.y - gaze.sy);
+      if (d < b.r * 1.25 && d < best && b.grow > .6) { best = d; target = b; }
+    }
+    const speed = MOVE[S.move];
+    for (const b of bubbles) {
+      b.grow = Math.min(1, b.grow + dt * 2);
+      if (speed) {
+        b.y -= speed * b.speed * dt * (b === target ? .25 : 1);   // a looked-at bubble slows right down
+        if (!reduce) b.x = b.bx + Math.sin(t * .7 + b.phase) * b.r * .3;
+        if (b.y < -b.r) { b.y = H + b.r; b.bx = b.x = b.r + Math.random() * Math.max(1, W - 2 * b.r); b.dwell = 0; }
+      }
+      if (b === target) b.dwell += dt * 1000 / lookMs();
+      else b.dwell = Math.max(0, b.dwell - dt * 1000 / (lookMs() * 2));  // drains slowly, so a wobble doesn't lose progress
+    }
+    if (target && target.dwell >= 1) pop(target);
+
+    if (popped >= toPop && friends.every(f => f.t >= 1)) { winTimer += dt; if (winTimer > .7) win(); }
+  }
+
+  for (const f of friends) f.t = Math.min(1, f.t + dt / 1.1);
+  for (const p of particles) { p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= .94; p.vy *= .94; p.life -= dt * 1.6; }
+  particles = particles.filter(p => p.life > 0);
+  for (const c of confetti) { c.x += c.vx * dt; c.y += c.vy * dt; c.rot += c.vr * dt; }
+  confetti = confetti.filter(c => c.y < H + 20);
+  if (!reduce) for (const a of ambient) { a.y -= a.v * dt; if (a.y < -.05) { a.y = 1.05; a.x = Math.random(); } }
+}
+
+// ---------- draw ----------
+const EMOJI_FONT = '"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif';
+function emoji(ch, x, y, size) {
+  ctx.fillStyle = '#000';  // colour emoji take the fill's alpha, so keep it opaque
+  ctx.font = `${Math.round(size)}px ${EMOJI_FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(ch, x, y + size * .05);
+}
+function drawWeeds() {
+  const n = Math.max(3, Math.round(W / 260));
+  ctx.lineCap = 'round';
+  for (let i = 0; i < n; i++) {
+    const x = (i + .5) * W / n + Math.sin(i * 7) * 60, h = H * (.18 + (i % 3) * .06), sway = reduce ? 0 : Math.sin(t * .8 + i) * 18;
+    ctx.strokeStyle = i % 2 ? '#2e9e6a' : '#3cb878'; ctx.lineWidth = 12;
+    ctx.beginPath(); ctx.moveTo(x, H);
+    ctx.quadraticCurveTo(x + sway - 30, H - h * .5, x + sway, H - h); ctx.stroke();
+  }
+}
+function drawBubble(b) {
+  const wob = reduce ? 0 : Math.sin(t * 2 + b.phase) * .015;
+  const r = b.r * b.grow * (1 + wob + (b === target ? .07 : 0));
+  const by = MOVE[S.move] || reduce ? b.y : b.y + Math.sin(t * 1.3 + b.phase) * 4;
+  if (r < 2) return;
+  const g = ctx.createRadialGradient(b.x - r * .3, by - r * .35, r * .1, b.x, by, r);
+  g.addColorStop(0, 'rgba(255,255,255,.45)');
+  g.addColorStop(.7, `hsla(${b.hue},90%,85%,.16)`);
+  g.addColorStop(1, `hsla(${b.hue},95%,75%,.5)`);
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(b.x, by, r, 0, Math.PI * 2); ctx.fill();
+  ctx.lineWidth = 3; ctx.strokeStyle = `hsla(${b.hue},100%,92%,.9)`; ctx.stroke();
+  ctx.globalAlpha = .95; emoji(b.emoji, b.x, by, r * .95); ctx.globalAlpha = 1;
+  ctx.fillStyle = 'rgba(255,255,255,.8)';
+  ctx.beginPath(); ctx.ellipse(b.x - r * .45, by - r * .5, r * .16, r * .09, -.6, 0, Math.PI * 2); ctx.fill();
+  if (b.dwell > 0) {
+    const lw = Math.max(8, r * .13);
+    ctx.lineWidth = lw; ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(255,255,255,.35)';
+    ctx.beginPath(); ctx.arc(b.x, by, r + lw * .9, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = '#ffd166';
+    ctx.beginPath(); ctx.arc(b.x, by, r + lw * .9, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.min(1, b.dwell)); ctx.stroke();
+  }
+}
+function drawHud() {
+  for (let i = 0; i < toPop; i++) {
+    const s = slot(i);
+    ctx.fillStyle = 'rgba(255,255,255,.22)';
+    ctx.beginPath(); ctx.arc(s.x, s.y, s.size * .42, 0, Math.PI * 2); ctx.fill();
+  }
+  for (const f of friends) {
+    const s = slot(f.slot), e = f.t < 1 ? 1 - Math.pow(1 - f.t, 3) : 1;
+    const dance = state === 'win' && !reduce ? Math.sin(t * 6 + f.slot) * 6 : (reduce ? 0 : Math.sin(t * 2 + f.slot) * 2);
+    f.x = f.x0 + (s.x - f.x0) * e; f.y = f.y0 + (s.y - f.y0) * e - Math.sin(e * Math.PI) * 90 + (f.t >= 1 ? dance : 0);
+    emoji(f.emoji, f.x, f.y, f.size0 + (s.size * .72 - f.size0) * e);
+  }
+}
+function draw() {
+  ctx.drawImage(bg, 0, 0, W, H);
+  ctx.fillStyle = 'rgba(255,255,255,.35)';
+  for (const a of ambient) { ctx.beginPath(); ctx.arc(a.x * W + (reduce ? 0 : Math.sin(t + a.p) * 8), a.y * H, a.r, 0, Math.PI * 2); ctx.fill(); }
+  drawWeeds();
+  if (state !== 'menu' || round > 0) {
+    for (const b of bubbles) drawBubble(b);
+    for (const p of particles) {
+      ctx.fillStyle = `hsla(${p.hue},100%,92%,${Math.max(0, p.life)})`;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+    }
+    drawHud();
+  }
+  for (const c of confetti) {
+    ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(c.rot); ctx.fillStyle = c.c; ctx.fillRect(-6, -3, 12, 6); ctx.restore();
+  }
+  if (state === 'play' && S.dot === 'on' && gaze.seen) {
+    ctx.fillStyle = 'rgba(255,255,255,.3)'; ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(gaze.sx, gaze.sy, 16, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  }
+}
+
+// ---------- loop ----------
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(.05, Math.max(0, (now - last) / 1000)); last = now;
+  update(dt); draw();
+  requestAnimationFrame(frame);
+}
+resize();
+// #autotest: plays itself (gaze follows the first bubble) so the game can be checked headless
+if (location.hash === '#autotest') {
+  startRound(true);
+  setInterval(() => {
+    const b = bubbles[0]; if (b) { gaze.x = b.x; gaze.y = b.y; gaze.seen = true; }
+    update(1 / 30);   // timer-driven, since headless browsers may not advance animation-frame time
+  }, 33);
+  const paint = () => { draw(); requestAnimationFrame(paint); };
+  requestAnimationFrame(paint);
+} else requestAnimationFrame(frame);
+</script>
+</body>
+</html>
