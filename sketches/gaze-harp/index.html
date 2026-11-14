@@ -1,0 +1,1019 @@
+<!doctype html>
+<html lang="en-GB" data-wash="sage" data-look="soft">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>gaze harp · noise guaranteed</title>
+<link rel="icon" href="../../favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="apple-touch-icon" href="../../images/apple-touch-icon.png">
+<style>
+  /* noise guaranteed brand (BRAND.md in noiseguaranteed.github.io): sage wash, Atkinson
+     Hyperlegible Mono, square corners, lowercase headings. Fonts are self-hosted.
+     Three looks: "bright" is the brand as on the site; "soft" (the default) mutes the
+     colours and lines for long sessions; "dark" is for dim rooms. */
+  @font-face {
+    font-family: 'Atkinson Hyperlegible Mono';
+    src: url('fonts/ahmono.woff2') format('woff2');
+    font-weight: 200 800; font-style: normal; font-display: swap;
+  }
+  [data-wash="sage"] {
+    --wash: #a9cba2; --wash-hover: #d6e8d0; --wash-soft: #eef5eb;
+    --wash-noise: #4e6a49, #8fb488, #d6e8d0, #ff40ff;
+  }
+  :root {
+    --ink: #000; --line: #000; --panel: #fff; --muted: #3b3d36; --bg: var(--wash-soft);
+    --btn: #000; --btn-text: #fff;
+  }
+  html[data-look="soft"] {
+    --ink: #232821; --line: #5d6758; --panel: #fafcf9; --muted: #535c4f; --bg: #eef3ec;
+    --wash: #c3d9bd; --wash-hover: #e1ebdd; --btn: #3d4a38; --btn-text: #fff;
+    --wash-noise: #8fb488, #c3d9bd, #e3c3df, #d6e8d0;
+  }
+  html[data-look="dark"] {
+    --ink: #e4ece1; --line: #55654f; --panel: #171b16; --muted: #a7b5a2; --bg: #0e110d;
+    --wash: #34452f; --wash-hover: #222b20; --btn: #a9cba2; --btn-text: #000;
+    --wash-noise: #4e6a49, #8fb488, #2a3527, #7a3f78;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font: 17px/1.6 'Atkinson Hyperlegible Mono', 'Courier New', monospace;
+  }
+  canvas#c { display: block; position: fixed; inset: 0; }
+  button { font: inherit; font-weight: bold; border-radius: 0; cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+  .btn { background: var(--btn); color: var(--btn-text); border: 2px solid var(--line); min-height: 44px; padding: 8px 16px; }
+  .btn:hover { background: var(--wash-hover); color: var(--ink); }
+  kbd { font: inherit; font-size: 14px; border: 1.5px solid var(--line); background: var(--panel); padding: 0 5px; }
+  canvas.noise { display: block; width: 100%; height: 16px; }
+
+  #gear { position: fixed; right: 12px; top: 12px; z-index: 5; width: 44px; height: 44px; padding: 0; font-size: 22px; line-height: 1; }
+
+  #panel {
+    position: fixed; top: 0; right: 0; bottom: 0; width: min(380px, 100vw); z-index: 6;
+    background: var(--panel); color: var(--ink); border-left: 2px solid var(--line);
+    padding: 18px 20px 60px; overflow-y: auto; transform: translateX(100%); transition: transform .2s ease;
+  }
+  #panel.open { transform: none; }
+  @media (prefers-reduced-motion: reduce) { #panel { transition: none; } }
+  #panel h2 { font-size: 24px; line-height: 1.2; margin: 0 0 6px; text-transform: lowercase; }
+  #panel h3 {
+    display: flex; align-items: baseline; gap: 10px;
+    font-size: 17px; text-transform: lowercase; margin: 24px 0 8px;
+  }
+  #panel h3::before { content: attr(data-n) / ""; font-weight: normal; font-size: 13px; }
+  #panel h3::after { content: ""; flex: 1; border-bottom: 2px dotted var(--line); transform: translateY(-5px); }
+  #panel label { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; font-size: 15px; margin: 10px 0; }
+  #panel label small { grid-column: 1 / -1; color: var(--muted); font-size: 13px; line-height: 1.45; }
+  #panel input[type=range] { grid-column: 1 / -1; width: 100%; accent-color: var(--line); }
+  #panel input[type=checkbox] { accent-color: var(--line); width: 20px; height: 20px; }
+  #panel select, #panel input[type=text] {
+    background: var(--panel); color: var(--ink); border: 2px solid var(--line); border-radius: 0;
+    padding: 4px 8px; font: inherit; font-size: 14px; min-height: 36px;
+  }
+  #panel input[type=text] { grid-column: 1 / -1; width: 100%; }
+  #panel .val { font-weight: bold; font-variant-numeric: tabular-nums; font-size: 14px; }
+  #panel .big { background: var(--bg); border: 2px solid var(--line); padding: 4px 12px 8px; }
+  #panel .close { position: absolute; top: 10px; right: 10px; background: var(--panel); color: var(--ink); border: 2px solid var(--line); width: 44px; height: 44px; font-size: 22px; }
+  #panel .close:hover { background: var(--wash-hover); }
+  #panel p { font-size: 14px; color: var(--muted); line-height: 1.5; margin: 6px 0; }
+
+  #start { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; background: var(--bg); padding: 16px; overflow-y: auto; }
+  #start .card { max-width: 640px; width: 100%; background: var(--panel); border: 2px solid var(--line); }
+  #start .head { display: flex; align-items: center; gap: 14px; padding: 14px 20px; }
+  #start .head img { width: 64px; height: 64px; }
+  html[data-look="dark"] #start .head img { background: #fff; border-radius: 50%; } /* the ring needs a light disc on dark */
+  #start .head span { font-weight: bold; font-size: 20px; }
+  #start .noise-band { border-top: 2px solid var(--line); border-bottom: 2px solid var(--line); }
+  #start .body { padding: 20px 24px 24px; }
+  #start .kicker { text-transform: uppercase; font-size: 13px; letter-spacing: .06em; margin: 0; }
+  #start h1 { font-size: clamp(34px, 6vw, 52px); line-height: 1.1; margin: 4px 0 10px; text-transform: lowercase; }
+  #start .intro { font-size: 18px; margin: 0 0 14px; max-width: 70ch; }
+  #start ol { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+  #start li { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: start; }
+  #start li .n { border: 2px solid var(--line); background: var(--wash); font-weight: bold; padding: 0 8px; font-size: 15px; }
+  #start #go { margin-top: 20px; width: 100%; font-size: 20px; padding: 14px; }
+  #start .fine { font-size: 14px; color: var(--muted); margin: 14px 0 0; }
+</style>
+<script>
+  // apply the saved look before first paint
+  try { const s = JSON.parse(localStorage.getItem('gazeharp') || '{}'); if (s.look) document.documentElement.dataset.look = s.look; } catch (e) {}
+</script>
+</head>
+<body>
+<canvas id="c" role="img" aria-label="gaze harp: an instrument you play by looking at notes"></canvas>
+
+<div id="start">
+  <div class="card">
+    <div class="head"><img src="img/ng_logo.png" width="64" height="64" alt=""><span>noise guaranteed</span></div>
+    <div class="noise-band"><canvas class="noise" aria-hidden="true" data-seed="gaze harp" data-style="stripes" data-palette="wash" data-cell="3" data-density="0.7"></canvas></div>
+    <div class="body">
+      <p class="kicker">Instruments · eye gaze</p>
+      <h1>gaze harp</h1>
+      <p class="intro">Play pentatonic scales with your eyes. Inspired by the EyeHarp.</p>
+      <ol role="list">
+        <li><span class="n" aria-hidden="true">1</span><span><b>melody:</b> look at a note's square to play it. Look at the centre to rest. The inner ring is low, the outer ring is high.</span></li>
+        <li><span class="n" aria-hidden="true">2</span><span><b>loop editor:</b> look at a grid square to switch it on or off. The loop keeps playing under the melody.</span></li>
+        <li><span class="n" aria-hidden="true">3</span><span><b>strings:</b> sweep your eyes across the strings to strum them. Looking higher up makes a brighter sound.</span></li>
+      </ol>
+      <button class="btn" id="go">start playing</button>
+      <p class="fine">The buttons along the top need a longer look. Gaze can come from anything that moves the mouse pointer with your eyes, or from a WebSocket stream. Keys: <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> layers, <kbd>[</kbd> <kbd>]</kbd> melody gaze time, <kbd>Space</kbd> loop, <kbd>D</kbd> drone, <kbd>Esc</kbd> settings, <kbd>F11</kbd> full screen. <a href="../../index.html">noise guaranteed home</a></p>
+    </div>
+  </div>
+</div>
+
+<button class="btn" id="gear" title="Settings (Esc)" aria-label="Settings">⚙</button>
+
+<aside id="panel" aria-label="Settings">
+  <button class="close" id="closePanel" aria-label="Close settings">×</button>
+  <h2>settings</h2>
+  <p>For the facilitator, using a mouse or keyboard. This browser remembers them.</p>
+
+  <h3 data-n="01">melody</h3>
+  <div class="big">
+    <label>melody gaze time <span class="val" data-v="dwell"></span>
+      <input type="range" data-k="dwell" min="40" max="1500" step="10">
+      <small>How long you look at a note before it plays. A short time feels like an instrument; a longer time is easier to control. Keys: <kbd>[</kbd> shorter, <kbd>]</kbd> longer.</small>
+    </label>
+  </div>
+  <label>rest gaze time <span class="val" data-v="restDwell"></span>
+    <input type="range" data-k="restDwell" min="40" max="1500" step="10">
+    <small>How long you look at the centre before a held note stops.</small>
+  </label>
+  <label>sound
+    <select data-k="sound">
+      <option value="harp">harp (plucked)</option>
+      <option value="bell">bell (plucked)</option>
+      <option value="flute">flute (holds while you look)</option>
+      <option value="glass">glass pad (holds while you look)</option>
+    </select>
+  </label>
+  <label>glide between held notes <input type="checkbox" data-k="glide"></label>
+
+  <h3 data-n="02">look</h3>
+  <label>colours
+    <select data-k="look">
+      <option value="soft">soft</option>
+      <option value="dark">dark</option>
+      <option value="bright">bright</option>
+    </select>
+    <small>Soft mutes the colours and lines. Dark suits a dim room. Bright is the full noise guaranteed palette.</small>
+  </label>
+
+  <h3 data-n="03">scale</h3>
+  <label>key <select data-k="key" id="keySel"></select></label>
+  <label>scale <select data-k="scale" id="scaleSel"></select></label>
+  <label>octaves <select data-k="octaves"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></label>
+  <label>register <select data-k="register"><option value="-1">low</option><option value="0">middle</option><option value="1">high</option></select></label>
+
+  <h3 data-n="04">loop and strings</h3>
+  <label>loop square gaze time <span class="val" data-v="cellDwell"></span><input type="range" data-k="cellDwell" min="200" max="2000" step="50"></label>
+  <label>tempo <span class="val" data-v="bpm"></span><input type="range" data-k="bpm" min="50" max="180" step="1"></label>
+  <label>strings: strum everything you sweep across <input type="checkbox" data-k="sweep">
+    <small>Each string plays once as you cross it, then waits until you move away from it. When this is off, a string plays when you land on it and hold for the melody gaze time.</small>
+  </label>
+
+  <h3 data-n="05">ableton link</h3>
+  <label>sync the loop with Ableton Link <input type="checkbox" data-k="link"></label>
+  <label>bridge address <span class="val" id="linkStatus"></span>
+    <input type="text" data-k="linkUrl">
+    <small>Browsers can't join Link on their own, so start the bridge first: double-click <b>link-bridge\start-link-bridge.bat</b>. The loop then follows the session's tempo and bars, and tempo changes here go to everyone.</small>
+  </label>
+  <label>share start and stop <input type="checkbox" data-k="linkStartStop">
+    <small>Starting or stopping the loop here starts or stops other Link apps that have start/stop sync on, and the other way round.</small>
+  </label>
+  <label>timing nudge <span class="val" data-v="linkOffset"></span>
+    <input type="range" data-k="linkOffset" min="-150" max="150" step="1">
+    <small>Move the loop earlier (−) or later (+) if it doesn't sound quite in time with the other apps.</small>
+  </label>
+
+  <h3 data-n="06">sound levels</h3>
+  <label>volume <span class="val" data-v="volume"></span><input type="range" data-k="volume" min="0" max="1" step="0.01"></label>
+  <label>reverb <span class="val" data-v="reverb"></span><input type="range" data-k="reverb" min="0" max="1" step="0.01"></label>
+
+  <h3 data-n="07">gaze input</h3>
+  <label>source
+    <select data-k="input">
+      <option value="mouse">mouse pointer</option>
+      <option value="ws">WebSocket stream</option>
+    </select>
+  </label>
+  <label>WebSocket address <span class="val" id="wsStatus"></span>
+    <input type="text" data-k="wsUrl">
+    <small>Send JSON like {"x":0.42,"y":0.61}, with x and y from 0 to 1 across the whole screen. Run the browser full screen (F11) so the screen and the page line up.</small>
+  </label>
+  <label>smoothing <span class="val" data-v="smoothing"></span>
+    <input type="range" data-k="smoothing" min="0" max="0.92" step="0.02">
+    <small>Steadies small eye jitter. Big jumps between targets still land straight away.</small>
+  </label>
+  <label>top button gaze time <span class="val" data-v="uiDwell"></span><input type="range" data-k="uiDwell" min="300" max="2500" step="50"></label>
+  <label>show gaze point <input type="checkbox" data-k="showGaze"></label>
+  <label>hide mouse cursor <input type="checkbox" data-k="hideCursor"></label>
+
+  <h3 data-n="08">keys</h3>
+  <p><kbd>1</kbd> melody · <kbd>2</kbd> loop editor · <kbd>3</kbd> strings · <kbd>[</kbd> <kbd>]</kbd> melody gaze time · <kbd>Space</kbd> loop on or off · <kbd>D</kbd> drone · <kbd>Esc</kbd> this panel. Clicking plays whatever is under the pointer straight away, which is handy when testing with a mouse.</p>
+</aside>
+
+<script src="vendor/noiseguaranteed/noise.js"></script>
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+const cv = $('#c'), ctx = cv.getContext('2d');
+
+// ---------- settings ----------
+const DEF = {
+  mode: 'ring', look: 'soft', input: 'mouse', wsUrl: 'ws://localhost:8765',
+  key: 2, scale: 'majPent', octaves: 2, register: 0,
+  sound: 'harp', glide: false, sweep: true,
+  dwell: 200, restDwell: 150, cellDwell: 600, uiDwell: 900,
+  smoothing: 0.5, showGaze: true, hideCursor: false,
+  volume: 0.8, reverb: 0.35, bpm: 84,
+  link: false, linkUrl: 'ws://localhost:8766', linkStartStop: true, linkOffset: 0
+};
+const S = Object.assign({}, DEF);
+try { Object.assign(S, JSON.parse(localStorage.getItem('gazeharp') || '{}')); } catch (e) {}
+function save() { try { localStorage.setItem('gazeharp', JSON.stringify(S)); } catch (e) {} }
+
+// ---------- looks ----------
+const FONT = "'Atkinson Hyperlegible Mono', 'Courier New', monospace";
+// deg: one colour per scale degree. tint/tintMax: higher octaves are mixed towards tint.
+const THEMES = {
+  bright: {
+    bg: '#eef5eb', paper: '#ffffff', ink: '#000000', line: '#000000', muted: '#3b3d36',
+    wash: '#a9cba2', washInk: '#000000', washHover: '#d6e8d0', progress: '#a9cba2', progressOn: '#d6e8d0', playhead: '#a9cba2',
+    deg: ['#81ff73', '#fff273', '#73f2ff', '#f273ff', '#7381ff'], tint: '#ffffff', tintMax: 0.55,
+    lw: 2, lwCur: 5, fix: '#000000', noiseExtra: ['#000000', '#ffffff'], noiseDensity: 0.9,
+    strip: 'wash', stripDensity: 0.85, halo: 'rgba(255,255,255,.85)', logoDisc: false
+  },
+  soft: {
+    bg: '#eef3ec', paper: '#fafcf9', ink: '#232821', line: '#5d6758', muted: '#535c4f',
+    wash: '#c3d9bd', washInk: '#232821', washHover: '#e1ebdd', progress: '#c3d9bd', progressOn: '#e1ebdd', playhead: '#dfe9db',
+    deg: ['#c4e6bb', '#ede0a8', '#b9dadd', '#e3c3df', '#c3c7e8'], tint: '#fafcf9', tintMax: 0.45,
+    lw: 1.5, lwCur: 3, fix: '#3d4539', noiseExtra: ['#5d6758', '#fafcf9'], noiseDensity: 0.7,
+    strip: ['#8fb488', '#c3d9bd', '#e3c3df', '#d6e8d0'], stripDensity: 0.5, halo: 'rgba(250,252,249,.85)', logoDisc: false
+  },
+  dark: {
+    bg: '#0e110d', paper: '#171b16', ink: '#e4ece1', line: '#55654f', muted: '#a7b5a2',
+    wash: '#a9cba2', washInk: '#000000', washHover: '#222b20', progress: '#34452f', progressOn: '#c9ddc4', playhead: '#20291d',
+    deg: ['#3b6a35', '#6d6533', '#2f6466', '#6a3f66', '#3f4580'], tint: '#8a9a86', tintMax: 0.3,
+    lw: 1.5, lwCur: 3, fix: '#e4ece1', noiseExtra: ['#0e110d', '#a9cba2'], noiseDensity: 0.7,
+    strip: ['#4e6a49', '#8fb488', '#2a3527', '#7a3f78'], stripDensity: 0.55, halo: 'rgba(0,0,0,.7)', logoDisc: true
+  }
+};
+let T = THEMES.soft;
+function mix(a, b, t) {
+  const p = h => { const n = parseInt(h.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255]; };
+  const x = p(a), y = p(b);
+  return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * t)).join(',')})`;
+}
+const logo = new Image(); logo.src = 'img/ng_logo.png';
+let degNoise = [], stripNoise = null;
+function makeNoise() {
+  const NG = window.NoiseGuaranteed; if (!NG || !W) return;
+  // Note squares fill with pixel noise in their own colour while they sound.
+  degNoise = T.deg.map((c, k) => ctx.createPattern(NG.image(240, 240, { seed: 'gaze harp ' + k, cell: 6, density: T.noiseDensity, palette: [c, c, ...T.noiseExtra], bg: c }), 'repeat'));
+  stripNoise = NG.image(Math.ceil(W), 16, { seed: 'gaze harp', style: 'stripes', palette: T.strip, cell: 3, density: T.stripDensity, bg: T.paper });
+}
+function setLook() {
+  T = THEMES[S.look] || THEMES.soft;
+  document.documentElement.dataset.look = S.look;
+  makeNoise();
+  if (window.NoiseGuaranteed) NoiseGuaranteed.refresh();
+}
+
+// ---------- music ----------
+const NOTE_NAMES = ['C','C♯','D','E♭','E','F','F♯','G','A♭','A','B♭','B'];
+const SCALES = {
+  majPent:  { name: 'major pentatonic',        st: [0,2,4,7,9] },
+  minPent:  { name: 'minor pentatonic',        st: [0,3,5,7,10] },
+  egyptian: { name: 'Egyptian (suspended)',    st: [0,2,5,7,10] },
+  manGong:  { name: 'man gong (blues minor)',  st: [0,3,5,8,10] },
+  yo:       { name: 'yo (Japanese)',           st: [0,2,5,7,9] },
+  hirajoshi:{ name: 'hirajōshi',               st: [0,2,3,7,8] },
+  insen:    { name: 'in-sen',                  st: [0,1,5,7,10] }
+};
+if (!SCALES[S.scale]) S.scale = 'majPent';
+const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+const nname = m => NOTE_NAMES[((m % 12) + 12) % 12] + (Math.floor(m / 12) - 1);
+const baseMidi = () => (S.octaves === 1 ? 60 : 48) + S.key + 12 * S.register;
+const degMidi = (oct, k) => baseMidi() + 12 * oct + SCALES[S.scale].st[k];
+
+// ---------- audio ----------
+let ac = null, master, revIn, revOut;
+function initAudio() {
+  if (ac) { ac.resume(); return; }
+  ac = new (window.AudioContext || window.webkitAudioContext)();
+  const comp = ac.createDynamicsCompressor();
+  comp.threshold.value = -16; comp.ratio.value = 4;
+  master = ac.createGain(); master.gain.value = S.volume;
+  master.connect(comp); comp.connect(ac.destination);
+  const conv = ac.createConvolver(); conv.buffer = impulse(3.2);
+  revIn = ac.createGain(); revOut = ac.createGain(); revOut.gain.value = S.reverb;
+  revIn.connect(conv); conv.connect(revOut); revOut.connect(master);
+}
+function impulse(sec) {
+  const sr = ac.sampleRate, len = (sr * sec) | 0, b = ac.createBuffer(2, len, sr);
+  for (let c = 0; c < 2; c++) {
+    const d = b.getChannelData(c);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2);
+  }
+  return b;
+}
+function route(node, send) {
+  node.connect(master);
+  const s = ac.createGain(); s.gain.value = send;
+  node.connect(s); s.connect(revIn);
+}
+
+// Karplus-Strong plucked string, rendered once per pitch and cached.
+const ksCache = new Map();
+function ksBuf(f) {
+  const key = f.toFixed(2);
+  if (ksCache.has(key)) return ksCache.get(key);
+  const sr = ac.sampleRate;
+  const T60 = Math.max(1.3, Math.min(4.5, 5 - f / 280));
+  const len = Math.floor(sr * (T60 + 0.3));
+  const b = ac.createBuffer(1, len, sr), d = b.getChannelData(0);
+  const P = sr / f - 0.5, p0 = Math.floor(P), fr = P - p0;
+  const g = Math.pow(0.001, 1 / (f * T60));
+  const n0 = p0 + 2;
+  let prev = 0, mean = 0;
+  for (let i = 0; i < n0; i++) { prev = prev * 0.45 + (Math.random() * 2 - 1) * 0.55; d[i] = prev; mean += prev; }
+  mean /= n0;
+  for (let i = 0; i < n0; i++) d[i] -= mean;
+  for (let i = n0; i < len; i++) {
+    const a = d[i - p0], bb = d[i - p0 - 1], c = d[i - p0 - 2];
+    d[i] = g * 0.5 * ((a + (bb - a) * fr) + (bb + (c - bb) * fr));
+  }
+  let peak = 0;
+  for (let i = 0; i < len; i++) peak = Math.max(peak, Math.abs(d[i]));
+  const fade = Math.floor(sr * 0.25);
+  for (let i = 0; i < len; i++) {
+    d[i] /= (peak || 1);
+    if (i > len - fade) d[i] *= (len - i) / fade;
+  }
+  ksCache.set(key, b);
+  return b;
+}
+function harp(f, t, vel = 0.8, bright = 1) {
+  const s = ac.createBufferSource(); s.buffer = ksBuf(f);
+  const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 700 + bright * 9000;
+  const g = ac.createGain(); g.gain.value = vel * 0.6;
+  s.connect(lp); lp.connect(g); route(g, 0.55); s.start(t);
+}
+function bell(f, t, vel = 0.8, bright = 1) {
+  const c = ac.createOscillator(), m = ac.createOscillator(), mg = ac.createGain(), g = ac.createGain();
+  c.frequency.value = f; m.frequency.value = f * 3.5;
+  mg.gain.setValueAtTime(f * (0.4 + 1.6 * bright), t);
+  mg.gain.exponentialRampToValueAtTime(f * 0.03, t + 1.6);
+  m.connect(mg); mg.connect(c.frequency);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(vel * 0.3, t + 0.006);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 3.2);
+  c.connect(g); route(g, 0.8);
+  c.start(t); m.start(t); c.stop(t + 3.3); m.stop(t + 3.3);
+}
+function mallet(f, t, vel = 0.5) {
+  const parts = [[1, 1, 0.9], [3.98, 0.25, 0.12], [9.1, 0.06, 0.04]];
+  const out = ac.createGain(); out.gain.value = vel * 0.45; route(out, 0.35);
+  for (const [mul, lvl, dec] of parts) {
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.frequency.value = f * mul;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(lvl, t + 0.004);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dec);
+    o.connect(g); g.connect(out); o.start(t); o.stop(t + dec + 0.05);
+  }
+}
+function holdVoice(f, type, level = 1) {
+  const t = ac.currentTime, flute = type === 'flute';
+  const out = ac.createGain();
+  out.gain.setValueAtTime(0.0001, t);
+  out.gain.exponentialRampToValueAtTime((flute ? 0.26 : 0.16) * level, t + (flute ? 0.07 : 0.3));
+  const lp = ac.createBiquadFilter(); lp.type = 'lowpass';
+  lp.frequency.value = Math.min(f * (flute ? 6 : 4), flute ? 6000 : 3200); lp.Q.value = flute ? 0.5 : 1.5;
+  lp.connect(out); route(out, flute ? 0.5 : 0.85);
+  const spec = flute
+    ? [['sine', 1, 1, 0], ['triangle', 1, 0.35, 0], ['sine', 2, 0.1, 0]]
+    : [['sawtooth', 1, 0.22, -8], ['sawtooth', 1, 0.22, 8], ['triangle', 2, 0.15, 0]];
+  const lfo = ac.createOscillator(), lg = ac.createGain();
+  lfo.frequency.value = flute ? 5.2 : 0.3;
+  lg.gain.setValueAtTime(0, t); lg.gain.linearRampToValueAtTime(flute ? 14 : 6, t + 0.7);
+  lfo.connect(lg); lfo.start(t);
+  const oscs = spec.map(([wave, mul, lvl, det]) => {
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = wave; o.frequency.value = f * mul; o.detune.value = det; g.gain.value = lvl;
+    lg.connect(o.detune); o.connect(g); g.connect(lp); o.start(t);
+    return { o, mul };
+  });
+  return {
+    f,
+    glide(nf) {
+      const tt = ac.currentTime;
+      oscs.forEach(x => x.o.frequency.setTargetAtTime(nf * x.mul, tt, 0.045));
+      lp.frequency.setTargetAtTime(Math.min(nf * (flute ? 6 : 4), flute ? 6000 : 3200), tt, 0.05);
+      this.f = nf;
+    },
+    stop() {
+      const tt = ac.currentTime;
+      out.gain.cancelScheduledValues(tt);
+      out.gain.setValueAtTime(Math.max(out.gain.value, 0.0001), tt);
+      out.gain.setTargetAtTime(0.0001, tt, flute ? 0.07 : 0.4);
+      const end = tt + (flute ? 0.6 : 2.6);
+      oscs.forEach(x => x.o.stop(end)); lfo.stop(end);
+    }
+  };
+}
+const isHold = () => S.sound === 'flute' || S.sound === 'glass';
+function pluck(f, t, vel, bright) {
+  if (S.sound === 'bell') bell(f, t, vel, bright);
+  else if (S.sound === 'harp') harp(f, t, vel, bright);
+  else { // a short blown note when a hold sound is used on the strings
+    const delay = Math.max(0, (t - ac.currentTime) * 1000);
+    setTimeout(() => { const v = holdVoice(f, S.sound, vel); setTimeout(() => v.stop(), 380); }, delay);
+  }
+}
+
+// ---------- melody state ----------
+let held = null; // { voice, id }
+const flash = new Map(); // id -> time
+function playNote(z) {
+  if (!ac) return;
+  const f = mtof(degMidi(z.oct, z.k));
+  flash.set(z.id, performance.now());
+  if (isHold()) {
+    if (held && S.glide) { held.voice.glide(f); held.id = z.id; }
+    else { if (held) held.voice.stop(); held = { voice: holdVoice(f, S.sound), id: z.id }; }
+  } else {
+    pluck(f, ac.currentTime, 0.85, 1);
+  }
+}
+function releaseHeld() { if (held) { held.voice.stop(); held = null; } }
+
+// ---------- Ableton Link (through link-bridge/link_bridge.py) ----------
+// The bridge sends the session's beat and tempo about 50 times a second. From each message
+// we estimate the audio-clock time of beat 0 ("origin"), smoothed to iron out delivery jitter.
+const LK = { ws: null, status: 'off', timer: null, tempo: 120, origin: null, peers: 0, playing: false, nextStep: null, lastT: -1 };
+function connectLink() {
+  clearTimeout(LK.timer);
+  if (LK.ws) { LK.ws.onclose = null; LK.ws.close(); LK.ws = null; }
+  LK.origin = null;
+  if (!S.link) { LK.status = 'off'; updateLinkStatus(); return; }
+  try { LK.ws = new WebSocket(S.linkUrl); } catch (e) { LK.status = 'bad address'; updateLinkStatus(); return; }
+  LK.status = 'connecting'; updateLinkStatus();
+  LK.ws.onopen = () => { LK.status = 'connected'; updateLinkStatus(); };
+  LK.ws.onclose = () => { LK.status = 'bridge not running'; LK.origin = null; updateLinkStatus(); LK.timer = setTimeout(connectLink, 2000); };
+  LK.ws.onmessage = e => { try { onLinkMsg(JSON.parse(e.data)); } catch (_) {} };
+}
+function linkSend(obj) { if (LK.ws && LK.ws.readyState === 1) LK.ws.send(JSON.stringify(obj)); }
+const linkActive = () => S.link && LK.origin !== null && LK.ws && LK.ws.readyState === 1;
+// context time of the sound leaving the speakers right now
+function audioNow() {
+  if (ac.getOutputTimestamp) {
+    const ts = ac.getOutputTimestamp();
+    if (ts.contextTime > 0 && ts.performanceTime > 0) return ts.contextTime + (performance.now() - ts.performanceTime) / 1000;
+  }
+  return ac.currentTime - (ac.outputLatency || ac.baseLatency || 0);
+}
+function onLinkMsg(m) {
+  if (m.type !== 'link') return;
+  if (m.peers !== LK.peers) { LK.peers = m.peers; updateLinkStatus(); }
+  if (!ac) return;
+  const est = audioNow() - m.beat * 60 / m.tempo;
+  if (LK.origin === null || m.tempo !== LK.tempo || Math.abs(est - LK.origin) > 0.03) { LK.origin = est; LK.nextStep = null; }
+  else LK.origin += (est - LK.origin) * 0.05;
+  LK.tempo = m.tempo;
+  const shown = Math.round(m.tempo * 10) / 10;
+  if (S.bpm !== shown) { S.bpm = shown; syncPanel(); }
+  if (S.linkStartStop && m.playing !== LK.playing && m.playing !== playing) setPlaying(m.playing, true);
+  LK.playing = m.playing;
+}
+function updateLinkStatus() {
+  const el = $('#linkStatus'); if (!el) return;
+  el.textContent = !S.link ? '' : LK.status === 'connected' ? `connected · ${LK.peers} ${LK.peers === 1 ? 'peer' : 'peers'}` : LK.status;
+}
+
+// ---------- loop sequencer ----------
+const STEPS = 8, ROWS = 5; // 8 quavers = one 4-beat bar
+let seq = Array.from({ length: ROWS }, () => Array(STEPS).fill(false));
+[[4, 0], [2, 2], [1, 3], [3, 5], [2, 6]].forEach(([r, s]) => seq[r][s] = true);
+try { const sv = JSON.parse(localStorage.getItem('gazeharp-seq')); if (sv && sv.length === ROWS) seq = sv; } catch (e) {}
+const saveSeq = () => { try { localStorage.setItem('gazeharp-seq', JSON.stringify(seq)); } catch (e) {} };
+const rowMidi = r => baseMidi() + SCALES[S.scale].st[ROWS - 1 - r];
+let playing = false, nextTime = 0, stepIdx = 0, stepLog = [];
+function setPlaying(on, fromLink) {
+  if (!ac) return;
+  playing = on;
+  if (on) { nextTime = ac.currentTime + 0.06; stepIdx = 0; stepLog = []; LK.nextStep = null; LK.lastT = -1; }
+  if (!fromLink && S.link && S.linkStartStop) linkSend({ type: 'play', playing: on });
+}
+function playStep(s, t) {
+  for (let r = 0; r < ROWS; r++) if (seq[r][s]) mallet(mtof(rowMidi(r)), t, s % 4 === 0 ? 0.6 : 0.45);
+  stepLog.push({ t, s });
+  if (stepLog.length > 32) stepLog.shift();
+}
+setInterval(() => {
+  if (!ac || !playing) return;
+  const horizon = ac.currentTime + 0.12;
+  if (linkActive()) {
+    // steps sit on the session's quaver grid, so step 0 always lands on the bar
+    const sd = 60 / LK.tempo / 2, off = S.linkOffset / 1000;
+    if (LK.nextStep === null) LK.nextStep = Math.ceil((ac.currentTime + 0.01 - off - LK.origin) / sd);
+    for (;;) {
+      const t = LK.origin + LK.nextStep * sd + off;
+      if (t > horizon) break;
+      if (t >= ac.currentTime && t > LK.lastT + sd * 0.5) { playStep(((LK.nextStep % STEPS) + STEPS) % STEPS, t); LK.lastT = t; }
+      LK.nextStep++;
+    }
+    nextTime = LK.lastT + sd; // so free-running carries on smoothly if Link drops out
+    return;
+  }
+  const dur = 60 / S.bpm / 2;
+  if (nextTime < ac.currentTime) nextTime = ac.currentTime + 0.02;
+  while (nextTime < horizon) {
+    playStep(stepIdx, nextTime);
+    stepIdx = (stepIdx + 1) % STEPS;
+    nextTime += dur;
+  }
+}, 25);
+function currentStep() {
+  if (!playing || !ac) return -1;
+  const now = ac.currentTime; let s = -1;
+  for (const e of stepLog) if (e.t <= now) s = e.s;
+  return s;
+}
+function changeTempo(bpm) {
+  S.bpm = Math.max(50, Math.min(180, bpm));
+  if (linkActive()) linkSend({ type: 'tempo', bpm: S.bpm });
+}
+
+// ---------- drone ----------
+let drone = null;
+function setDrone(on) {
+  if (drone) { drone.forEach(v => v.stop()); drone = null; }
+  if (on && ac) {
+    const root = baseMidi() - 12, st = SCALES[S.scale].st;
+    const second = st.includes(7) ? 7 : 5;
+    drone = [holdVoice(mtof(root), 'glass', 0.8), holdVoice(mtof(root + second), 'glass', 0.55)];
+  }
+}
+
+// ---------- gaze input ----------
+const raw = { x: innerWidth / 2, y: innerHeight / 2 };
+const gaze = { x: raw.x, y: raw.y };
+const prevGaze = { x: raw.x, y: raw.y };
+let samples = 0, rate = 0;
+setInterval(() => { rate = samples; samples = 0; }, 1000);
+addEventListener('pointermove', e => {
+  if (S.input !== 'mouse') return;
+  raw.x = e.clientX; raw.y = e.clientY; samples++;
+});
+let ws = null, wsStatus = 'off', wsTimer = null;
+function connectWS() {
+  clearTimeout(wsTimer);
+  if (ws) { ws.onclose = null; ws.close(); ws = null; }
+  if (S.input !== 'ws') { wsStatus = 'off'; updateWsStatus(); return; }
+  try { ws = new WebSocket(S.wsUrl); } catch (e) { wsStatus = 'bad address'; updateWsStatus(); return; }
+  wsStatus = 'connecting'; updateWsStatus();
+  ws.onopen = () => { wsStatus = 'connected'; updateWsStatus(); };
+  ws.onclose = () => { wsStatus = 'retrying'; updateWsStatus(); wsTimer = setTimeout(connectWS, 1500); };
+  ws.onmessage = e => {
+    let x, y;
+    try {
+      const m = JSON.parse(e.data);
+      if (Array.isArray(m)) { x = m[0]; y = m[1]; } else { x = m.x; y = m.y; }
+    } catch (_) {
+      const p = String(e.data).trim().split(/[\s,]+/); x = +p[0]; y = +p[1];
+    }
+    if (!isFinite(x) || !isFinite(y)) return;
+    // normalised screen coordinates -> page coordinates
+    const bx = (outerWidth - innerWidth) / 2;
+    const top = outerHeight - innerHeight - bx;
+    raw.x = x * screen.width - screenX - bx;
+    raw.y = y * screen.height - screenY - top;
+    samples++;
+  };
+}
+function updateWsStatus() { const el = $('#wsStatus'); if (el) el.textContent = S.input === 'ws' ? wsStatus : ''; }
+
+function updateGaze(dt) {
+  prevGaze.x = gaze.x; prevGaze.y = gaze.y;
+  const dx = raw.x - gaze.x, dy = raw.y - gaze.y;
+  const jump = Math.min(W, H) * 0.12;
+  if (Math.hypot(dx, dy) > jump) { gaze.x = raw.x; gaze.y = raw.y; return; }
+  const a = 1 - Math.pow(S.smoothing, dt * 60);
+  gaze.x += dx * a; gaze.y += dy * a;
+}
+
+// ---------- layout ----------
+let W = 0, H = 0;
+const L = {};
+function layout() {
+  W = innerWidth; H = innerHeight;
+  const dpr = devicePixelRatio || 1;
+  cv.width = W * dpr; cv.height = H * dpr;
+  cv.style.width = W + 'px'; cv.style.height = H + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const pad = Math.max(8, Math.min(14, W * 0.01));
+  L.pad = pad;
+  // Header: logo and name, then the gaze buttons. A noise strip runs underneath.
+  const headH = Math.max(72, Math.min(124, H * 0.13));
+  L.headH = headH;
+  L.stripY = headH; L.stripH = 16;
+  const topH = headH + L.stripH + 4; // header + strip + its two 2px rules
+  L.topH = topH;
+  L.logoS = Math.min(64, headH - 2 * pad);
+  L.brandW = W > 900 ? pad * 2 + L.logoS + 12 + 190 : pad * 2 + L.logoS;
+  const ids = [['ring', 'melody'], ['loop', 'loop editor'], ['strings', 'strings'], ['play', 'loop'], ['drone', 'drone']];
+  // The settings button sits at the far right of the header, outside the gaze buttons:
+  // it's for the facilitator and responds to clicks only, never to gaze.
+  const gearW = 44 + pad;
+  const gear = $('#gear'); gear.style.right = pad + 'px'; gear.style.top = (headH - 44) / 2 + 'px';
+  const bx0 = L.brandW, bw = (W - bx0 - gearW - pad * (ids.length + 1)) / ids.length;
+  L.top = ids.map(([id, label], i) => ({ id, label, x: bx0 + pad + i * (bw + pad), y: pad, w: bw, h: headH - pad * 2 }));
+  // melody ring
+  const areaH = H - topH;
+  L.cx = W / 2; L.cy = topH + areaH / 2;
+  L.R = Math.min(W, areaH) / 2 * 0.94;
+  L.restR = L.R * 0.24;
+  L.ringW = (L.R - L.restR) / S.octaves;
+  // loop editor
+  const ctrlH = Math.max(60, Math.min(110, H * 0.12));
+  const gy = topH + pad, gh = H - topH - ctrlH - pad * 3;
+  L.grid = { x: pad, y: gy, w: W - pad * 2, h: gh, cw: (W - pad * 2) / STEPS, ch: gh / ROWS };
+  const cids = [['slower', 'slower'], ['faster', 'faster'], ['random', 'surprise me'], ['clear', 'clear']];
+  const cbw = (W - pad * (cids.length + 1)) / cids.length;
+  L.ctrl = cids.map(([id, label], i) => ({ id, label, x: pad + i * (cbw + pad), y: H - ctrlH - pad, w: cbw, h: ctrlH }));
+  // strings
+  L.nStr = 5 * S.octaves + 1;
+  L.bandW = W / L.nStr;
+  L.strTop = topH + pad;
+  makeNoise();
+}
+
+// ---------- hit testing + dwell ----------
+const NONE = { id: 'none', kind: 'none' };
+const inR = (x, y, r) => x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h;
+const STEP_ANG = Math.PI * 2 / 5;
+function hit(x, y) {
+  for (const b of L.top) if (inR(x, y, b)) return { id: 'top:' + b.id, kind: 'button', b, dwell: S.uiDwell };
+  if (y < L.topH) return NONE;
+  if (S.mode === 'ring') {
+    const dx = x - L.cx, dy = y - L.cy, r = Math.hypot(dx, dy);
+    if (r < L.restR) return { id: 'rest', kind: 'rest', dwell: S.restDwell };
+    if (r > L.R) return NONE;
+    const oct = Math.min(S.octaves - 1, Math.floor((r - L.restR) / L.ringW));
+    let a = Math.atan2(dy, dx) + Math.PI / 2 + STEP_ANG / 2;
+    a = ((a % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+    const k = Math.min(4, Math.floor(a / STEP_ANG));
+    return { id: `n:${oct}:${k}`, kind: 'note', oct, k, dwell: S.dwell };
+  }
+  if (S.mode === 'loop') {
+    for (const b of L.ctrl) if (inR(x, y, b)) return { id: 'ctrl:' + b.id, kind: 'ctrl', b, dwell: S.uiDwell };
+    const g = L.grid;
+    if (inR(x, y, g)) {
+      const s = Math.min(STEPS - 1, Math.floor((x - g.x) / g.cw));
+      const r = Math.min(ROWS - 1, Math.floor((y - g.y) / g.ch));
+      return { id: `cell:${r}:${s}`, kind: 'cell', r, s, dwell: S.cellDwell };
+    }
+    return NONE;
+  }
+  if (S.mode === 'strings' && y > L.strTop) {
+    const i = Math.max(0, Math.min(L.nStr - 1, Math.floor(x / L.bandW)));
+    // when sweeping, strings play only as you cross them (no dwell), so they can't sound twice
+    return { id: 'str:' + i, kind: 'string', i, dwell: S.sweep ? undefined : S.dwell };
+  }
+  return NONE;
+}
+
+let cur = NONE, curSince = 0, fired = false, cand = null, candSince = 0;
+const SWITCH_MS = 45; // a new target must hold this long before it takes over (stops flicker on edges)
+function tickDwell(now) {
+  const z = hit(gaze.x, gaze.y);
+  if (z.id === cur.id) { cand = null; }
+  else {
+    if (!cand || cand.id !== z.id) { cand = z; candSince = now; }
+    if (now - candSince >= SWITCH_MS) { cur = cand; curSince = candSince; fired = false; cand = null; }
+  }
+  if (!fired && cur.dwell !== undefined && now - curSince >= cur.dwell) { fired = true; fire(cur); }
+  // a held note fades out if you look away from the ring (not at a note or the rest circle)
+  if (held && cur.kind !== 'note' && cur.kind !== 'rest' && now - curSince > 250) releaseHeld();
+}
+function dwellProgress(now) {
+  if (fired || cur.dwell === undefined) return 0;
+  return Math.min(1, (now - curSince) / cur.dwell);
+}
+
+function fire(z) {
+  if (!ac) return;
+  switch (z.kind) {
+    case 'button': topAction(z.b.id); break;
+    case 'ctrl': ctrlAction(z.b.id); break;
+    case 'note': playNote(z); break;
+    case 'rest': releaseHeld(); break;
+    case 'cell':
+      seq[z.r][z.s] = !seq[z.r][z.s];
+      if (seq[z.r][z.s]) mallet(mtof(rowMidi(z.r)), ac.currentTime, 0.4);
+      flash.set(z.id, performance.now()); saveSeq();
+      break;
+    case 'string':
+      if (performance.now() - (lastPl[z.i] || 0) > 350) pluckString(z.i, 0);
+      break;
+  }
+}
+function setMode(m) {
+  if (S.mode === m) return;
+  releaseHeld(); S.mode = m; save();
+}
+function topAction(id) {
+  if (id === 'ring' || id === 'loop' || id === 'strings') setMode(id);
+  else if (id === 'play') setPlaying(!playing);
+  else if (id === 'drone') setDrone(!drone);
+}
+function ctrlAction(id) {
+  if (id === 'slower') changeTempo(S.bpm - 6);
+  else if (id === 'faster') changeTempo(S.bpm + 6);
+  else if (id === 'clear') seq.forEach(r => r.fill(false));
+  else if (id === 'random') {
+    seq.forEach(r => r.fill(false));
+    for (let s = 0; s < STEPS; s++) if (s === 0 || Math.random() < 0.6) seq[s === 0 ? ROWS - 1 : (Math.random() * ROWS) | 0][s] = true;
+  }
+  save(); saveSeq(); syncPanel();
+}
+
+// ---------- strings ----------
+// A string plays once as the gaze crosses it, then is disarmed until the gaze moves
+// clearly away from it (30% of the gap to the next string). This stops slow movement
+// and jitter on the line from plucking it twice.
+const lastPl = [], amp = [], armed = [];
+function strMidi(i) { return degMidi(Math.floor(i / 5), i % 5); }
+function pluckString(i, delay) {
+  const now = performance.now();
+  if (now - (lastPl[i] || 0) < 60) return;
+  lastPl[i] = now; amp[i] = 1; armed[i] = false;
+  const bright = 1 - Math.max(0, Math.min(1, (gaze.y - L.strTop) / (H - L.strTop)));
+  pluck(mtof(strMidi(i)), ac.currentTime + delay, 0.75, 0.15 + bright * 0.85);
+}
+function sweepStrings() {
+  if (S.mode !== 'strings') return;
+  for (let i = 0; i < L.nStr; i++) if (!armed[i] && Math.abs(gaze.x - (i + 0.5) * L.bandW) > L.bandW * 0.3) armed[i] = true;
+  if (!ac || !S.sweep) return;
+  if (gaze.y <= L.strTop || prevGaze.y <= L.strTop) return;
+  const a = prevGaze.x, b = gaze.x;
+  if (a === b) return;
+  const lo = Math.min(a, b), hi = Math.max(a, b), list = [];
+  for (let i = 0; i < L.nStr; i++) {
+    const x = (i + 0.5) * L.bandW;
+    if (x > lo && x <= hi && armed[i] !== false) list.push(i);
+  }
+  if (b < a) list.reverse();
+  list.forEach((i, j) => pluckString(i, j * 0.022));
+}
+
+// ---------- drawing ----------
+function font(size, bold) { return `${bold ? 'bold ' : ''}${Math.round(size)}px ${FONT}`; }
+function fitFont(text, maxW, size, bold) {
+  size = Math.max(13, size);
+  ctx.font = font(size, bold);
+  while (size > 13 && ctx.measureText(text).width > maxW) { size -= 1; ctx.font = font(size, bold); }
+  return size;
+}
+function box(x, y, w, h, lw) { const i = lw / 2; ctx.lineWidth = lw; ctx.strokeStyle = T.line; ctx.strokeRect(x + i, y + i, w - lw, h - lw); }
+// A text label on a solid chip: text never sits on noise or colour fills.
+function chip(text, x, y, size, align = 'center') {
+  ctx.font = font(size, true);
+  const w = ctx.measureText(text).width + 12, h = size + 8;
+  const lx = align === 'center' ? x - w / 2 : x;
+  ctx.fillStyle = T.paper; ctx.fillRect(lx, y, w, h);
+  box(lx, y, w, h, T.lw);
+  ctx.fillStyle = T.ink; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.fillText(text, lx + 6, y + h / 2 + 1);
+}
+// Gaze buttons: plain with an edge; the chosen one in the wash; the dwell fills from the left.
+function drawButton(b, label, on, prog, isCur) {
+  ctx.fillStyle = on ? T.wash : isCur ? T.washHover : T.paper;
+  ctx.fillRect(b.x, b.y, b.w, b.h);
+  if (prog > 0) { ctx.fillStyle = on ? T.progressOn : T.progress; ctx.fillRect(b.x, b.y, b.w * prog, b.h); }
+  box(b.x, b.y, b.w, b.h, on ? T.lwCur + 1 : T.lw);
+  fitFont(label, b.w - 16, Math.min(b.h * 0.3, 24), true);
+  ctx.fillStyle = on ? T.washInk : T.ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(label, b.x + b.w / 2, b.y + b.h / 2 + 1);
+}
+function drawHeader(now, prog) {
+  ctx.fillStyle = T.paper; ctx.fillRect(0, 0, W, L.headH);
+  const ls = L.logoS, ly = (L.headH - ls) / 2;
+  if (T.logoDisc) { ctx.beginPath(); ctx.arc(L.pad + ls / 2, ly + ls / 2, ls / 2, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.fill(); }
+  if (logo.complete && logo.naturalWidth) ctx.drawImage(logo, L.pad, ly, ls, ls);
+  if (W > 900) {
+    ctx.fillStyle = T.ink; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    const tx = L.pad + ls + 12, my = L.headH / 2;
+    ctx.font = font(20, true); ctx.fillText('gaze harp', tx, my - 20);
+    ctx.font = font(13, false); ctx.fillStyle = T.muted;
+    ctx.fillText('noise guaranteed', tx, my + 2);
+    const src = S.input === 'ws' ? `WebSocket ${wsStatus}` : 'mouse';
+    ctx.fillText(`gaze: ${src} · ${rate} Hz`, tx, my + 21);
+  }
+  ctx.fillStyle = T.line; ctx.fillRect(0, L.stripY, W, 2); ctx.fillRect(0, L.stripY + 2 + L.stripH, W, 2);
+  if (stripNoise) ctx.drawImage(stripNoise, 0, L.stripY + 2, W, L.stripH);
+  const lk = linkActive();
+  for (const b of L.top) {
+    const isCur = cur.id === 'top:' + b.id;
+    let label = b.label, on = b.id === S.mode;
+    if (b.id === 'play') { label = (playing ? '■ loop' : '▶ loop') + ` · ${Math.round(lk ? LK.tempo : S.bpm)}${lk ? ' link' : ''}`; on = playing; }
+    if (b.id === 'drone') { label = drone ? 'drone on' : 'drone'; on = !!drone; }
+    drawButton(b, label, on, isCur ? prog : 0, isCur);
+  }
+}
+function fixation(x, y, prog, maxR) {
+  if (prog > 0) {
+    ctx.beginPath(); ctx.arc(x, y, 7 + prog * maxR, 0, Math.PI * 2);
+    ctx.lineWidth = T.lwCur; ctx.strokeStyle = T.fix; ctx.stroke();
+  }
+  // the fixation point: a pixel, not a dot
+  ctx.fillStyle = T.paper; ctx.fillRect(x - 7, y - 7, 14, 14);
+  ctx.fillStyle = T.fix; ctx.fillRect(x - 5, y - 5, 10, 10);
+}
+function drawRing(now, prog) {
+  const { cx, cy, restR, ringW } = L;
+  ctx.imageSmoothingEnabled = false;
+  for (let o = 0; o < S.octaves; o++) {
+    const r0 = restR + o * ringW, r1 = r0 + ringW;
+    const tint = S.octaves > 1 ? o / (S.octaves - 1) * T.tintMax : 0; // higher octaves are paler
+    for (let k = 0; k < 5; k++) {
+      const id = `n:${o}:${k}`;
+      const a0 = -Math.PI / 2 + (k - 0.5) * STEP_ANG, a1 = a0 + STEP_ANG;
+      const isCur = cur.id === id, isHeld = held && held.id === id;
+      const fl = isHeld ? 1 : flash.has(id) ? Math.max(0, 1 - (now - flash.get(id)) / 700) : 0;
+      ctx.beginPath(); ctx.arc(cx, cy, r1, a0, a1); ctx.arc(cx, cy, r0, a1, a0, true); ctx.closePath();
+      ctx.fillStyle = mix(T.deg[k], T.tint, tint); ctx.fill();
+      if (fl > 0 && degNoise[k]) { ctx.globalAlpha = fl; ctx.fillStyle = degNoise[k]; ctx.fill(); ctx.globalAlpha = 1; }
+      ctx.lineWidth = isCur ? T.lwCur : T.lw; ctx.strokeStyle = T.line; ctx.stroke();
+      const am = (a0 + a1) / 2, rm = (r0 + r1) / 2;
+      const fx = cx + Math.cos(am) * rm, fy = cy + Math.sin(am) * rm;
+      fixation(fx, fy, isCur ? prog : 0, ringW * 0.3);
+      chip(nname(degMidi(o, k)), fx, fy + 14, Math.max(13, Math.min(20, ringW * 0.14)));
+    }
+  }
+  ctx.beginPath(); ctx.arc(cx, cy, restR - 6, 0, Math.PI * 2);
+  ctx.fillStyle = cur.id === 'rest' ? T.washHover : T.paper; ctx.fill();
+  ctx.lineWidth = cur.id === 'rest' ? T.lwCur : T.lw; ctx.strokeStyle = T.line; ctx.stroke();
+  if (cur.id === 'rest' && prog > 0) {
+    ctx.beginPath(); ctx.arc(cx, cy, restR - 12, -Math.PI / 2, -Math.PI / 2 + prog * Math.PI * 2);
+    ctx.lineWidth = T.lwCur + 1; ctx.strokeStyle = T.fix; ctx.stroke();
+  }
+  ctx.fillStyle = T.ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = font(Math.max(15, restR * 0.2), true); ctx.fillText('rest', cx, cy - restR * 0.22);
+  const sub = `${NOTE_NAMES[S.key]} ${SCALES[S.scale].name}`;
+  fitFont(sub, restR * 1.6, Math.max(13, restR * 0.1), false); ctx.fillStyle = T.muted; ctx.fillText(sub, cx, cy + restR * 0.08);
+  ctx.font = font(Math.max(13, restR * 0.1), false); ctx.fillText(`gaze ${S.dwell} ms`, cx, cy + restR * 0.32);
+}
+function drawLoop(now, prog) {
+  const g = L.grid, step = currentStep();
+  ctx.imageSmoothingEnabled = false;
+  for (let r = 0; r < ROWS; r++) for (let s = 0; s < STEPS; s++) {
+    const id = `cell:${r}:${s}`, k = ROWS - 1 - r, on = seq[r][s];
+    const x = g.x + s * g.cw + 4, y = g.y + r * g.ch + 4, w = g.cw - 8, h = g.ch - 8;
+    const isCur = cur.id === id, playHere = s === step;
+    ctx.fillStyle = on ? T.deg[k] : playHere ? T.playhead : T.paper;
+    ctx.fillRect(x, y, w, h);
+    if (on && playHere && degNoise[k]) { ctx.fillStyle = degNoise[k]; ctx.fillRect(x, y, w, h); }
+    box(x, y, w, h, isCur ? T.lwCur : T.lw);
+    fixation(x + w / 2, y + h / 2, isCur ? prog : 0, Math.min(w, h) * 0.36);
+    if (s === 0) chip(nname(rowMidi(r)), x + 8, y + 8, Math.max(13, Math.min(16, h * 0.16)), 'left');
+  }
+  for (const b of L.ctrl) drawButton(b, b.label, false, cur.id === 'ctrl:' + b.id ? prog : 0, cur.id === 'ctrl:' + b.id);
+}
+function drawStrings(now, prog, dt) {
+  const top = L.strTop, bot = H - L.pad;
+  const hint = S.sweep ? 'sweep your eyes across the strings · higher up sounds brighter' : 'look at a string to play it · higher up sounds brighter';
+  fitFont(hint, W - 40, 15, false);
+  ctx.fillStyle = T.muted; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  ctx.fillText(hint, W / 2, top);
+  const ribbon = Math.max(8, Math.min(22, L.bandW * 0.18));
+  for (let i = 0; i < L.nStr; i++) {
+    const k = i % 5, x = (i + 0.5) * L.bandW, id = 'str:' + i;
+    if (cur.id === id) {
+      ctx.fillStyle = T.washHover; ctx.fillRect(i * L.bandW, top + 28, L.bandW, bot - top - 28);
+      if (!S.sweep && prog > 0) { ctx.fillStyle = T.progress; const ph = (bot - top - 28) * prog; ctx.fillRect(i * L.bandW, bot - ph, L.bandW, ph); }
+    }
+    amp[i] = (amp[i] || 0) * Math.pow(0.05, dt);
+    const bulge = amp[i] * Math.sin(now * 0.06 + i) * L.bandW * 0.22;
+    const y0 = top + 34, y1 = bot - 40;
+    ctx.beginPath(); ctx.moveTo(x, y0); ctx.quadraticCurveTo(x + bulge, (y0 + y1) / 2, x, y1);
+    ctx.lineCap = 'butt';
+    ctx.lineWidth = ribbon + T.lw * 2; ctx.strokeStyle = T.line; ctx.stroke();
+    ctx.lineWidth = ribbon; ctx.strokeStyle = amp[i] > 0.15 && degNoise[k] ? degNoise[k] : T.deg[k]; ctx.stroke();
+    chip(nname(strMidi(i)), x, bot - 30, Math.max(13, Math.min(16, L.bandW * 0.2)));
+  }
+}
+function drawGaze(prog) {
+  if (!S.showGaze) return;
+  ctx.globalAlpha = 0.4; ctx.fillStyle = T.ink; ctx.fillRect(raw.x - 2, raw.y - 2, 4, 4); ctx.globalAlpha = 1;
+  ctx.beginPath(); ctx.arc(gaze.x, gaze.y, 16, 0, Math.PI * 2);
+  ctx.lineWidth = 6; ctx.strokeStyle = T.halo; ctx.stroke();
+  ctx.lineWidth = 2; ctx.strokeStyle = T.ink; ctx.stroke();
+  if (prog > 0) {
+    ctx.beginPath(); ctx.arc(gaze.x, gaze.y, 16, -Math.PI / 2, -Math.PI / 2 + prog * Math.PI * 2);
+    ctx.lineWidth = 5; ctx.strokeStyle = T.ink; ctx.stroke();
+  }
+}
+let toast = null; // { text, t }
+function drawToast(now) {
+  if (!toast || now - toast.t > 1400) return;
+  ctx.font = font(22, true);
+  const w = ctx.measureText(toast.text).width + 32, h = 52, x = (W - w) / 2, y = L.topH + 16;
+  ctx.fillStyle = T.paper; ctx.fillRect(x, y, w, h);
+  box(x, y, w, h, T.lw);
+  ctx.fillStyle = T.ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(toast.text, W / 2, y + h / 2 + 1);
+}
+
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.1, (now - last) / 1000); last = now;
+  updateGaze(dt);
+  sweepStrings();
+  tickDwell(now);
+  const prog = dwellProgress(now);
+  ctx.fillStyle = T.bg; ctx.fillRect(0, 0, W, H);
+  if (S.mode === 'ring') drawRing(now, prog);
+  else if (S.mode === 'loop') drawLoop(now, prog);
+  else drawStrings(now, prog, dt);
+  drawHeader(now, prog);
+  drawToast(now);
+  drawGaze(prog);
+  requestAnimationFrame(frame);
+}
+
+// ---------- settings panel ----------
+const panel = $('#panel');
+const keySel = $('#keySel'), scaleSel = $('#scaleSel');
+NOTE_NAMES.forEach((n, i) => keySel.add(new Option(n, i)));
+Object.entries(SCALES).forEach(([id, s]) => scaleSel.add(new Option(s.name, id)));
+const NUM = new Set(['key', 'octaves', 'register', 'dwell', 'restDwell', 'cellDwell', 'uiDwell', 'smoothing', 'volume', 'reverb', 'bpm', 'linkOffset']);
+const fmt = (k, v) => /dwell|offset/i.test(k) ? `${v} ms` : k === 'bpm' ? `${v} bpm` : `${Math.round(v * 100)}%`;
+function syncPanel() {
+  panel.querySelectorAll('[data-k]').forEach(el => {
+    const k = el.dataset.k;
+    if (el === document.activeElement && el.type === 'range') return; // don't fight a slider being dragged
+    if (el.type === 'checkbox') el.checked = !!S[k]; else el.value = S[k];
+  });
+  panel.querySelectorAll('[data-v]').forEach(el => el.textContent = fmt(el.dataset.v, S[el.dataset.v]));
+  updateWsStatus(); updateLinkStatus();
+}
+panel.addEventListener('input', e => {
+  const el = e.target, k = el.dataset.k; if (!k) return;
+  S[k] = el.type === 'checkbox' ? el.checked : NUM.has(k) ? +el.value : el.value;
+  save(); syncPanel(); apply(k);
+});
+function apply(k) {
+  if (k === 'octaves') layout();
+  if (k === 'look') setLook();
+  if (k === 'input' || k === 'wsUrl') connectWS();
+  if (k === 'link' || k === 'linkUrl') connectLink();
+  if (k === 'bpm') changeTempo(S.bpm);
+  if (k === 'hideCursor') cv.style.cursor = S.hideCursor ? 'none' : 'crosshair';
+  if (ac && k === 'volume') master.gain.setTargetAtTime(S.volume, ac.currentTime, 0.03);
+  if (ac && k === 'reverb') revOut.gain.setTargetAtTime(S.reverb, ac.currentTime, 0.03);
+  if (k === 'sound') releaseHeld();
+  if (['key', 'scale', 'register', 'octaves'].includes(k)) { releaseHeld(); if (drone) setDrone(true); }
+}
+function nudgeDwell(dir) {
+  // steps of 20 ms up to 300 ms, then 50 ms
+  const stepMs = (dir > 0 ? S.dwell >= 300 : S.dwell > 300) ? 50 : 20;
+  S.dwell = Math.max(40, Math.min(1500, S.dwell + dir * stepMs));
+  save(); syncPanel();
+  toast = { text: `melody gaze time ${S.dwell} ms`, t: performance.now() };
+}
+const togglePanel = open => panel.classList.toggle('open', open);
+$('#gear').onclick = () => togglePanel(true);
+$('#closePanel').onclick = () => togglePanel(false);
+
+addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' && e.target.type === 'text') return;
+  if (e.key === 'Escape') togglePanel(!panel.classList.contains('open'));
+  else if (e.key === '1') setMode('ring');
+  else if (e.key === '2') setMode('loop');
+  else if (e.key === '3') setMode('strings');
+  else if (e.key === '[') nudgeDwell(-1);
+  else if (e.key === ']') nudgeDwell(1);
+  else if (e.key === ' ') { e.preventDefault(); initAudio(); setPlaying(!playing); }
+  else if (e.key === 'd' || e.key === 'D') { initAudio(); setDrone(!drone); }
+});
+cv.addEventListener('pointerdown', e => {
+  initAudio();
+  const z = hit(e.clientX, e.clientY);
+  if (z.kind === 'string') return; // strings are strummed by moving across them
+  if (z.kind !== 'none') { cur = z; curSince = performance.now(); fired = true; fire(z); }
+});
+$('#go').onclick = () => { initAudio(); $('#start').remove(); };
+
+addEventListener('resize', layout);
+if (document.fonts) document.fonts.load(font(17, true)).catch(() => {});
+layout(); setLook(); syncPanel(); connectWS(); connectLink();
+cv.style.cursor = S.hideCursor ? 'none' : 'crosshair';
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
